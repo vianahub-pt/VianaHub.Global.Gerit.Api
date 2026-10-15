@@ -5,11 +5,25 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      target_environment:
+        description: GitHub Environment to deploy to
+        type: environment
+        required: true
 
+permissions:
+  contents: read
+
+# Future production requirements:
+# - Pin GitHub Actions to full commit SHAs.
+# - Authenticate the VPS to the registry if the image is private.
+# - Add health checks and rollback.
 jobs:
-  build-and-push:
+  build:
+    name: Build and publish Gerit image
     runs-on: ubuntu-latest
-
+    outputs:
+      image: ${{ vars.DOCKERHUB_USERNAME }}/vianahub-api@${{ steps.build-image.outputs.digest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,33 +31,252 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
+        id: build-image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/vianahub-api:latest
+          tags: "${{ format('{0}/vianahub-api:{1}', vars.DOCKERHUB_USERNAME, github.sha) }}${{ github.ref == 'refs/heads/main' && format(',{0}/vianahub-api:latest', vars.DOCKERHUB_USERNAME) || '' }}"
 
   deploy:
-    needs: build-and-push
+    name: Deploy Gerit image
+    needs: build
     runs-on: ubuntu-latest
-
+    environment:
+      # Push em main sempre implanta VianaHub; dispatch usa o Environment escolhido.
+      name: ${{ github.event_name == 'push' && 'production-vianahub' || inputs.target_environment }}
+    concurrency:
+      group: gerit-deploy-${{ github.event_name == 'push' && 'production-vianahub' || inputs.target_environment }}
+      cancel-in-progress: false
     steps:
-      - name: Deploy on VPS
+      - name: Deploy to selected VPS
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GERIT_IMAGE: ${{ needs.build.outputs.image }}
+          GERIT_DOMAIN: ${{ vars.GERIT_DOMAIN }}
+          GERIT_INSTANCE_NAME: ${{ vars.GERIT_INSTANCE_NAME }}
+          GERIT_DB_CONNECTION: ${{ secrets.GERIT_DB_CONNECTION }}
+          GERIT_HANGFIRE_CONNECTION: ${{ secrets.GERIT_HANGFIRE_CONNECTION }}
+          GERIT_HANGFIRE_USERNAME: ${{ secrets.GERIT_HANGFIRE_USERNAME }}
+          GERIT_HANGFIRE_PASSWORD: ${{ secrets.GERIT_HANGFIRE_PASSWORD }}
+          GERIT_JWT_ENCRYPTION_KEY: ${{ secrets.GERIT_JWT_ENCRYPTION_KEY }}
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
+          host: ${{ vars.VPS_HOST }}
+          username: ${{ vars.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          envs: GERIT_IMAGE,GERIT_DOMAIN,GERIT_INSTANCE_NAME,GERIT_DB_CONNECTION,GERIT_HANGFIRE_CONNECTION,GERIT_HANGFIRE_USERNAME,GERIT_HANGFIRE_PASSWORD,GERIT_JWT_ENCRYPTION_KEY
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vianahub-api:latest
-            docker stop vianahub-api || true
-            docker rm vianahub-api || true
+            set -eu
+
+            : "${GERIT_IMAGE:?Image reference is required}"
+            : "${GERIT_DOMAIN:?Gerit domain is required}"
+            : "${GERIT_INSTANCE_NAME:?Gerit instance name is required}"
+            : "${GERIT_DB_CONNECTION:?Database connection is required}"
+            : "${GERIT_HANGFIRE_CONNECTION:?Hangfire connection is required}"
+            : "${GERIT_HANGFIRE_USERNAME:?Hangfire username is required}"
+            : "${GERIT_HANGFIRE_PASSWORD:?Hangfire password is required}"
+            : "${GERIT_JWT_ENCRYPTION_KEY:?JWT encryption key is required}"
+
+            case "$GERIT_INSTANCE_NAME" in
+              ''|[!a-zA-Z0-9]*|*[!a-zA-Z0-9_.-]*)
+                echo "GERIT_INSTANCE_NAME contains unsupported characters" >&2
+                exit 1
+                ;;
+            esac
+
+            case "$GERIT_DOMAIN" in
+              ''|*[!a-zA-Z0-9.-]*|.*|*.|*..*)
+                echo "GERIT_DOMAIN contains unsupported characters" >&2
+                exit 1
+                ;;
+            esac
+
+            DYNAMIC_DIR=/opt/infrastructure/reverse-proxy/dynamic
+            if ! docker network inspect proxy-network >/dev/null 2>&1; then
+              echo "Required Docker network proxy-network does not exist" >&2
+              exit 1
+            fi
+            if [ ! -d "$DYNAMIC_DIR" ]; then
+              echo "Required Traefik dynamic configuration directory does not exist" >&2
+              exit 1
+            fi
+
+            export ConnectionStrings__DefaultConnection="$GERIT_DB_CONNECTION"
+            export ConnectionStrings__HangfireConnection="$GERIT_HANGFIRE_CONNECTION"
+            export HangfireDashboard__Username="$GERIT_HANGFIRE_USERNAME"
+            export HangfireDashboard__Password="$GERIT_HANGFIRE_PASSWORD"
+            export JwtKeyManagement__EncryptionKey="$GERIT_JWT_ENCRYPTION_KEY"
+
+            docker pull "$GERIT_IMAGE"
+
+            umask 077
+            PREVIOUS_TRAEFIK_CONFIG=false
+            TRAEFIK_CONFIG_BACKUP=
+            TRAEFIK_CONFIG_REPLACEMENT_STARTED=false
+            TRAEFIK_CONFIG=$(mktemp "$DYNAMIC_DIR/.gerit.yml.XXXXXX")
+            trap 'rm -f "$TRAEFIK_CONFIG"; if [ -n "$TRAEFIK_CONFIG_BACKUP" ]; then rm -f "$TRAEFIK_CONFIG_BACKUP"; fi' EXIT
+            cat > "$TRAEFIK_CONFIG" <<EOF
+            http:
+              routers:
+                gerit:
+                  rule: "Host(\`$GERIT_DOMAIN\`)"
+                  entryPoints:
+                    - web
+                  service: gerit
+
+              services:
+                gerit:
+                  loadBalancer:
+                    servers:
+                      - url: "http://$GERIT_INSTANCE_NAME:8080"
+            EOF
+            chmod 0644 "$TRAEFIK_CONFIG"
+            if [ -e "$DYNAMIC_DIR/gerit.yml" ]; then
+              PREVIOUS_TRAEFIK_CONFIG=true
+              TRAEFIK_CONFIG_BACKUP=$(mktemp "$DYNAMIC_DIR/.gerit.yml.backup.XXXXXX")
+              cp -p "$DYNAMIC_DIR/gerit.yml" "$TRAEFIK_CONFIG_BACKUP"
+            fi
+
+            rollback_traefik_config() {
+              deploy_status=$?
+              trap - EXIT
+              rm -f "$TRAEFIK_CONFIG"
+
+              if [ "$TRAEFIK_CONFIG_REPLACEMENT_STARTED" = "true" ]; then
+                if [ "$PREVIOUS_TRAEFIK_CONFIG" = "true" ]; then
+                  if ! mv -f "$TRAEFIK_CONFIG_BACKUP" "$DYNAMIC_DIR/gerit.yml"; then
+                    echo "Rollback failed: could not restore the previous Traefik configuration" >&2
+                  fi
+                elif ! rm -f "$DYNAMIC_DIR/gerit.yml"; then
+                  echo "Rollback failed: could not remove the failed Traefik configuration" >&2
+                fi
+              elif [ -n "$TRAEFIK_CONFIG_BACKUP" ]; then
+                rm -f "$TRAEFIK_CONFIG_BACKUP"
+              fi
+
+              exit "$deploy_status"
+            }
+
+            trap rollback_traefik_config EXIT
+            TRAEFIK_CONFIG_REPLACEMENT_STARTED=true
+            mv -f "$TRAEFIK_CONFIG" "$DYNAMIC_DIR/gerit.yml"
+
+            PREVIOUS_CONTAINER=false
+            PREVIOUS_IMAGE=
+            BACKUP_CONTAINER_NAME=
+            CONTAINER_REPLACEMENT_STARTED=false
+            DEPLOYMENT_SUCCEEDED=false
+
+            rollback_deploy() {
+              deploy_status=$?
+              trap - EXIT
+
+              if [ "$DEPLOYMENT_SUCCEEDED" = "true" ]; then
+                exit "$deploy_status"
+              fi
+
+              echo "Deployment did not pass validation; attempting rollback" >&2
+              if [ "$TRAEFIK_CONFIG_REPLACEMENT_STARTED" = "true" ]; then
+                if [ "$PREVIOUS_TRAEFIK_CONFIG" = "true" ]; then
+                  if ! mv -f "$TRAEFIK_CONFIG_BACKUP" "$DYNAMIC_DIR/gerit.yml"; then
+                    echo "Rollback failed: could not restore the previous Traefik configuration" >&2
+                  fi
+                elif ! rm -f "$DYNAMIC_DIR/gerit.yml"; then
+                  echo "Rollback failed: could not remove the failed Traefik configuration" >&2
+                fi
+              fi
+
+              if [ "$CONTAINER_REPLACEMENT_STARTED" = "true" ] && docker container inspect "$GERIT_INSTANCE_NAME" >/dev/null 2>&1; then
+                docker rm -f "$GERIT_INSTANCE_NAME" >/dev/null 2>&1 || true
+              fi
+
+              if [ "$PREVIOUS_CONTAINER" = "true" ]; then
+                if docker container inspect "$BACKUP_CONTAINER_NAME" >/dev/null 2>&1; then
+                  if ! docker rename "$BACKUP_CONTAINER_NAME" "$GERIT_INSTANCE_NAME"; then
+                    echo "Rollback failed: could not restore the previous container name" >&2
+                    exit 1
+                  fi
+                elif ! docker container inspect "$GERIT_INSTANCE_NAME" >/dev/null 2>&1; then
+                  echo "Rollback failed: previous container is unavailable" >&2
+                  exit 1
+                fi
+                if ! docker start "$GERIT_INSTANCE_NAME" >/dev/null; then
+                  echo "Rollback failed: could not start the previous container" >&2
+                  exit 1
+                fi
+                RESTORED_STATUS=$(docker inspect --format '{{.State.Status}}' "$GERIT_INSTANCE_NAME")
+                if [ "$RESTORED_STATUS" != "running" ]; then
+                  echo "Rollback failed: previous container is not running" >&2
+                  exit 1
+                fi
+                RESTORED_IMAGE=$(docker inspect --format '{{.Image}}' "$GERIT_INSTANCE_NAME")
+                if [ "$RESTORED_IMAGE" != "$PREVIOUS_IMAGE" ]; then
+                  echo "Rollback failed: restored container image does not match the previous image" >&2
+                  exit 1
+                fi
+                echo "Previous Gerit container restored" >&2
+              fi
+
+              exit "$deploy_status"
+            }
+
+            trap rollback_deploy EXIT
+            if docker container inspect "$GERIT_INSTANCE_NAME" >/dev/null 2>&1; then
+              PREVIOUS_CONTAINER=true
+              PREVIOUS_IMAGE=$(docker inspect --format '{{.Image}}' "$GERIT_INSTANCE_NAME")
+              BACKUP_SUFFIX=$$
+              BACKUP_CONTAINER_NAME="${GERIT_INSTANCE_NAME}-rollback-$BACKUP_SUFFIX"
+              while docker container inspect "$BACKUP_CONTAINER_NAME" >/dev/null 2>&1; do
+                BACKUP_SUFFIX="${BACKUP_SUFFIX}x"
+                BACKUP_CONTAINER_NAME="${GERIT_INSTANCE_NAME}-rollback-$BACKUP_SUFFIX"
+              done
+              docker stop "$GERIT_INSTANCE_NAME"
+              docker rename "$GERIT_INSTANCE_NAME" "$BACKUP_CONTAINER_NAME"
+            fi
+            CONTAINER_REPLACEMENT_STARTED=true
             docker run -d \
-              --name vianahub-api \
-              -p 80:8080 \
+              --name "$GERIT_INSTANCE_NAME" \
+              --network proxy-network \
               --restart always \
-              ${{ secrets.DOCKERHUB_USERNAME }}/vianahub-api:latest
+              --env ConnectionStrings__DefaultConnection \
+              --env ConnectionStrings__HangfireConnection \
+              --env HangfireDashboard__Username \
+              --env HangfireDashboard__Password \
+              --env JwtKeyManagement__EncryptionKey \
+              "$GERIT_IMAGE"
+
+            if ! docker container inspect "$GERIT_INSTANCE_NAME" >/dev/null 2>&1; then
+              echo "Gerit container was not created" >&2
+              exit 1
+            fi
+            if [ "$(docker inspect --format '{{.State.Status}}' "$GERIT_INSTANCE_NAME")" != "running" ]; then
+              echo "Gerit container is not running" >&2
+              exit 1
+            fi
+            if [ "$(docker inspect --format '{{if index .NetworkSettings.Networks "proxy-network"}}connected{{end}}' "$GERIT_INSTANCE_NAME")" != "connected" ]; then
+              echo "Gerit container is not connected to proxy-network" >&2
+              exit 1
+            fi
+
+            sleep 5
+            if [ "$(docker inspect --format '{{.State.Status}}' "$GERIT_INSTANCE_NAME")" != "running" ]; then
+              echo "Gerit container did not remain running" >&2
+              exit 1
+            fi
+            if [ "$(docker inspect --format '{{if index .NetworkSettings.Networks "proxy-network"}}connected{{end}}' "$GERIT_INSTANCE_NAME")" != "connected" ]; then
+              echo "Gerit container is no longer connected to proxy-network" >&2
+              exit 1
+            fi
+
+            if [ "$PREVIOUS_TRAEFIK_CONFIG" = "true" ]; then
+              rm -f "$TRAEFIK_CONFIG_BACKUP"
+            fi
+            if [ "$PREVIOUS_CONTAINER" = "true" ] && ! docker rm "$BACKUP_CONTAINER_NAME"; then
+              echo "Warning: previous Gerit container backup could not be removed" >&2
+            fi
+            DEPLOYMENT_SUCCEEDED=true
+            trap - EXIT
