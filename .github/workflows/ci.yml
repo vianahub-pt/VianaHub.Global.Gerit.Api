@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Validate PR source branch policy
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          if [[ "$BASE_BRANCH" == "main" && "$HEAD_BRANCH" != "develop" && "$HEAD_BRANCH" != hotfix/* ]]; then
+            echo "Pull requests targeting main must come from develop or hotfix/*. Source branch: $HEAD_BRANCH" >&2
+            exit 1
+          fi
+
+      - name: Restore solution
+        run: dotnet restore VianaHub.Global.Gerit.sln
+
+      - name: Verify formatting of changed C# files
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mapfile -d '' changed_cs_files < <(git diff --name-only -z --diff-filter=ACMR "$BASE_SHA...$HEAD_SHA" -- '*.cs')
+
+          if (( ${#changed_cs_files[@]} == 0 )); then
+            echo "No changed .cs files; formatting check is not required."
+            exit 0
+          fi
+
+          printf 'Checking changed C# files:\n'
+          printf ' - %s\n' "${changed_cs_files[@]}"
+          dotnet format VianaHub.Global.Gerit.sln --include "${changed_cs_files[@]}" --verify-no-changes --no-restore
+
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore solution
+        run: dotnet restore VianaHub.Global.Gerit.sln
+
+      - name: Build Release
+        run: dotnet build VianaHub.Global.Gerit.sln --configuration Release --no-restore
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore solution
+        run: dotnet restore VianaHub.Global.Gerit.sln
+
+      - name: Build Release
+        run: dotnet build VianaHub.Global.Gerit.sln --configuration Release --no-restore
+
+      - name: Test Release
+        run: dotnet test VianaHub.Global.Gerit.sln --configuration Release --no-build
