@@ -55,7 +55,7 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
     public async Task<VisitTeamVehicleDetailResponse> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive || entity.VisitTeamId != visitTeamId)
+        if (entity == null || entity.IsDeleted || entity.VisitTeamId != visitTeamId)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitTeamVehicle.GetById.ResourceNotFound"), 410);
             return null;

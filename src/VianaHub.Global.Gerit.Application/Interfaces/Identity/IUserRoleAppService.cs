@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Identity;
 
 public interface IUserRoleAppService
 {
-    Task<UserRoleResponse> GetByIdAsync(int userId, int roleId, CancellationToken ct);
+    Task<UserRoleDetailResponse> GetByIdAsync(int userId, int roleId, CancellationToken ct);
     Task<IList<UserRoleResponse>> GetByUserAsync(int userId, CancellationToken ct);
     Task<IList<UserRoleResponse>> GetByRoleAsync(int roleId, CancellationToken ct);
     Task<IList<UserRoleResponse>> GetAllAsync(CancellationToken ct);

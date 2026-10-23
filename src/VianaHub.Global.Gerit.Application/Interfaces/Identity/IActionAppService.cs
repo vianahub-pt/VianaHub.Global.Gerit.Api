@@ -8,7 +8,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Identity;
 public interface IActionAppService
 {
     Task<IEnumerable<ActionResponse>> GetAllAsync(CancellationToken ct);
-    Task<ActionResponse> GetByIdAsync(int id, CancellationToken ct);
+    Task<ActionDetailResponse?> GetByIdAsync(int id, CancellationToken ct);
     Task<ListPageResponse<ActionResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct);
     Task<int> CreateAsync(CreateActionRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int id, UpdateActionRequest request, CancellationToken ct);

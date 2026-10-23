@@ -148,7 +148,7 @@ public class PartyTypeAppService : IPartyTypeAppService
     public async Task<bool> DeactivateAsync(byte id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.PartyType.Deactivate.ResourceNotFound"), 410);
             return false;

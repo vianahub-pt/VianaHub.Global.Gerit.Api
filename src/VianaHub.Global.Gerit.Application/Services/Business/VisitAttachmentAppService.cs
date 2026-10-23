@@ -48,21 +48,21 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
         _logger = logger;
     }
 
-    public async Task<VisitAttachmentResponse> GetByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitAttachmentDetailResponse> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitAttachmentResponse>(entity);
+        return _mapper.Map<VisitAttachmentDetailResponse>(entity);
     }
 
     public async Task<VisitAttachmentResponse> GetByPublicIdAsync(Guid publicId, CancellationToken ct)
     {
         var entity = await _repo.GetByPublicIdAsync(publicId, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetByPublicId.ResourceNotFound"), 410);
             return null;
@@ -73,7 +73,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
     public async Task<VisitAttachmentDetailResponse> GetDetailByIdAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetById.ResourceNotFound"), 410);
             return null;
@@ -84,7 +84,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
     public async Task<VisitAttachmentDetailResponse> GetDetailByPublicIdAsync(Guid publicId, CancellationToken ct)
     {
         var entity = await _repo.GetByPublicIdAsync(publicId, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetByPublicId.ResourceNotFound"), 410);
             return null;
@@ -107,7 +107,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
     public async Task<VisitAttachmentResponse> GetPrimaryByVisitIdAsync(int visitId, CancellationToken ct)
     {
         var entity = await _repo.GetPrimaryByVisitIdAsync(visitId, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetPrimary.ResourceNotFound"), 410);
             return null;
@@ -160,7 +160,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
     public async Task<bool> UpdateAsync(int visitId, int id, UpdateVisitAttachmentRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.Update.ResourceNotFound"), 410);
             return false;
@@ -179,7 +179,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
     public async Task<bool> SetAsPrimaryAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.SetAsPrimary.ResourceNotFound"), 410);
             return false;
@@ -207,7 +207,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
     public async Task<bool> DeactivateAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.Deactivate.ResourceNotFound"), 410);
             return false;

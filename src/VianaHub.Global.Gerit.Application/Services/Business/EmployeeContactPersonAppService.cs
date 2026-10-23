@@ -51,15 +51,15 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
         return _mapper.Map<IEnumerable<EmployeeContactPersonResponse>>(entities);
     }
 
-    public async Task<EmployeeContactPersonResponse> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeContactPersonDetailResponse> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(employeeId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeContactPerson.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<EmployeeContactPersonResponse>(entity);
+        return _mapper.Map<EmployeeContactPersonDetailResponse>(entity);
     }
 
     public async Task<ListPageResponse<EmployeeContactPersonResponse>> GetPagedAsync(int employeeId, PagedFilterRequest request, CancellationToken ct)

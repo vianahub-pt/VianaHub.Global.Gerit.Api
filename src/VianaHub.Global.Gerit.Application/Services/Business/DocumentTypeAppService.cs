@@ -140,7 +140,7 @@ public class DocumentTypeAppService : IDocumentTypeAppService
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.DocumentType.Deactivate.ResourceNotFound"), 410);
             return false;

@@ -16,7 +16,7 @@ public static class AuthEndpoint
         var groupV1 = app.MapGroup("/v1/auth")
             .WithTags("Auth")
             .WithGroupName("v1")
-            .AllowAnonymous(); // Endpoints de autenticação devem ser públicos
+            .AllowAnonymous();
 
         groupV1.MapPost("/register", async ([FromBody] RegisterRequest request, [FromServices] IAuthAppService authService, [FromServices] INotify notify, CancellationToken ct) =>
         {

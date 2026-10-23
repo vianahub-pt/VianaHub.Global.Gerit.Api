@@ -54,10 +54,10 @@ public class UserAppService : IUserAppService
         return _mapper.Map<IEnumerable<UserResponse>>(entities);
     }
 
-    public async Task<UserResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<UserDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return _mapper.Map<UserResponse>(entity);
+        return _mapper.Map<UserDetailResponse>(entity);
     }
 
     public async Task<ListPageResponse<UserResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
@@ -79,7 +79,7 @@ public class UserAppService : IUserAppService
         var passwordHash = DomainExtensions.HashClientSecret(request.Password);
         var tenantId = _currentUser.GetTenantId();
         var entity = new UserEntity(tenantId, request.Name, request.Email, passwordHash, null, _currentUser.GetUserId());
-        
+
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -116,7 +116,7 @@ public class UserAppService : IUserAppService
         // A valida��o de senha forte j� � feita no validador de rota (UpdatePasswordRouteValidator)
         var newPasswordHash = DomainExtensions.HashClientSecret(request.NewPassword);
         entity.UpdatePassword(newPasswordHash, _currentUser.GetUserId());
-        
+
         return await _domain.UpdateAsync(entity, ct);
     }
 
