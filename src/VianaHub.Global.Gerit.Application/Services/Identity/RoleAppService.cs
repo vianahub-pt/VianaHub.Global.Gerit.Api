@@ -50,13 +50,13 @@ public class RoleAppService : IRoleAppService
         var entities = await _repo.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<RoleResponse>>(entities);
     }
-    
-    public async Task<RoleResponse> GetByIdAsync(int id, CancellationToken ct)
+
+    public async Task<RoleDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return _mapper.Map<RoleResponse>(entity);
+        return _mapper.Map<RoleDetailResponse>(entity);
     }
-    
+
     public async Task<ListPageResponse<RoleResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
@@ -67,7 +67,7 @@ public class RoleAppService : IRoleAppService
     public async Task<int> CreateAsync(CreateRoleRequest request, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
-        
+
         var exists = await _repo.ExistsByNameAsync(tenantId, request.Name, ct);
         if (exists)
         {
@@ -79,7 +79,7 @@ public class RoleAppService : IRoleAppService
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
-    
+
     public async Task<bool> UpdateAsync(int id, UpdateRoleRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
@@ -92,7 +92,7 @@ public class RoleAppService : IRoleAppService
         entity.Update(request.Code ?? entity.Code ?? request.Name ?? "ROLE", request.Name, request.Description, _currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
-    
+
     public async Task<bool> ActivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
@@ -105,7 +105,7 @@ public class RoleAppService : IRoleAppService
         entity.Activate(_currentUser.GetUserId());
         return await _domain.ActivateAsync(entity, ct);
     }
-    
+
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
@@ -118,7 +118,7 @@ public class RoleAppService : IRoleAppService
         entity.Deactivate(_currentUser.GetUserId());
         return await _domain.DeactivateAsync(entity, ct);
     }
-    
+
     public async Task<bool> DeleteAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
@@ -131,7 +131,7 @@ public class RoleAppService : IRoleAppService
         entity.Delete(_currentUser.GetUserId());
         return await _domain.DeleteAsync(entity, ct);
     }
-    
+
     public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
@@ -230,7 +230,7 @@ public class RoleAppService : IRoleAppService
             return null;
         }
     }
-    
+
     private async Task<bool> ProcessBulkItemsAsync(List<BulkUploadRoleItem> items, CancellationToken ct)
     {
         var hasErrors = false;
@@ -269,7 +269,7 @@ public class RoleAppService : IRoleAppService
 
         return !hasErrors;
     }
-    
+
     private bool ValidateBulkItem(BulkUploadRoleItem item)
     {
         if (string.IsNullOrWhiteSpace(item.Name))

@@ -51,13 +51,13 @@ public class TenantAppService : ITenantAppService
         var entities = await _repo.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<TenantResponse>>(entities);
     }
-    
-    public async Task<TenantResponse> GetByIdAsync(int id, CancellationToken ct)
+
+    public async Task<TenantDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return _mapper.Map<TenantResponse>(entity);
+        return _mapper.Map<TenantDetailResponse>(entity);
     }
-    
+
     public async Task<ListPageResponse<TenantResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
@@ -78,7 +78,7 @@ public class TenantAppService : ITenantAppService
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
-    
+
     public async Task<bool> UpdateAsync(int id, UpdateTenantRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
@@ -91,7 +91,7 @@ public class TenantAppService : ITenantAppService
         entity.Update(request.PartyTypeId, request.AcquisitionSourceTypeId, request.Name, request.Email, request.Website, request.UrlImage, request.Note, _currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
-    
+
     public async Task<bool> ActivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
@@ -104,7 +104,7 @@ public class TenantAppService : ITenantAppService
         entity.Activate(_currentUser.GetUserId());
         return await _domain.ActivateAsync(entity, ct);
     }
-    
+
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
@@ -117,7 +117,7 @@ public class TenantAppService : ITenantAppService
         entity.Deactivate(_currentUser.GetUserId());
         return await _domain.DeactivateAsync(entity, ct);
     }
-    
+
     public async Task<bool> DeleteAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
@@ -130,7 +130,7 @@ public class TenantAppService : ITenantAppService
         entity.Delete(_currentUser.GetUserId());
         return await _domain.DeleteAsync(entity, ct);
     }
-    
+
     public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
@@ -222,7 +222,7 @@ public class TenantAppService : ITenantAppService
             return null;
         }
     }
-    
+
     private async Task<bool> ProcessBulkItemsAsync(List<BulkUploadTenantItem> items, CancellationToken ct)
     {
         var hasErrors = false;
@@ -260,7 +260,7 @@ public class TenantAppService : ITenantAppService
 
         return !hasErrors;
     }
-    
+
     private bool ValidateBulkItem(BulkUploadTenantItem item)
     {
         if (string.IsNullOrWhiteSpace(item.Name))

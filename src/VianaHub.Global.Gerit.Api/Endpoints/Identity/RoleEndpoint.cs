@@ -129,8 +129,7 @@ public static class RoleEndpoint
             var success = await appService.BulkUploadAsync(file, ct);
             return notify.CustomResponse(success);
         })
-        //.CustomAuthorize("Admin,BackOffice,Manager", "Roles", "BulkUpload")
-        .AllowAnonymous()
+        .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "BulkUpload")
         .WithName("BulkUploadRoles")
         .WithSummary("Swagger.Endpoint.Role.BulkUpload.Summary")
         .DisableAntiforgery()

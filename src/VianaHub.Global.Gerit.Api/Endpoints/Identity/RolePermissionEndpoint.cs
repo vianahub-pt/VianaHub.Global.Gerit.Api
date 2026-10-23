@@ -67,8 +67,7 @@ public static class RolePermissionEndpoint
             var result = await appService.CreateAsync(request, ct);
             return notify.CustomResponse(new GenericResponse { Id = result.Id }, 201);
         })
-        //.CustomAuthorize("Admin,BackOffice,Manager", "RolePermissions", "Create")
-        .AllowAnonymous()
+        .CustomAuthorize("Admin,BackOffice,Manager", "RolePermissions", "Create")
         .WithName("CreateRolePermission")
         .WithSummary("Swagger.Endpoint.RolePermission.Create.Summary")
         .Produces<GenericResponse>(StatusCodes.Status201Created)
@@ -100,8 +99,7 @@ public static class RolePermissionEndpoint
             var success = await appService.BulkUploadAsync(file, ct);
             return notify.CustomResponse(success);
         })
-        //.CustomAuthorize("Admin,BackOffice,Manager", "RolePermissions", "BulkUpload")
-        .AllowAnonymous()
+        .CustomAuthorize("Admin,BackOffice,Manager", "RolePermissions", "BulkUpload")
         .WithName("BulkUploadRolePermission")
         .WithSummary("Swagger.Endpoint.RolePermission.BulkUpload.Summary")
         .DisableAntiforgery()

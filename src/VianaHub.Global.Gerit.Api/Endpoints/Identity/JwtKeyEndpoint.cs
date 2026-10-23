@@ -49,8 +49,7 @@ public static class JwtKeyEndpoint
             if (!ok) return notify.CustomResponse();
             return notify.CustomResponse(new GenericResponse { Id = tenantId }, 201);
         })
-        //.CustomAuthorize("Admin,BackOffice", "JwtKeys", "Create")
-        .AllowAnonymous()
+        .CustomAuthorize("Admin,BackOffice", "JwtKeys", "Create")
         .WithName("CreateInitialJwtKey")
         .WithSummary("Swagger.Endpoint.JwtKey.CreateInitialJwtKey.Summary")
         .Produces<GenericResponse>(StatusCodes.Status201Created)

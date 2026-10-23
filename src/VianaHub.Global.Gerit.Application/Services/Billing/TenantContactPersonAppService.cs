@@ -52,7 +52,7 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
     public async Task<TenantContactPersonDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.TenantContactPerson.GetById.ResourceNotFound"), 410);
             return null;
@@ -115,7 +115,7 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
     public async Task<bool> UpdateAsync(int tenantId, int id, UpdateTenantContactPersonRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.TenantContactPerson.Update.ResourceNotFound"), 410);
             return false;
@@ -145,7 +145,7 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
     public async Task<bool> SetAsPrimaryAsync(int tenantId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.TenantContactPerson.SetAsPrimary.ResourceNotFound"), 410);
             return false;
@@ -190,7 +190,7 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
     public async Task<bool> DeactivateAsync(int tenantId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.TenantContactPerson.Deactivate.ResourceNotFound"), 410);
             return false;

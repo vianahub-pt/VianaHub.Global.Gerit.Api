@@ -22,7 +22,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(response, 200);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "GetAll")
-        .AllowAnonymous()
         .WithName("GetAllUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.GetAll.Summary")
         .Produces(StatusCodes.Status200OK)
@@ -34,7 +33,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(response, 200);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "GetBy")
-        .AllowAnonymous()
         .WithName("GetUserPreferencesById")
         .WithSummary("Swagger.Endpoint.UserPreferences.GetById.Summary")
         .Produces(StatusCodes.Status200OK)
@@ -47,7 +45,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(response, 200);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "GetBy")
-        .AllowAnonymous()
         .WithName("GetUserPreferencesByUser")
         .WithSummary("Swagger.Endpoint.UserPreferences.GetByUser.Summary")
         .Produces(StatusCodes.Status200OK)
@@ -60,7 +57,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(response, 200);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "GetPaged")
-        .AllowAnonymous()
         .WithName("GetUserPreferencesPaged")
         .WithSummary("Swagger.Endpoint.UserPreferences.GetPaged.Summary")
         .Produces(StatusCodes.Status200OK)
@@ -72,7 +68,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(new GenericResponse { Id = id }, 201);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Create")
-        .AllowAnonymous()
         .WithName("CreateUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Create.Summary")
         .Produces<GenericResponse>(StatusCodes.Status201Created)
@@ -86,7 +81,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(updated, 200);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Update")
-        .AllowAnonymous()
         .WithName("UpdateUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Update.Summary")
         .Produces(StatusCodes.Status204NoContent)
@@ -101,7 +95,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(ok);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Activate")
-        .AllowAnonymous()
         .WithName("ActivateUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Activate.Summary")
         .Produces(StatusCodes.Status204NoContent)
@@ -114,7 +107,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(ok);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Deactivate")
-        .AllowAnonymous()
         .WithName("DeactivateUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Deactivate.Summary")
         .Produces(StatusCodes.Status204NoContent)
@@ -127,7 +119,6 @@ public static class UserPreferencesEndpoint
             return notify.CustomResponse(ok);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Delete")
-        .AllowAnonymous()
         .WithName("DeleteUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Delete.Summary")
         .Produces(StatusCodes.Status204NoContent)

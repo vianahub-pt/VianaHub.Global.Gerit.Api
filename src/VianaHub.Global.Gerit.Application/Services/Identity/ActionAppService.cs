@@ -54,15 +54,15 @@ public class ActionAppService : IActionAppService
         var entities = await _repo.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<ActionResponse>>(entities);
     }
-    public async Task<ActionResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ActionDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Action.Update.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<ActionResponse>(entity);
+        return _mapper.Map<ActionDetailResponse?>(entity);
     }
     public async Task<ListPageResponse<ActionResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
@@ -88,7 +88,7 @@ public class ActionAppService : IActionAppService
     public async Task<bool> UpdateAsync(int id, UpdateActionRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Action.Update.ResourceNotFound"), 410);
             return false;
@@ -112,7 +112,7 @@ public class ActionAppService : IActionAppService
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Action.Deactivate.ResourceNotFound"), 410);
             return false;

@@ -54,7 +54,7 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
     public async Task<VisitTeamEmployeeDetailResponse> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive || entity.VisitTeamId != visitTeamId)
+        if (entity == null || entity.IsDeleted || entity.VisitTeamId != visitTeamId)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitTeamEmployee.GetById.ResourceNotFound"), 410);
             return null;
@@ -114,7 +114,7 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
     public async Task<bool> UpdateAsync(int visitTeamId, int id, UpdateVisitTeamEmployeeRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive || entity.VisitTeamId != visitTeamId)
+        if (entity == null || entity.IsDeleted || entity.VisitTeamId != visitTeamId)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitTeamEmployee.Update.ResourceNotFound"), 410);
             return false;
@@ -147,7 +147,7 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
     public async Task<bool> DeactivateAsync(int visitTeamId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive || entity.VisitTeamId != visitTeamId)
+        if (entity == null || entity.IsDeleted || entity.VisitTeamId != visitTeamId)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitTeamEmployee.Deactivate.ResourceNotFound"), 410);
             return false;

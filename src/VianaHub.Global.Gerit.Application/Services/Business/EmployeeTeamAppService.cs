@@ -54,7 +54,7 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
     public async Task<EmployeeTeamDetailResponse> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(employeeId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeTeam.GetById.ResourceNotFound"), 410);
             return null;

@@ -114,7 +114,6 @@ public static class SubscriptionEndpoint
             var ok = await appService.ActivateAsync(id, ct);
             return notify.CustomResponse();
         })
-        .AllowAnonymous()
         .CustomAuthorize("Admin,BackOffice", "Subscriptions", "Activate")
         .WithSummary("Swagger.Endpoint.Subscription.Activate.Summary")
         .Produces(StatusCodes.Status204NoContent)
@@ -183,8 +182,7 @@ public static class SubscriptionEndpoint
             var success = await appService.BulkUploadAsync(file, ct);
             return notify.CustomResponse(success);
         })
-        //.CustomAuthorize("Admin,BackOffice,Manager", "Subscriptions", "BulkUpload")
-        .AllowAnonymous()
+        .CustomAuthorize("Admin,BackOffice,Manager", "Subscriptions", "BulkUpload")
         .WithName("BulkUploadSubscriptions")
         .WithSummary("Swagger.Endpoint.Subscription.BulkUpload.Summary")
         .DisableAntiforgery()

@@ -23,7 +23,6 @@ public static class UserRoleEndpoint
             return notify.CustomResponse(result, 200);
         })
         .CustomAuthorize("Admin,Manager", "UserRoles", "GetAll")
-        .AllowAnonymous()
         .WithName("GetAllUserRoles")
         .WithSummary("Swagger.Endpoint.UserRole.GetAll.Summary")
         .Produces<IEnumerable<UserRoleResponse>>(StatusCodes.Status200OK)
@@ -35,7 +34,6 @@ public static class UserRoleEndpoint
             return notify.CustomResponse(result, result != null ? 200 : 404);
         })
         .CustomAuthorize("Admin,Manager", "UserRoles", "GetBy")
-        .AllowAnonymous()
         .WithName("GetUserRoleById")
         .WithSummary("Swagger.Endpoint.UserRole.GetById.Summary")
         .Produces<UserRoleResponse>(StatusCodes.Status200OK)
@@ -48,7 +46,6 @@ public static class UserRoleEndpoint
             return notify.CustomResponse(result, 200);
         })
         .CustomAuthorize("Admin,Manager,User", "UserRoles", "GetBy")
-        .AllowAnonymous()
         .WithName("GetUserRolesByUser")
         .WithSummary("Swagger.Endpoint.UserRole.GetByUser.Summary")
         .Produces<IEnumerable<UserRoleResponse>>(StatusCodes.Status200OK)
@@ -60,7 +57,6 @@ public static class UserRoleEndpoint
             return notify.CustomResponse(result, 200);
         })
         .CustomAuthorize("Admin,Manager,User", "UserRoles", "GetBy")
-        .AllowAnonymous()
         .WithName("GetUserRolesByRole")
         .WithSummary("Swagger.Endpoint.UserRole.GetByRole.Summary")
         .Produces<IEnumerable<UserRoleResponse>>(StatusCodes.Status200OK)
@@ -72,7 +68,6 @@ public static class UserRoleEndpoint
             return notify.CustomResponse(new GenericResponse { Id = result.Id }, 201);
         })
         .CustomAuthorize("Admin,Manager", "UserRoles", "Create")
-        .AllowAnonymous()
         .WithName("CreateUserRole")
         .WithSummary("Swagger.Endpoint.UserRole.Create.Summary")
         .Produces<GenericResponse>(StatusCodes.Status201Created)
@@ -86,7 +81,6 @@ public static class UserRoleEndpoint
             return notify.CustomResponse();
         })
         .CustomAuthorize("Admin,Manager", "UserRoles", "Delete")
-        .AllowAnonymous()
         .WithName("DeleteUserRole")
         .WithSummary("Swagger.Endpoint.UserRole.Delete.Summary")
         .Produces(StatusCodes.Status204NoContent)
@@ -112,8 +106,7 @@ public static class UserRoleEndpoint
             var success = await appService.BulkUploadAsync(file, ct);
             return notify.CustomResponse(success);
         })
-        //.CustomAuthorize("Admin,BackOffice", "UserRoles", "BulkUpload")
-        .AllowAnonymous()
+        .CustomAuthorize("Admin,BackOffice", "UserRoles", "BulkUpload")
         .WithName("BulkUploadUserRole")
         .WithSummary("Swagger.Endpoint.UserRole.BulkUpload.Summary")
         .DisableAntiforgery()

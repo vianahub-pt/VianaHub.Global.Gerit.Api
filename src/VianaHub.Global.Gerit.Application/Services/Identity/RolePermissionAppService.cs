@@ -105,11 +105,11 @@ public class RolePermissionAppService : IRolePermissionAppService
         await _repository.DeleteAsync(tenantId, roleId, resourceId, actionId, ct);
     }
 
-    public async Task<RolePermissionResponse> GetByIdAsync(int roleId, int resourceId, int actionId, CancellationToken ct)
+    public async Task<RolePermissionDetailResponse> GetByIdAsync(int roleId, int resourceId, int actionId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var entity = await _repository.GetByIdAsync(tenantId, roleId, resourceId, actionId, ct);
-        return _mapper.Map<RolePermissionResponse>(entity);
+        return _mapper.Map<RolePermissionDetailResponse>(entity);
     }
 
     public async Task<IList<RolePermissionResponse>> GetByRoleAsync(int roleId, CancellationToken ct)

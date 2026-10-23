@@ -49,22 +49,22 @@ public class UserPreferencesAppService : IUserPreferencesAppService
         return _mapper.Map<IEnumerable<UserPreferencesResponse>>(entities);
     }
 
-    public async Task<UserPreferencesResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<UserPreferencesDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Update.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<UserPreferencesResponse>(entity);
+        return _mapper.Map<UserPreferencesDetailResponse>(entity);
     }
 
     public async Task<UserPreferencesResponse> GetByUserAsync(int userId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var entity = await _repo.GetByUserAsync(tenantId, userId, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Update.ResourceNotFound"), 410);
             return null;
