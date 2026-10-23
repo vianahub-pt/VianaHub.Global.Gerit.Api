@@ -2,7 +2,6 @@ using AutoMapper;
 using System.Globalization;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientAddress;
-using VianaHub.Global.Gerit.Application.Dtos.Response.Business.EmployeeAddress;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Services;
 using VianaHub.Global.Gerit.Domain.Tools.Pagination;
