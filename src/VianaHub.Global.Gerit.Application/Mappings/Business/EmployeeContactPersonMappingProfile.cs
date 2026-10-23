@@ -18,7 +18,7 @@ public class EmployeeContactPersonsMappingProfile : Profile
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
 
         CreateMap<EmployeeContactPersonsEntity, EmployeeContactPersonDetailResponse>();
-        
+
         CreateMap<ListPage<EmployeeContactPersonsEntity>, ListPageResponse<EmployeeContactPersonResponse>>();
     }
 }
