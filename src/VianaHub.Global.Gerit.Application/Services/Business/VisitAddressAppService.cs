@@ -53,7 +53,7 @@ public class VisitAddressAppService : IVisitAddressAppService
         var entities = await _repo.GetAllAsync(visitId, ct);
         if (entities == null)
             return Enumerable.Empty<VisitAddressResponse>();
-        
+
         return _mapper.Map<IEnumerable<VisitAddressResponse>>(entities);
     }
 

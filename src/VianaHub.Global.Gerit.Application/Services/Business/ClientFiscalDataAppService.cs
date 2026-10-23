@@ -40,10 +40,10 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
     public async Task<IEnumerable<ClientFiscalDataResponse>> GetAllAsync(int clientId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(clientId, ct);
-        
+
         return _mapper.Map<IEnumerable<ClientFiscalDataResponse>>(entities);
     }
-    
+
     public async Task<ClientFiscalDataDetailResponse> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
@@ -54,7 +54,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
         }
         return _mapper.Map<ClientFiscalDataDetailResponse>(entity);
     }
-    
+
     public async Task<ListPageResponse<ClientFiscalDataResponse>> GetPagedAsync(int clientId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
