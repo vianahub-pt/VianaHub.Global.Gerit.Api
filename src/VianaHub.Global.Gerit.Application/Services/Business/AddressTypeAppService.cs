@@ -58,7 +58,7 @@ public class AddressTypeAppService : IAddressTypeAppService
     public async Task<AddressTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.AddressType.GetById.ResourceNotFound"), 410);
             return null;
@@ -95,7 +95,7 @@ public class AddressTypeAppService : IAddressTypeAppService
     public async Task<bool> UpdateAsync(int id, UpdateAddressTypeRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.AddressType.Update.ResourceNotFound"), 410);
             return false;
@@ -140,7 +140,7 @@ public class AddressTypeAppService : IAddressTypeAppService
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.AddressType.Deactivate.ResourceNotFound"), 410);
             return false;

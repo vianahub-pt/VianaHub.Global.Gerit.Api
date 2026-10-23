@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 
 public interface IActionDataRepository
 {
-    Task<ActionEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<ActionEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<ActionEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<ActionEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

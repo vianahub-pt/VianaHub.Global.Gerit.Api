@@ -8,7 +8,7 @@ public interface IRolePermissionAppService
 {
     Task<RolePermissionResponse> CreateAsync(CreateRolePermissionRequest request, CancellationToken ct);
     Task DeleteAsync(int roleId, int resourceId, int actionId, CancellationToken ct);
-    Task<RolePermissionResponse> GetByIdAsync(int roleId, int resourceId, int actionId, CancellationToken ct);
+    Task<RolePermissionDetailResponse> GetByIdAsync(int roleId, int resourceId, int actionId, CancellationToken ct);
     Task<IList<RolePermissionResponse>> GetByRoleAsync(int roleId, CancellationToken ct);
     Task<IList<RolePermissionResponse>> GetByResourceAsync(int resourceId, CancellationToken ct);
     Task<IList<RolePermissionResponse>> GetAllAsync(CancellationToken ct);

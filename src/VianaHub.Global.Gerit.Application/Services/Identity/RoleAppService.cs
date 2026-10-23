@@ -51,10 +51,10 @@ public class RoleAppService : IRoleAppService
         return _mapper.Map<IEnumerable<RoleResponse>>(entities);
     }
     
-    public async Task<RoleResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<RoleDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return _mapper.Map<RoleResponse>(entity);
+        return _mapper.Map<RoleDetailResponse>(entity);
     }
     
     public async Task<ListPageResponse<RoleResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)

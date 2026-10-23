@@ -54,7 +54,7 @@ public class VehicleAppService : IVehicleAppService
     public async Task<VehicleDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Vehicle.GetById.ResourceNotFound"), 410);
             return null;

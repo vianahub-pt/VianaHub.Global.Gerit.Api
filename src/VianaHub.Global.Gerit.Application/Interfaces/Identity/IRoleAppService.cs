@@ -8,7 +8,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Identity;
 public interface IRoleAppService
 {
     Task<IEnumerable<RoleResponse>> GetAllAsync(CancellationToken ct);
-    Task<RoleResponse> GetByIdAsync(int id, CancellationToken ct);
+    Task<RoleDetailResponse> GetByIdAsync(int id, CancellationToken ct);
     Task<ListPageResponse<RoleResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct);
     Task<int> CreateAsync(CreateRoleRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int id, UpdateRoleRequest request, CancellationToken ct);

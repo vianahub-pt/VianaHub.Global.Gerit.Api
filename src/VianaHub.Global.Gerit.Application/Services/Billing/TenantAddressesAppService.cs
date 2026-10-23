@@ -46,7 +46,7 @@ public class TenantAddressesAppService : ITenantAddressesAppService
     public async Task<TenantAddressDetailResponse> GetByIdAsync(int tenantId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(tenantId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.TenantAddress.GetById.ResourceNotFound"), 410);
             return null;
@@ -97,7 +97,7 @@ public class TenantAddressesAppService : ITenantAddressesAppService
     public async Task<bool> UpdateAsync(int tenantId, int id, UpdateTenantAddressRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(tenantId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.TenantAddress.Update.ResourceNotFound"), 410);
             return false;
@@ -151,7 +151,7 @@ public class TenantAddressesAppService : ITenantAddressesAppService
     public async Task<bool> DeactivateAsync(int tenantId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(tenantId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.TenantAddress.Deactivate.ResourceNotFound"), 410);
             return false;

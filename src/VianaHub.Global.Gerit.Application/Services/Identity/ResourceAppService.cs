@@ -50,15 +50,15 @@ public class ResourceAppService : IResourceAppService
         var entities = await _repo.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<ResourceResponse>>(entities);
     }
-    public async Task<ResourceResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ResourceDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Resource.Update.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<ResourceResponse>(entity);
+        return _mapper.Map<ResourceDetailResponse>(entity);
     }
     public async Task<ListPageResponse<ResourceResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
@@ -84,7 +84,7 @@ public class ResourceAppService : IResourceAppService
     public async Task<bool> UpdateAsync(int id, UpdateResourceRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Resource.Update.ResourceNotFound"), 410);
             return false;
@@ -108,7 +108,7 @@ public class ResourceAppService : IResourceAppService
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Resource.Deactivate.ResourceNotFound"), 410);
             return false;

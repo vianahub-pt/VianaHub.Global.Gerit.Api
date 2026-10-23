@@ -47,11 +47,11 @@ public class UserRoleAppService : IUserRoleAppService
         _fileValidation = fileValidation;
     }
 
-    public async Task<UserRoleResponse> GetByIdAsync(int userId, int roleId, CancellationToken ct)
+    public async Task<UserRoleDetailResponse> GetByIdAsync(int userId, int roleId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var entity = await _repository.GetByIdAsync(tenantId, userId, roleId, ct);
-        return _mapper.Map<UserRoleResponse>(entity);
+        return _mapper.Map<UserRoleDetailResponse>(entity);
     }
 
     public async Task<IList<UserRoleResponse>> GetByUserAsync(int userId, CancellationToken ct)

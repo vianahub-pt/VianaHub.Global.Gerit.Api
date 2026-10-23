@@ -54,10 +54,10 @@ public class UserAppService : IUserAppService
         return _mapper.Map<IEnumerable<UserResponse>>(entities);
     }
 
-    public async Task<UserResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<UserDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return _mapper.Map<UserResponse>(entity);
+        return _mapper.Map<UserDetailResponse>(entity);
     }
 
     public async Task<ListPageResponse<UserResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)

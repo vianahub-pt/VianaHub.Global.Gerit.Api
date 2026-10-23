@@ -47,7 +47,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
     public async Task<ClientFiscalDataDetailResponse> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.GetById.ResourceNotFound"), 410);
             return null;
@@ -100,7 +100,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
     public async Task<bool> UpdateAsync(int clientId, int id, UpdateClientFiscalDataRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.Update.ResourceNotFound"), 410);
             return false;
@@ -137,7 +137,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
     public async Task<bool> DeactivateAsync(int clientId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.Deactivate.ResourceNotFound"), 410);
             return false;

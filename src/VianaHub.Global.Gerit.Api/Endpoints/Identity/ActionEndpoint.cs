@@ -57,7 +57,6 @@ public static class ActionEndpoint
             return notify.CustomResponse(new GenericResponse { Id = id }, 201);
         })
         .CustomAuthorize("Admin,BackOffice", "Actions", "Create")
-        .AllowAnonymous()
         .WithName("CreateAction")
         .WithSummary("Swagger.Endpoint.Action.Create.Summary")
         .Produces<GenericResponse>(StatusCodes.Status201Created)
@@ -129,8 +128,7 @@ public static class ActionEndpoint
             var success = await appService.BulkUploadAsync(file, ct);
             return notify.CustomResponse(success);
         })
-        //.CustomAuthorize("Admin,BackOffice,Manager", "Plans", "BulkUpload")
-        .AllowAnonymous()
+        .CustomAuthorize("Admin,BackOffice,Manager", "Actions", "BulkUpload")
         .WithName("BulkUploadAction")
         .WithSummary("Swagger.Endpoint.Action.BulkUpload.Summary")
         .DisableAntiforgery()

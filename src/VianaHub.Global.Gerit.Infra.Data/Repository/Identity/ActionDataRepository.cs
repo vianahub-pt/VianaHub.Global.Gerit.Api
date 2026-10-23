@@ -16,7 +16,7 @@ public class ActionDataRepository : IActionDataRepository
         _context = context;
     }
 
-    public async Task<ActionEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ActionEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<ActionEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }

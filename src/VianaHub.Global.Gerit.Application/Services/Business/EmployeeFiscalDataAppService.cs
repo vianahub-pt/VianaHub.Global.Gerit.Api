@@ -47,7 +47,7 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
     public async Task<EmployeeFiscalDataDetailResponse> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(employeeId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeFiscalData.GetById.ResourceNotFound"), 410);
             return null;
@@ -100,7 +100,7 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
     public async Task<bool> UpdateAsync(int employeeId, int id, UpdateEmployeeFiscalDataRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(employeeId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeFiscalData.Update.ResourceNotFound"), 410);
             return false;
@@ -137,7 +137,7 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
     public async Task<bool> DeactivateAsync(int employeeId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(employeeId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeFiscalData.Deactivate.ResourceNotFound"), 410);
             return false;

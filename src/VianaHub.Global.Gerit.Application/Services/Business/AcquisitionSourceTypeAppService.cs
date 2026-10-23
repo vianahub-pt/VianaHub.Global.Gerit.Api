@@ -55,7 +55,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
     public async Task<AcquisitionSourceTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.AcquisitionSourceType.GetById.ResourceNotFound"), 410);
             return null;
@@ -91,7 +91,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
     public async Task<bool> UpdateAsync(int id, UpdateAcquisitionSourceTypeRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.AcquisitionSourceType.Update.ResourceNotFound"), 410);
             return false;
@@ -128,7 +128,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.AcquisitionSourceType.Deactivate.ResourceNotFound"), 410);
             return false;

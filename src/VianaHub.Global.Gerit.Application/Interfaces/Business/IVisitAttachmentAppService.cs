@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Business;
 
 public interface IVisitAttachmentAppService
 {
-    Task<VisitAttachmentResponse> GetByIdAsync(int visitId, int id, CancellationToken ct);
+    Task<VisitAttachmentDetailResponse> GetByIdAsync(int visitId, int id, CancellationToken ct);
     Task<VisitAttachmentResponse> GetByPublicIdAsync(Guid publicId, CancellationToken ct);
     Task<VisitAttachmentDetailResponse> GetDetailByIdAsync(int visitId, int id, CancellationToken ct);
     Task<VisitAttachmentDetailResponse> GetDetailByPublicIdAsync(Guid publicId, CancellationToken ct);

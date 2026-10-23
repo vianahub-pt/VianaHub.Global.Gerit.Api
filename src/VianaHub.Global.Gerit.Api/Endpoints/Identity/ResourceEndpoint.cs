@@ -125,8 +125,7 @@ public static class ResourceEndpoint
             var success = await appService.BulkUploadAsync(file, ct);
             return notify.CustomResponse(success);
         })
-        //.CustomAuthorize("Admin,BackOffice,Manager", "Resources", "BulkUpload")
-        .AllowAnonymous()
+        .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "BulkUpload")
         .WithName("BulkUploadResources")
         .WithSummary("Swagger.Endpoint.Resource.BulkUpload.Summary")
         .DisableAntiforgery()

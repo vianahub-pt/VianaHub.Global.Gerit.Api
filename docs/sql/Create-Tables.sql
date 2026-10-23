@@ -635,183 +635,181 @@ CONSTRAINT CK_JobDefinitions_MaxRetries CHECK (MaxRetries >= 0)
 );
 GO
 CREATE TABLE dbo.Clients (
-Id                          INT IDENTITY(1,1) NOT NULL,
-TenantId                    INT               NOT NULL,
-PartyTypeId                 TINYINT           NOT NULL,
-StatusDefinitionId          INT               NOT NULL,
-StatusDomainId              INT               NOT NULL,
-AcquisitionSourceTypeId     INT               NOT NULL,
-Name                        NVARCHAR(500)     NOT NULL,
-PhoneNumber                 NVARCHAR(50)          NULL,
-CellPhoneNumber             NVARCHAR(50)          NULL,
-IsCellPhoneWhatsapp         BIT               NOT NULL CONSTRAINT DF_Clients_IsCellPhoneWhatsapp  DEFAULT 0,
-Email                       NVARCHAR(320)         NULL,
-ImageUrl    	            NVARCHAR(500)         NULL,
-WebsiteUrl                  NVARCHAR(500)         NULL,
-
-BirthDate                   DATE                  NULL,
-Gender                      NVARCHAR(30)          NULL,
-Nationality                 NVARCHAR(100)         NULL,
-
-CompanyRegistrationNumber   NVARCHAR(100)          NULL,
-EconomicActivityCode        NVARCHAR(20)           NULL,
-NumberOfEmployees           INT                    NULL,
-
-Note                        NVARCHAR(1000)        NULL,
-
-IsActive                    BIT               NOT NULL CONSTRAINT DF_Clients_IsActive DEFAULT 1,
-IsDeleted                   BIT               NOT NULL CONSTRAINT DF_Clients_IsDeleted DEFAULT 0,
-CreatedBy                   INT               NOT NULL, 
-CreatedAt                   DATETIME2(7)      NOT NULL CONSTRAINT DF_Clients_CreatedAt DEFAULT SYSUTCDATETIME(),
-ModifiedBy                  INT                    NULL,
-ModifiedAt                  DATETIME2(7)           NULL,
-CONSTRAINT PK_Clients PRIMARY KEY CLUSTERED (Id),
-CONSTRAINT UQ_Clients_Id_Tenant UNIQUE (Id, TenantId),
-CONSTRAINT CK_Clients_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
-CONSTRAINT CK_Clients_CellPhoneWhatsapp CHECK (IsCellPhoneWhatsapp = 0 OR NULLIF(LTRIM(RTRIM(CellPhoneNumber)), N'') IS NOT NULL),
-CONSTRAINT CK_Clients_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
-CONSTRAINT CK_Clients_NumberOfEmployees CHECK (NumberOfEmployees IS NULL OR NumberOfEmployees >= 0),
-CONSTRAINT CK_Clients_BirthDate CHECK (BirthDate IS NULL OR BirthDate <= CAST(SYSUTCDATETIME() AS DATE)),
-CONSTRAINT CK_Clients_PartyTypeData
-    CHECK (
-        (
-            PartyTypeId = 1
-            AND CompanyRegistrationNumber IS NULL
-            AND EconomicActivityCode IS NULL
-            AND NumberOfEmployees IS NULL
-        )
-        OR
-        (
-            PartyTypeId = 2
-            AND BirthDate IS NULL
-            AND Gender IS NULL
-            AND Nationality IS NULL
-        )
-    ),
-CONSTRAINT FK_Clients_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
-CONSTRAINT FK_Clients_PartyType FOREIGN KEY (PartyTypeId) REFERENCES dbo.PartyTypes(Id),
-CONSTRAINT FK_Clients_StatusDefinition FOREIGN KEY (StatusDefinitionId, TenantId, StatusDomainId) REFERENCES dbo.StatusDefinitions (Id, TenantId, StatusDomainId),
-CONSTRAINT FK_Clients_AcquisitionSourceType FOREIGN KEY (AcquisitionSourceTypeId) REFERENCES dbo.AcquisitionSourceTypes(Id)
-
-
-);
-GO
-CREATE TABLE dbo.ClientAddresses (
-Id			    INT IDENTITY(1,1)	NOT NULL,
-TenantId	    INT					NOT NULL,
-ClientId	    INT					NOT NULL,
-AddressTypeId   INT                 NOT NULL,
-CountryCode		CHAR(2)				NOT NULL DEFAULT 'PT',
-Street			NVARCHAR(200)		NOT NULL,
-Neighborhood    NVARCHAR(100)           NULL,
-City			NVARCHAR(100)		NOT NULL,
-District		NVARCHAR(100)		    NULL,
-PostalCode		NVARCHAR(20)		NOT NULL,
-StreetNumber    NVARCHAR(20)            NULL,
-Complement      NVARCHAR(100)           NULL,
-Latitude        DECIMAL(9,6)            NULL,
-Longitude       DECIMAL(9,6)            NULL,
-Note            NVARCHAR(500)           NULL,
-IsPrimary		BIT					NOT NULL DEFAULT 0,
-IsActive		BIT					NOT NULL DEFAULT 1,
-IsDeleted		BIT					NOT NULL DEFAULT 0,
-CreatedBy		INT         		NOT NULL,
-CreatedAt		DATETIME2(7)		NOT NULL DEFAULT SYSUTCDATETIME(),
-ModifiedBy	    INT         		    NULL,
-ModifiedAt		DATETIME2(7)			NULL,
-CONSTRAINT PK_ClientAddresses PRIMARY KEY CLUSTERED (Id),
-CONSTRAINT UQ_ClientAddresses_Id_Tenant UNIQUE (Id, TenantId),
-CONSTRAINT CK_ClientAddresses_Primary_Active CHECK (IsPrimary = 0 OR IsActive = 1),
-CONSTRAINT CK_ClientAddresses_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
-CONSTRAINT CK_ClientAddresses_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
-CONSTRAINT CK_ClientAddresses_Latitude CHECK (Latitude IS NULL OR Latitude BETWEEN -90 AND 90),
-CONSTRAINT CK_ClientAddresses_Longitude CHECK (Longitude IS NULL OR Longitude BETWEEN -180 AND 180),
-CONSTRAINT CK_ClientAddresses_Coordinates CHECK ((Latitude IS NULL AND Longitude IS NULL) OR (Latitude IS NOT NULL AND Longitude IS NOT NULL)),
-CONSTRAINT FK_ClientAddresses_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
-CONSTRAINT FK_ClientAddresses_Client FOREIGN KEY (ClientId, TenantId) REFERENCES dbo.Clients(Id, TenantId),
-CONSTRAINT FK_ClientAddresses_AddressType FOREIGN KEY (AddressTypeId) REFERENCES dbo.AddressTypes(Id)
+	Id                          INT IDENTITY(1,1) NOT NULL,
+	TenantId                    INT               NOT NULL,
+	PartyTypeId                 TINYINT           NOT NULL,
+	StatusDefinitionId          INT               NOT NULL,
+	StatusDomainId              INT               NOT NULL,
+	AcquisitionSourceTypeId     INT               NOT NULL,
+	Name                        NVARCHAR(500)     NOT NULL,
+	PhoneNumber                 NVARCHAR(50)          NULL,
+	CellPhoneNumber             NVARCHAR(50)          NULL,
+	IsCellPhoneWhatsapp         BIT               NOT NULL CONSTRAINT DF_Clients_IsCellPhoneWhatsapp  DEFAULT 0,
+	Email                       NVARCHAR(320)         NULL,
+	ImageUrl    	            NVARCHAR(500)         NULL,
+	WebsiteUrl                  NVARCHAR(500)         NULL,
+	
+	BirthDate                   DATE                  NULL,
+	Gender                      NVARCHAR(30)          NULL,
+	Nationality                 NVARCHAR(100)         NULL,
+	
+	CompanyRegistrationNumber   NVARCHAR(100)          NULL,
+	EconomicActivityCode        NVARCHAR(20)           NULL,
+	NumberOfEmployees           INT                    NULL,
+	
+	Note                        NVARCHAR(1000)        NULL,
+	
+	IsActive                    BIT               NOT NULL CONSTRAINT DF_Clients_IsActive DEFAULT 1,
+	IsDeleted                   BIT               NOT NULL CONSTRAINT DF_Clients_IsDeleted DEFAULT 0,
+	CreatedBy                   INT               NOT NULL, 
+	CreatedAt                   DATETIME2(7)      NOT NULL CONSTRAINT DF_Clients_CreatedAt DEFAULT SYSUTCDATETIME(),
+	ModifiedBy                  INT                    NULL,
+	ModifiedAt                  DATETIME2(7)           NULL,
+	CONSTRAINT PK_Clients PRIMARY KEY CLUSTERED (Id),
+	CONSTRAINT UQ_Clients_Id_Tenant UNIQUE (Id, TenantId),
+	CONSTRAINT CK_Clients_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
+	CONSTRAINT CK_Clients_CellPhoneWhatsapp CHECK (IsCellPhoneWhatsapp = 0 OR NULLIF(LTRIM(RTRIM(CellPhoneNumber)), N'') IS NOT NULL),
+	CONSTRAINT CK_Clients_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
+	CONSTRAINT CK_Clients_NumberOfEmployees CHECK (NumberOfEmployees IS NULL OR NumberOfEmployees >= 0),
+	CONSTRAINT CK_Clients_BirthDate CHECK (BirthDate IS NULL OR BirthDate <= CAST(SYSUTCDATETIME() AS DATE)),
+	CONSTRAINT CK_Clients_PartyTypeData
+	    CHECK (
+	        (
+	            PartyTypeId = 1
+	            AND CompanyRegistrationNumber IS NULL
+	            AND EconomicActivityCode IS NULL
+	            AND NumberOfEmployees IS NULL
+	        )
+	        OR
+	        (
+	            PartyTypeId = 2
+	            AND BirthDate IS NULL
+	            AND Gender IS NULL
+	            AND Nationality IS NULL
+	        )
+	    ),
+	CONSTRAINT FK_Clients_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
+	CONSTRAINT FK_Clients_PartyType FOREIGN KEY (PartyTypeId) REFERENCES dbo.PartyTypes(Id),
+	CONSTRAINT FK_Clients_StatusDefinition FOREIGN KEY (StatusDefinitionId, TenantId, StatusDomainId) REFERENCES dbo.StatusDefinitions (Id, TenantId, StatusDomainId),
+	CONSTRAINT FK_Clients_AcquisitionSourceType FOREIGN KEY (AcquisitionSourceTypeId) REFERENCES dbo.AcquisitionSourceTypes(Id)
 );
 GO
 CREATE TABLE dbo.ClientContactPersons (
-Id			        INT IDENTITY(1,1)	NOT NULL,
-TenantId	        INT					NOT NULL,
-ClientId	        INT					NOT NULL,
-JobTitle            NVARCHAR(150)           NULL,
-Department          NVARCHAR(150)           NULL,
-Name		        NVARCHAR(150)		NOT NULL,
-PhoneNumber         NVARCHAR(50)            NULL,
-CellPhoneNumber     NVARCHAR(50)            NULL,
-IsCellPhoneWhatsapp BIT               NOT NULL CONSTRAINT DF_ClientContactPersons_IsCellPhoneWhatsapp  DEFAULT 0,
-Email		        NVARCHAR(255)		    NULL,
-IsPrimary	        BIT					NOT NULL DEFAULT 0,
-IsActive	        BIT					NOT NULL DEFAULT 1,
-IsDeleted	        BIT					NOT NULL DEFAULT 0,
-CreatedBy	        INT         		NOT NULL,
-CreatedAt	        DATETIME2(7)		NOT NULL DEFAULT SYSUTCDATETIME(),
-ModifiedBy	        INT         		    NULL,
-ModifiedAt	        DATETIME2(7)			NULL,
-CONSTRAINT PK_ClientContactPersons PRIMARY KEY CLUSTERED (Id),
-CONSTRAINT CK_ClientContactPersons_Primary_Active CHECK (IsPrimary = 0 OR IsActive = 1),
-CONSTRAINT CK_ClientContactPersons_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
-CONSTRAINT CK_ClientContactPersons_CellPhoneWhatsapp CHECK (IsCellPhoneWhatsapp = 0 OR NULLIF(LTRIM(RTRIM(CellPhoneNumber)), N'') IS NOT NULL),
-CONSTRAINT CK_ClientContactPersons_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
-CONSTRAINT FK_ClientContactPersons_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
-CONSTRAINT FK_ClientContactPersons_Client FOREIGN KEY (ClientId, TenantId) REFERENCES dbo.Clients(Id, TenantId)
+	Id			        INT IDENTITY(1,1)	NOT NULL,
+	TenantId	        INT					NOT NULL,
+	ClientId	        INT					NOT NULL,
+	JobTitle            NVARCHAR(150)           NULL,
+	Department          NVARCHAR(150)           NULL,
+	Name		        NVARCHAR(150)		NOT NULL,
+	PhoneNumber         NVARCHAR(50)            NULL,
+	CellPhoneNumber     NVARCHAR(50)            NULL,
+	IsCellPhoneWhatsapp BIT               NOT NULL CONSTRAINT DF_ClientContactPersons_IsCellPhoneWhatsapp  DEFAULT 0,
+	Email		        NVARCHAR(255)		    NULL,
+	IsPrimary	        BIT					NOT NULL DEFAULT 0,
+	IsActive	        BIT					NOT NULL DEFAULT 1,
+	IsDeleted	        BIT					NOT NULL DEFAULT 0,
+	CreatedBy	        INT         		NOT NULL,
+	CreatedAt	        DATETIME2(7)		NOT NULL DEFAULT SYSUTCDATETIME(),
+	ModifiedBy	        INT         		    NULL,
+	ModifiedAt	        DATETIME2(7)			NULL,
+	CONSTRAINT PK_ClientContactPersons PRIMARY KEY CLUSTERED (Id),
+	CONSTRAINT CK_ClientContactPersons_Primary_Active CHECK (IsPrimary = 0 OR IsActive = 1),
+	CONSTRAINT CK_ClientContactPersons_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
+	CONSTRAINT CK_ClientContactPersons_CellPhoneWhatsapp CHECK (IsCellPhoneWhatsapp = 0 OR NULLIF(LTRIM(RTRIM(CellPhoneNumber)), N'') IS NOT NULL),
+	CONSTRAINT CK_ClientContactPersons_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
+	CONSTRAINT FK_ClientContactPersons_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
+	CONSTRAINT FK_ClientContactPersons_Client FOREIGN KEY (ClientId, TenantId) REFERENCES dbo.Clients(Id, TenantId)
+);
+GO
+CREATE TABLE dbo.ClientAddresses (
+	Id			    INT IDENTITY(1,1)	NOT NULL,
+	TenantId	    INT					NOT NULL,
+	ClientId	    INT					NOT NULL,
+	AddressTypeId   INT                 NOT NULL,
+	CountryCode		CHAR(2)				NOT NULL DEFAULT 'PT',
+	Street			NVARCHAR(200)		NOT NULL,
+	Neighborhood    NVARCHAR(100)           NULL,
+	City			NVARCHAR(100)		NOT NULL,
+	District		NVARCHAR(100)		    NULL,
+	PostalCode		NVARCHAR(20)		NOT NULL,
+	StreetNumber    NVARCHAR(20)            NULL,
+	Complement      NVARCHAR(100)           NULL,
+	Latitude        DECIMAL(9,6)            NULL,
+	Longitude       DECIMAL(9,6)            NULL,
+	Note            NVARCHAR(500)           NULL,
+	IsPrimary		BIT					NOT NULL DEFAULT 0,
+	IsActive		BIT					NOT NULL DEFAULT 1,
+	IsDeleted		BIT					NOT NULL DEFAULT 0,
+	CreatedBy		INT         		NOT NULL,
+	CreatedAt		DATETIME2(7)		NOT NULL DEFAULT SYSUTCDATETIME(),
+	ModifiedBy	    INT         		    NULL,
+	ModifiedAt		DATETIME2(7)			NULL,
+	CONSTRAINT PK_ClientAddresses PRIMARY KEY CLUSTERED (Id),
+	CONSTRAINT UQ_ClientAddresses_Id_Tenant UNIQUE (Id, TenantId),
+	CONSTRAINT CK_ClientAddresses_Primary_Active CHECK (IsPrimary = 0 OR IsActive = 1),
+	CONSTRAINT CK_ClientAddresses_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
+	CONSTRAINT CK_ClientAddresses_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
+	CONSTRAINT CK_ClientAddresses_Latitude CHECK (Latitude IS NULL OR Latitude BETWEEN -90 AND 90),
+	CONSTRAINT CK_ClientAddresses_Longitude CHECK (Longitude IS NULL OR Longitude BETWEEN -180 AND 180),
+	CONSTRAINT CK_ClientAddresses_Coordinates CHECK ((Latitude IS NULL AND Longitude IS NULL) OR (Latitude IS NOT NULL AND Longitude IS NOT NULL)),
+	CONSTRAINT FK_ClientAddresses_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
+	CONSTRAINT FK_ClientAddresses_Client FOREIGN KEY (ClientId, TenantId) REFERENCES dbo.Clients(Id, TenantId),
+	CONSTRAINT FK_ClientAddresses_AddressType FOREIGN KEY (AddressTypeId) REFERENCES dbo.AddressTypes(Id)
 );
 GO
 CREATE TABLE dbo.ClientDocuments (
-Id                  INT IDENTITY(1,1) NOT NULL,                         -- Identificador do documento, chave primária
-TenantId            INT               NOT NULL,                         -- Tenant dono do documento
-ClientId            INT               NOT NULL,                         -- FK para Clients
-DocumentTypeId      INT               NOT NULL,                         -- FK para DocumentTypes
-DocumentNumber      NVARCHAR(100)     NOT NULL,                         -- Número do documento
-IssuingCountryCode  CHAR(2)           NOT NULL,                         -- Código do país emissor (opcional)
-IssuedAt            DATE                  NULL,                         -- Data de emissão (opcional)
-ExpiresAt           DATE                  NULL,                         -- Data de expiração (opcional)
-IsPrimary           BIT               NOT NULL DEFAULT 0,               -- Indica se é o documento principal do cliente
-IsActive            BIT               NOT NULL DEFAULT 1,               -- Indica se o documento está ativo
-IsDeleted           BIT               NOT NULL DEFAULT 0,               -- Indica se o documento foi excluído (soft delete)
-CreatedBy           INT               NOT NULL,                         -- Usuário criador
-CreatedAt           DATETIME2(7)      NOT NULL DEFAULT SYSUTCDATETIME(),   -- Data de criação
-ModifiedBy          INT                   NULL,                         -- Usuário modificador
-ModifiedAt          DATETIME2(7)          NULL,                         -- Data de modificação
-CONSTRAINT PK_ClientDocuments PRIMARY KEY CLUSTERED (Id),
-CONSTRAINT UQ_ClientDocuments_Id_Tenant UNIQUE (Id, TenantId),
-CONSTRAINT CK_ClientDocuments_Primary_Active CHECK (IsPrimary = 0 OR IsActive = 1),
-CONSTRAINT CK_ClientDocuments_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
-CONSTRAINT CK_ClientDocuments_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
-CONSTRAINT CK_ClientDocuments_Dates
-CHECK (
-ExpiresAt IS NULL
-OR IssuedAt IS NULL
-OR ExpiresAt >= IssuedAt
-),
-CONSTRAINT FK_ClientDocuments_Client FOREIGN KEY (ClientId, TenantId) REFERENCES dbo.Clients(Id, TenantId),
-CONSTRAINT FK_ClientDocuments_DocumentType FOREIGN KEY (DocumentTypeId) REFERENCES dbo.DocumentTypes(Id)
+	Id                  INT IDENTITY(1,1) NOT NULL,                         -- Identificador do documento, chave primária
+	TenantId            INT               NOT NULL,                         -- Tenant dono do documento
+	ClientId            INT               NOT NULL,                         -- FK para Clients
+	DocumentTypeId      INT               NOT NULL,                         -- FK para DocumentTypes
+	DocumentNumber      NVARCHAR(100)     NOT NULL,                         -- Número do documento
+	IssuingCountryCode  CHAR(2)           NOT NULL,                         -- Código do país emissor (opcional)
+	IssuedAt            DATE                  NULL,                         -- Data de emissão (opcional)
+	ExpiresAt           DATE                  NULL,                         -- Data de expiração (opcional)
+	IsPrimary           BIT               NOT NULL DEFAULT 0,               -- Indica se é o documento principal do cliente
+	IsActive            BIT               NOT NULL DEFAULT 1,               -- Indica se o documento está ativo
+	IsDeleted           BIT               NOT NULL DEFAULT 0,               -- Indica se o documento foi excluído (soft delete)
+	CreatedBy           INT               NOT NULL,                         -- Usuário criador
+	CreatedAt           DATETIME2(7)      NOT NULL DEFAULT SYSUTCDATETIME(),   -- Data de criação
+	ModifiedBy          INT                   NULL,                         -- Usuário modificador
+	ModifiedAt          DATETIME2(7)          NULL,                         -- Data de modificação
+	CONSTRAINT PK_ClientDocuments PRIMARY KEY CLUSTERED (Id),
+	CONSTRAINT UQ_ClientDocuments_Id_Tenant UNIQUE (Id, TenantId),
+	CONSTRAINT CK_ClientDocuments_Primary_Active CHECK (IsPrimary = 0 OR IsActive = 1),
+	CONSTRAINT CK_ClientDocuments_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
+	CONSTRAINT CK_ClientDocuments_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
+	CONSTRAINT CK_ClientDocuments_Dates
+	CHECK (
+	ExpiresAt IS NULL
+	OR IssuedAt IS NULL
+	OR ExpiresAt >= IssuedAt
+	),
+	CONSTRAINT FK_ClientDocuments_Client FOREIGN KEY (ClientId, TenantId) REFERENCES dbo.Clients(Id, TenantId),
+	CONSTRAINT FK_ClientDocuments_DocumentType FOREIGN KEY (DocumentTypeId) REFERENCES dbo.DocumentTypes(Id)
 );
 GO
 CREATE TABLE dbo.ClientFiscalData (
-Id                      INT IDENTITY(1,1) NOT NULL,
-TenantId                INT               NOT NULL,
-ClientId                INT               NOT NULL,
-TaxNumber               NVARCHAR(20)      NOT NULL,
-VatNumber               NVARCHAR(20)          NULL,
-FiscalCountry           CHAR(2)           NOT NULL DEFAULT 'PT',
-IsVatRegistered         BIT               NOT NULL DEFAULT 0,
-IBAN                    NVARCHAR(34)           NULL,
-FiscalEmail             NVARCHAR(255)         NULL,
-IsActive                BIT               NOT NULL DEFAULT 1,
-IsDeleted               BIT               NOT NULL DEFAULT 0,
-CreatedBy               INT               NOT NULL,
-CreatedAt               DATETIME2(7)      NOT NULL DEFAULT SYSUTCDATETIME(),
-ModifiedBy              INT                   NULL,
-ModifiedAt              DATETIME2(7)          NULL,
-CONSTRAINT PK_ClientFiscalData PRIMARY KEY CLUSTERED (Id),
-CONSTRAINT CK_ClientFiscalData_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
-CONSTRAINT CK_ClientFiscalData_VatNumber CHECK (IsVatRegistered = 0 OR NULLIF(LTRIM(RTRIM(VatNumber)), N'') IS NOT NULL),
-CONSTRAINT CK_ClientFiscalData_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
-CONSTRAINT FK_ClientFiscalData_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
-CONSTRAINT FK_ClientFiscalData_Client FOREIGN KEY (ClientId, TenantId) REFERENCES dbo.Clients(Id, TenantId)
+	Id                      INT IDENTITY(1,1) NOT NULL,
+	TenantId                INT               NOT NULL,
+	ClientId                INT               NOT NULL,
+	TaxNumber               NVARCHAR(20)      NOT NULL,
+	VatNumber               NVARCHAR(20)          NULL,
+	FiscalCountry           CHAR(2)           NOT NULL DEFAULT 'PT',
+	IsVatRegistered         BIT               NOT NULL DEFAULT 0,
+	IBAN                    NVARCHAR(34)           NULL,
+	FiscalEmail             NVARCHAR(255)         NULL,
+	IsActive                BIT               NOT NULL DEFAULT 1,
+	IsDeleted               BIT               NOT NULL DEFAULT 0,
+	CreatedBy               INT               NOT NULL,
+	CreatedAt               DATETIME2(7)      NOT NULL DEFAULT SYSUTCDATETIME(),
+	ModifiedBy              INT                   NULL,
+	ModifiedAt              DATETIME2(7)          NULL,
+	CONSTRAINT PK_ClientFiscalData PRIMARY KEY CLUSTERED (Id),
+	CONSTRAINT CK_ClientFiscalData_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
+	CONSTRAINT CK_ClientFiscalData_VatNumber CHECK (IsVatRegistered = 0 OR NULLIF(LTRIM(RTRIM(VatNumber)), N'') IS NOT NULL),
+	CONSTRAINT CK_ClientFiscalData_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
+	CONSTRAINT FK_ClientFiscalData_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
+	CONSTRAINT FK_ClientFiscalData_Client FOREIGN KEY (ClientId, TenantId) REFERENCES dbo.Clients(Id, TenantId)
 );
 GO
 CREATE TABLE dbo.Teams (

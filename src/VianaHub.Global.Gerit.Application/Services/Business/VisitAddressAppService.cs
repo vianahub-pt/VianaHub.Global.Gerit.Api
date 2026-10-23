@@ -60,7 +60,7 @@ public class VisitAddressAppService : IVisitAddressAppService
     public async Task<VisitAddressDetailResponse> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitAddress.GetById.ResourceNotFound"), 410);
             return null;

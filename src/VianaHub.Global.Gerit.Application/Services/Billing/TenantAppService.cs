@@ -52,10 +52,10 @@ public class TenantAppService : ITenantAppService
         return _mapper.Map<IEnumerable<TenantResponse>>(entities);
     }
     
-    public async Task<TenantResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<TenantDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return _mapper.Map<TenantResponse>(entity);
+        return _mapper.Map<TenantDetailResponse>(entity);
     }
     
     public async Task<ListPageResponse<TenantResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)

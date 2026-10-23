@@ -58,7 +58,7 @@ public class FileTypeAppService : IFileTypeAppService
     public async Task<FileTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.FileType.GetById.ResourceNotFound"), 410);
             return null;
@@ -91,7 +91,7 @@ public class FileTypeAppService : IFileTypeAppService
     public async Task<bool> UpdateAsync(int id, UpdateFileTypeRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.FileType.Update.ResourceNotFound"), 410);
             return false;
@@ -124,7 +124,7 @@ public class FileTypeAppService : IFileTypeAppService
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.FileType.Deactivate.ResourceNotFound"), 410);
             return false;

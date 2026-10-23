@@ -58,15 +58,15 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
         return _mapper.Map<IEnumerable<VisitContactPersonResponse>>(entities);
     }
 
-    public async Task<VisitContactPersonResponse> GetByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitContactPersonDetailResponse> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.VisitContactPerson.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitContactPersonResponse>(entity);
+        return _mapper.Map<VisitContactPersonDetailResponse>(entity);
     }
 
     public async Task<ListPageResponse<VisitContactPersonResponse>> GetPagedAsync(int visitId, PagedFilterRequest request, CancellationToken ct)

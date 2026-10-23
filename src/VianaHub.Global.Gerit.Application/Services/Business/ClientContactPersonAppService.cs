@@ -57,7 +57,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
     public async Task<ClientContactPersonDetailResponse> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.GetById.ResourceNotFound"), 410);
             return null;

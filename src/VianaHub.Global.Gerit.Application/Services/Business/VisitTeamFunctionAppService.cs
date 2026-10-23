@@ -58,7 +58,7 @@ public class VisitTeamFunctionAppService : IVisitTeamFunctionAppService
     public async Task<VisitTeamFunctionDetailResponse> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null || entity.IsDeleted || !entity.IsActive)
+        if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Function.Update.ResourceNotFound"), 410);
             return null;
