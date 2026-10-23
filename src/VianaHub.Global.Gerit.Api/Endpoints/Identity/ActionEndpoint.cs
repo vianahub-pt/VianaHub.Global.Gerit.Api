@@ -4,6 +4,7 @@ using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Action;
+using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Action;
 using VianaHub.Global.Gerit.Application.Interfaces.Billing;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
@@ -25,7 +26,7 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Actions", "GetAll")
         .WithName("GetAllActions")
         .WithSummary("Swagger.Endpoint.Action.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<IEnumerable<ActionResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async ([FromRoute] int id, [FromServices] IActionAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -36,7 +37,7 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Actions", "GetBy")
         .WithName("GetActionById")
         .WithSummary("Swagger.Endpoint.Action.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ActionDetailResponse?>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -48,7 +49,7 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Actions", "GetPaged")
         .WithName("GetActionsPaged")
         .WithSummary("Swagger.Endpoint.Action.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ListPageResponse<ActionResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async ([FromBody] CreateActionRequest request, [FromServices] IActionAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
