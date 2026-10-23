@@ -40,7 +40,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/vianahub-api:latest
+          tags: "${{ format('{0}/vianahub-api:{1}', vars.DOCKERHUB_NAMESPACE, github.sha) }}${{ github.ref == 'refs/heads/main' && format(',{0}/vianahub-api:latest', vars.DOCKERHUB_NAMESPACE) || '' }}"
 
   deploy:
     name: Deploy Gerit image
