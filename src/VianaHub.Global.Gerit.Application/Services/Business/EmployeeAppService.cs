@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
