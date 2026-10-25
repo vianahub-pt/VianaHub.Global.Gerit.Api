@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.EntityFrameworkCore;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Pagination;
@@ -125,7 +126,7 @@ public class RoleDataRepository : IRoleDataRepository
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[RLS][Diagnostic] Failed to read SESSION_CONTEXT");
+            _logger.LogWarning("[RLS][Diagnostic] Failed to read SESSION_CONTEXT | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
         }
     }
 }

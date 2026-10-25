@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -156,7 +157,7 @@ public static class DatabaseExtensions
                     catch (Exception ex)
                     {
                         // Log and continue; many CREATE statements will fail if objects already exist
-                        logger.LogWarning(ex, "?? Falha ao aplicar {Description}: {Message}", description, ex.Message);
+                        logger.LogWarning("?? Falha ao aplicar {Description}: {Message} | Exception: {ExceptionDetails}", description, LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
                     }
                 }
 
@@ -226,7 +227,7 @@ public static class DatabaseExtensions
                                         }
                                         catch (Exception ex)
                                         {
-                                            logger.LogWarning(ex, "?? Falha ao adicionar coluna {Column} na tabela {Table}: {Message}", Name, tableName, ex.Message);
+                                            logger.LogWarning("?? Falha ao adicionar coluna {Column} na tabela {Table}: {Message} | Exception: {ExceptionDetails}", Name, tableName, LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
                                         }
                                     }
                                 }
@@ -307,7 +308,7 @@ public static class DatabaseExtensions
         catch (Microsoft.Data.SqlClient.SqlException sqlEx) when (sqlEx.Message.Contains("already an object named") ||
                                                                     sqlEx.Message.Contains("does not exist or you do not have permission"))
         {
-            logger.LogError(sqlEx, "? Erro de conflito de schema ao aplicar migrations");
+            logger.LogError("? Erro de conflito de schema ao aplicar migrations | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(sqlEx));
             logger.LogWarning("???????????????????????????????????????????????????????????????");
             logger.LogWarning("?? PROBLEMA DETECTADO: Conflito de schema do banco de dados");
             logger.LogWarning("???????????????????????????????????????????????????????????????");
@@ -334,7 +335,7 @@ public static class DatabaseExtensions
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "? Erro inesperado ao aplicar migrations");
+            logger.LogError("? Erro inesperado ao aplicar migrations | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             throw;
         }
     }
@@ -357,7 +358,7 @@ public static class DatabaseExtensions
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "? Erro ao executar seeding do banco");
+            logger.LogError("? Erro ao executar seeding do banco | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             throw;
         }
     }
@@ -390,7 +391,7 @@ public static class DatabaseExtensions
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "? Erro ao inicializar banco de dados");
+            logger.LogError("? Erro ao inicializar banco de dados | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             throw;
         }
     }

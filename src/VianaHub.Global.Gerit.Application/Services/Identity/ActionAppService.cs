@@ -212,7 +212,7 @@ public class ActionAppService : IActionAppService
                 catch (CsvHelperException ex)
                 {
                     // Log linha com erro mas continua processamento
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de Actions", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de Actions | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -229,7 +229,7 @@ public class ActionAppService : IActionAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de Actions: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de Actions: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Exception"), 400);
             return null;
         }

@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
@@ -122,7 +123,7 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "?? [CreateAsync] Add JwtKeysEntity | falha ao criar chave JwtKey");
+            _logger.LogError("?? [CreateAsync] Add JwtKeysEntity | falha ao criar chave JwtKey | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             throw new Exception("Falha ao criar chave JwtKey", ex);
         }
     }

@@ -214,7 +214,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Falha ao atualizar LastAccessAt para o usu�rio {UserId}", user.Id);
+            _logger.LogWarning("Falha ao atualizar LastAccessAt para o usu�rio {UserId} | Exception: {ExceptionDetails}", user.Id, LogValueSanitizer.ExceptionDetails(ex));
         }
 
         var refreshTokenValue = GenerateRefreshTokenValue();
@@ -414,7 +414,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Falha ao incluir roles/permissions no token para user {UserId}", user.Id);
+            _logger.LogWarning("Falha ao incluir roles/permissions no token para user {UserId} | Exception: {ExceptionDetails}", user.Id, LogValueSanitizer.ExceptionDetails(ex));
             // N�o falhar a gera��o do token por causa das claims de permiss�o; conceder token b�sico
         }
 
@@ -443,7 +443,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao descriptografar chave privada para tenant {TenantId}", user.TenantId);
+            _logger.LogError("Erro ao descriptografar chave privada para tenant {TenantId} | Exception: {ExceptionDetails}", user.TenantId, LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.InvalidPrivateKey"), 500);
             return (null, DateTime.MinValue);
         }
@@ -490,7 +490,7 @@ public class AuthAppService : IAuthAppService
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Falha ao parsear permissionsJson antes de inserir no payload");
+                        _logger.LogWarning("Falha ao parsear permissionsJson antes de inserir no payload | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
                     }
                 }
 
@@ -506,7 +506,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao criar token JWT para tenant {TenantId}", user.TenantId);
+            _logger.LogError("Erro ao criar token JWT para tenant {TenantId} | Exception: {ExceptionDetails}", user.TenantId, LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.CreateFailed"), 500);
             return (null, DateTime.MinValue);
         }

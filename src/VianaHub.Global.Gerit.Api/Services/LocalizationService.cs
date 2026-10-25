@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Serilog;
 using System.Globalization;
 using System.Text.Json;
@@ -147,7 +148,7 @@ public class LocalizationService : ILocalizationService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "[Gerit:LocalizationService] Error loading file {File}", Path.GetFileName(commonFilePath));
+                Log.Error("[Gerit:LocalizationService] Error loading file {File} | Exception: {ExceptionDetails}", Path.GetFileName(commonFilePath), LogValueSanitizer.ExceptionDetails(ex));
                 _cache[culture] = new Dictionary<string, string>();
                 return _cache[culture];
             }

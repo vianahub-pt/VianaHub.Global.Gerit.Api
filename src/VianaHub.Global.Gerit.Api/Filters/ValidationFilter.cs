@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using FluentValidation;
 using System.Net;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
@@ -74,8 +75,7 @@ public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
                 foreach (var error in validationResult.Errors)
                 {
                     notify.Add($"{error.PropertyName}: {error.ErrorMessage}", 400);
-                    _logger.LogDebug("Erro de validação adicionado ao Notify: {PropertyName} - {ErrorMessage}",
-                        error.PropertyName, error.ErrorMessage);
+                    _logger.LogDebug("Erro de validação adicionado ao Notify: {PropertyName} - {ErrorMessage}", LogValueSanitizer.Sanitize(error.PropertyName), LogValueSanitizer.Sanitize(error.ErrorMessage));
                 }
             }
 

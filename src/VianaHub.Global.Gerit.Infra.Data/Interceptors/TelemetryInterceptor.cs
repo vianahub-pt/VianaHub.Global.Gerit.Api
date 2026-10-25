@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System.Data.Common;
@@ -196,13 +197,7 @@ public class TelemetryInterceptor : DbCommandInterceptor
 
     private void LogCommandFailed(DbCommand command, CommandErrorEventData eventData)
     {
-        _logger.LogError(
-            eventData.Exception,
-            "? DB Command Failed | CommandId: {CommandId} | SQL: {CommandText} | Error: {ErrorMessage}",
-            eventData.CommandId,
-            command.CommandText.Length > 200 ? command.CommandText[..200] + "..." : command.CommandText,
-            eventData.Exception.Message
-        );
+        _logger.LogError("? DB Command Failed | CommandId: {CommandId} | SQL: {CommandText} | Error: {ErrorMessage} | Exception: {ExceptionDetails}", eventData.CommandId, command.CommandText.Length > 200 ? command.CommandText[..200] + "..." : command.CommandText, LogValueSanitizer.Sanitize(eventData.Exception.Message), LogValueSanitizer.ExceptionDetails(eventData.Exception));
     }
 
     private void RecordMetrics(DbCommand command, CommandExecutedEventData eventData)

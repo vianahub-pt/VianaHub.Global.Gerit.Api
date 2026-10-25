@@ -312,7 +312,7 @@ public class ClientAppService : IClientAppService
                 catch (CsvHelperException ex)
                 {
                     // Log linha com erro mas continua processamento
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de Clients", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de Clients | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.Client.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -329,7 +329,7 @@ public class ClientAppService : IClientAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de Clients: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de Clients: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Client.ReadCsvFile.Exception"), 400);
             return null;
         }

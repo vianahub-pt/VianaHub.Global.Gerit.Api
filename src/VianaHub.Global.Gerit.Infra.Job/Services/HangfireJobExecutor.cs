@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,7 +43,7 @@ public class HangfireJobExecutor : IJobExecutor
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to register recurring job {JobName}", jobDefinition.JobName);
+            _logger.LogError("Failed to register recurring job {JobName} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(jobDefinition.JobName), LogValueSanitizer.ExceptionDetails(ex));
             return Task.FromResult(false);
         }
     }
@@ -56,7 +57,7 @@ public class HangfireJobExecutor : IJobExecutor
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to remove recurring job {JobName}", jobName);
+            _logger.LogError("Failed to remove recurring job {JobName} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(jobName), LogValueSanitizer.ExceptionDetails(ex));
             return Task.FromResult(false);
         }
     }
@@ -73,7 +74,7 @@ public class HangfireJobExecutor : IJobExecutor
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to enqueue job {JobName}", jobDefinition.JobName);
+            _logger.LogError("Failed to enqueue job {JobName} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(jobDefinition.JobName), LogValueSanitizer.ExceptionDetails(ex));
             return Task.FromResult<string?>(null);
         }
     }
@@ -91,21 +92,21 @@ public class HangfireJobExecutor : IJobExecutor
 
         try
         {
-            logger.LogInformation("Starting execution of job {JobType}.{JobMethod}", jobType, jobMethod);
+            logger.LogInformation("Starting execution of job {JobType}.{JobMethod}", LogValueSanitizer.Sanitize(jobType), LogValueSanitizer.Sanitize(jobMethod));
 
             // Validar e carregar o tipo do job via reflexão
             ArgumentNullException.ThrowIfNull(jobType);
             var type = Type.GetType(jobType);
             if (type == null)
             {
-                logger.LogError("Job type not found: {JobType}", jobType);
+                logger.LogError("Job type not found: {JobType}", LogValueSanitizer.Sanitize(jobType));
                 throw new InvalidOperationException($"Job type not found: {jobType}");
             }
 
             // Validar se a classe implementa IBackgroundJob
             if (!typeof(IJob).IsAssignableFrom(type))
             {
-                logger.LogError("Job type {JobType} does not implement IBackgroundJob", jobType);
+                logger.LogError("Job type {JobType} does not implement IBackgroundJob", LogValueSanitizer.Sanitize(jobType));
                 throw new InvalidOperationException($"Job type {jobType} must implement IBackgroundJob interface");
             }
 
@@ -113,7 +114,7 @@ public class HangfireJobExecutor : IJobExecutor
             var job = ActivatorUtilities.CreateInstance(scope.ServiceProvider, type) as IJob;
             if (job == null)
             {
-                logger.LogError("Failed to instantiate job type: {JobType}", jobType);
+                logger.LogError("Failed to instantiate job type: {JobType}", LogValueSanitizer.Sanitize(jobType));
                 throw new InvalidOperationException($"Failed to instantiate job type: {jobType}");
             }
 
@@ -123,24 +124,19 @@ public class HangfireJobExecutor : IJobExecutor
 
             using (JobContext.EnterBackgroundJobScope(jobName, jobExecutionId))
             {
-                logger.LogInformation(
-                    "?? [BackgroundJob] Executing {JobName} with execution ID {ExecutionId}",
-                    jobName, jobExecutionId);
+                logger.LogInformation("?? [BackgroundJob] Executing {JobName} with execution ID {ExecutionId}", LogValueSanitizer.Sanitize(jobName), jobExecutionId);
 
                 // Executar o job através do método padrão Execute
                 await job.Execute(CancellationToken.None);
 
-                logger.LogInformation(
-                    "? [BackgroundJob] Successfully completed {JobName} (execution ID: {ExecutionId})",
-                    jobName, jobExecutionId);
+                logger.LogInformation("? [BackgroundJob] Successfully completed {JobName} (execution ID: {ExecutionId})", LogValueSanitizer.Sanitize(jobName), jobExecutionId);
             }
 
-            logger.LogInformation("Successfully completed execution of job {JobType}.{JobMethod}", jobType, jobMethod);
+            logger.LogInformation("Successfully completed execution of job {JobType}.{JobMethod}", LogValueSanitizer.Sanitize(jobType), LogValueSanitizer.Sanitize(jobMethod));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error executing job {JobType}.{JobMethod}: {ErrorMessage}",
-                jobType, jobMethod, ex.Message);
+            logger.LogError("Error executing job {JobType}.{JobMethod}: {ErrorMessage} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(jobType), LogValueSanitizer.Sanitize(jobMethod), LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             throw;
         }
     }

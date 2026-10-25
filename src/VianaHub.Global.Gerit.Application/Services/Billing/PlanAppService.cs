@@ -290,7 +290,7 @@ public class PlanAppService : IPlanAppService
                 catch (CsvHelperException ex)
                 {
                     // Log linha com erro mas continua processamento
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de Plans", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de Plans | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.Plan.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -307,7 +307,7 @@ public class PlanAppService : IPlanAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de Plans: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de Plans: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Plan.ReadCsvFile.Exception"), 400);
             return null;
         }

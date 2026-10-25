@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
@@ -85,18 +86,13 @@ public class AuthorizationFilter : IEndpointFilter
                 .ToList();
         }
 
-        _logger.LogInformation("Usuário: {UserId} ({UserName}), Roles: [{Roles}]",
-            userId, userName, string.Join(", ", userRoles));
+        _logger.LogInformation("Usuário: {UserId} ({UserName}), Roles: [{Roles}]", LogValueSanitizer.Sanitize(userId), LogValueSanitizer.Sanitize(userName), LogValueSanitizer.Sanitize(string.Join(", ", userRoles)));
 
         // Verificar se o usuário possui alguma das roles permitidas (se configurado)
         if (_allowedRoles.Any() && !_allowedRoles.Any(allowedRole => userRoles.Contains(allowedRole)))
         {
-            _logger.LogWarning(
-                "Acesso negado: Usuário {UserId} não possui nenhuma das roles permitidas. " +
-                "Roles do usuário: [{UserRoles}], Roles permitidas: [{AllowedRoles}]",
-                userId,
-                string.Join(", ", userRoles),
-                string.Join(", ", _allowedRoles));
+            _logger.LogWarning("Acesso negado: Usuário {UserId} não possui nenhuma das roles permitidas. " +
+                "Roles do usuário: [{UserRoles}], Roles permitidas: [{AllowedRoles}]", LogValueSanitizer.Sanitize(userId), LogValueSanitizer.Sanitize(string.Join(", ", userRoles)), LogValueSanitizer.Sanitize(string.Join(", ", _allowedRoles)));
 
             var notify = httpContext.RequestServices.GetService<INotify>();
             if (notify != null)
@@ -124,9 +120,7 @@ public class AuthorizationFilter : IEndpointFilter
 
             if (!hasPermission)
             {
-                _logger.LogWarning(
-                    "Acesso negado: Usuário {UserId} não tem permissão para {ActionEntity} em {Resource}",
-                    userId, _action, _resource);
+                _logger.LogWarning("Acesso negado: Usuário {UserId} não tem permissão para {ActionEntity} em {Resource}", LogValueSanitizer.Sanitize(userId), _action, _resource);
 
                 var notify = httpContext.RequestServices.GetService<INotify>();
                 if (notify != null)
@@ -145,7 +139,7 @@ public class AuthorizationFilter : IEndpointFilter
             }
         }
 
-        _logger.LogInformation("Autorização concedida para usuário {UserId}", userId);
+        _logger.LogInformation("Autorização concedida para usuário {UserId}", LogValueSanitizer.Sanitize(userId));
         return await next(context);
     }
 
@@ -220,7 +214,7 @@ public class AuthorizationFilter : IEndpointFilter
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Erro ao desserializar claim 'permissions'");
+                _logger.LogWarning("Erro ao desserializar claim 'permissions' | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
                 httpContext.Items[cacheKey] = new Dictionary<string, HashSet<string>>();
             }
 
@@ -241,7 +235,7 @@ public class AuthorizationFilter : IEndpointFilter
                 }
                 else
                 {
-                    _logger.LogDebug("Permissão '{Permission}' NÃO encontrada no claim 'permissions' (ações disponíveis: {Actions})", requiredPermission, string.Join(", ", actions));
+                    _logger.LogDebug("Permissão '{Permission}' NÃO encontrada no claim 'permissions' (ações disponíveis: {Actions})", requiredPermission, LogValueSanitizer.Sanitize(string.Join(", ", actions)));
                     return false;
                 }
             }

@@ -257,7 +257,7 @@ public class AddressTypeAppService : IAddressTypeAppService
                 catch (CsvHelperException ex)
                 {
                     // Log linha com erro mas continua processamento
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de AddressTypes", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de AddressTypes | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.AddressType.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -274,7 +274,7 @@ public class AddressTypeAppService : IAddressTypeAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de AddressTypes: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de AddressTypes: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.AddressType.ReadCsvFile.Exception"), 400);
             return null;
         }
