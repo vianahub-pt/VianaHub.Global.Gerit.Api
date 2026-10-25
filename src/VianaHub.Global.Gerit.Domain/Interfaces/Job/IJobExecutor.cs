@@ -20,5 +20,5 @@ public interface IJobExecutor
     /// <summary>
     /// Enfileira um job para execução imediata
     /// </summary>
-    Task<string> EnqueueJobAsync(JobDefinitionsEntity jobDefinition);
+    Task<string?> EnqueueJobAsync(JobDefinitionsEntity jobDefinition);
 }

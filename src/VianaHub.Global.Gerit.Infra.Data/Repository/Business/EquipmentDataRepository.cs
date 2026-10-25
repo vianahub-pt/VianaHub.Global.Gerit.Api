@@ -16,16 +16,13 @@ public class EquipmentDataRepository : IEquipmentDataRepository
         _context = context;
     }
 
-    public async Task<EquipmentEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<EquipmentEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<EquipmentEntity>()
             .AsNoTracking()
             .Include(x => x.EquipmentType)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EquipmentEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(EquipmentEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -34,11 +31,8 @@ public class EquipmentDataRepository : IEquipmentDataRepository
         return await _context.Set<EquipmentEntity>()
             .AsNoTracking()
             .Include(x => x.EquipmentType)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EquipmentEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(EquipmentEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted).OrderBy(x => x.Name).ToListAsync(ct);
     }
 
@@ -47,20 +41,17 @@ public class EquipmentDataRepository : IEquipmentDataRepository
         var query = _context.Set<EquipmentEntity>()
             .AsNoTracking()
             .Include(x => x.EquipmentType)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EquipmentEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(EquipmentEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => EF.Functions.Like(x.Name.ToLower(), $"%{search}%") || 
-                                     EF.Functions.Like(x.SerialNumber.ToLower(), $"%{search}%") ||
-                                     EF.Functions.Like(x.EquipmentType.Name.ToLower(), $"%{search}%") ||
-                                     EF.Functions.Like(x.StatusDefinition.Code.ToLower(), $"%{search}%"));
+            query = query.Where(x => (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%")) ||
+                                     (x.SerialNumber != null && EF.Functions.Like(x.SerialNumber.ToLower(), $"%{search}%")) ||
+                                     (x.EquipmentType != null && x.EquipmentType.Name != null && EF.Functions.Like(x.EquipmentType.Name.ToLower(), $"%{search}%")) ||
+                                     (x.StatusDefinition != null && x.StatusDefinition.Code != null && EF.Functions.Like(x.StatusDefinition.Code.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -90,7 +81,7 @@ public class EquipmentDataRepository : IEquipmentDataRepository
         return await _context.Set<EquipmentEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(int tenantId, string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(int tenantId, string? name, CancellationToken ct)
     {
         return await _context.Set<EquipmentEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Name == name && !x.IsDeleted, ct);
     }

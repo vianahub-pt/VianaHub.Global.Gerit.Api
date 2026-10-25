@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using System.Net;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
@@ -26,7 +26,7 @@ public class FileValidationFilter : IEndpointFilter
     /// <summary>
     /// Executa a validação do arquivo antes de processar o request.
     /// </summary>
-    public async ValueTask<object> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         _logger.LogDebug("FileValidationFilter executando");
 

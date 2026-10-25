@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Entities.Business;
 using Microsoft.EntityFrameworkCore;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
@@ -16,18 +17,15 @@ public class SubscriptionDataRepository : ISubscriptionDataRepository
         _context = context;
     }
 
-    public async Task<SubscriptionEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<SubscriptionEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<SubscriptionEntity>()
             .AsNoTracking()
             .Include(x => x.SubscriptionPlan)
                 .ThenInclude(x => x.Translations)
             .Include(x => x.Tenant)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -38,11 +36,8 @@ public class SubscriptionDataRepository : ISubscriptionDataRepository
             .Include(x => x.SubscriptionPlan)
                 .ThenInclude(x => x.Translations)
             .Include(x => x.Tenant)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(ct);
@@ -55,11 +50,8 @@ public class SubscriptionDataRepository : ISubscriptionDataRepository
             .Include(x => x.SubscriptionPlan)
                 .ThenInclude(x => x.Translations)
             .Include(x => x.Tenant)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted);
 
         // Filtro de busca
@@ -69,9 +61,9 @@ public class SubscriptionDataRepository : ISubscriptionDataRepository
 
             query = query.Where(x =>
                 x.SubscriptionPlan.Translations.Any(t =>
-                    EF.Functions.Like(t.Name.ToLower(), $"%{search}%"))
-                || EF.Functions.Like(x.StripeId.ToLower(), $"%{search}%")
-                || EF.Functions.Like(x.StripeCustomerId.ToLower(), $"%{search}%")
+                    (t.Name != null && EF.Functions.Like(t.Name.ToLower(), $"%{search}%")))
+                || (x.StripeId != null && EF.Functions.Like(x.StripeId.ToLower(), $"%{search}%"))
+                || (x.StripeCustomerId != null && EF.Functions.Like(x.StripeCustomerId.ToLower(), $"%{search}%"))
             );
         }
 
@@ -116,18 +108,15 @@ public class SubscriptionDataRepository : ISubscriptionDataRepository
             .AnyAsync(x => x.TenantId == tenantId && !x.IsDeleted, ct);
     }
 
-    public async Task<SubscriptionEntity> GetByTenantIdAsync(int tenantId, CancellationToken ct)
+    public async Task<SubscriptionEntity?> GetByTenantIdAsync(int tenantId, CancellationToken ct)
     {
         return await _context.Set<SubscriptionEntity>()
             .AsNoTracking()
             .Include(x => x.SubscriptionPlan)
                 .ThenInclude(x => x.Translations)
             .Include(x => x.Tenant)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && !x.IsDeleted, ct);
     }
 
@@ -138,11 +127,8 @@ public class SubscriptionDataRepository : ISubscriptionDataRepository
             .Include(x => x.SubscriptionPlan)
                 .ThenInclude(x => x.Translations)
             .Include(x => x.Tenant)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => x.SubscriptionPlanId == subscriptionPlanId && !x.IsDeleted)
             .ToListAsync(ct);
     }
@@ -154,11 +140,8 @@ public class SubscriptionDataRepository : ISubscriptionDataRepository
             .Include(x => x.SubscriptionPlan)
                 .ThenInclude(x => x.Translations)
             .Include(x => x.Tenant)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => x.IsActive && !x.IsDeleted)
             .ToListAsync(ct);
     }
@@ -166,20 +149,17 @@ public class SubscriptionDataRepository : ISubscriptionDataRepository
     public async Task<IEnumerable<SubscriptionEntity>> GetExpiringSubscriptionsAsync(int daysBeforeExpiration, CancellationToken ct)
     {
         var targetDate = DateTime.UtcNow.AddDays(daysBeforeExpiration);
-        
+
         return await _context.Set<SubscriptionEntity>()
             .AsNoTracking()
             .Include(x => x.SubscriptionPlan)
                 .ThenInclude(x => x.Translations)
             .Include(x => x.Tenant)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
-            .Where(x => x.IsActive 
-                && !x.IsDeleted 
-                && x.CurrentPeriodEnd <= targetDate 
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(SubscriptionEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
+            .Where(x => x.IsActive
+                && !x.IsDeleted
+                && x.CurrentPeriodEnd <= targetDate
                 && x.CurrentPeriodEnd > DateTime.UtcNow)
             .ToListAsync(ct);
     }

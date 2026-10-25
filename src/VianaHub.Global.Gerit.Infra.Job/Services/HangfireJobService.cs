@@ -61,7 +61,7 @@ public class HangfireJobService : VianaHub.Global.Gerit.Domain.Interfaces.Job.IJ
         _logger.LogInformation("Removed recurring job {JobName} from Hangfire", jobName);
     }
 
-    public async Task<string> EnqueueJobAsync(JobDefinitionsEntity jobDef)
+    public async Task<string?> EnqueueJobAsync(JobDefinitionsEntity jobDef)
     {
         if (jobDef == null) throw new ArgumentNullException(nameof(jobDef));
 

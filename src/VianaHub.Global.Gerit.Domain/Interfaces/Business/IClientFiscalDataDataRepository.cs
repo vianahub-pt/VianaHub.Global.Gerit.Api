@@ -7,7 +7,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 public interface IClientFiscalDataDataRepository
 {
     Task<IEnumerable<ClientFiscalDataEntity>> GetAllAsync(int clientId, CancellationToken ct);
-    Task<ClientFiscalDataEntity> GetByIdAsync(int clientId, int id, CancellationToken ct = default);
+    Task<ClientFiscalDataEntity?> GetByIdAsync(int clientId, int id, CancellationToken ct = default);
     Task<ListPage<ClientFiscalDataEntity>> GetPagedAsync(int clientId, PagedFilter filter, CancellationToken ct = default);
     Task<bool> ExistsByIdAsync(int clientId, CancellationToken ct = default);
     Task<bool> ExistsByTaxNumberAsync(int clientId, string taxNumber, CancellationToken ct = default);

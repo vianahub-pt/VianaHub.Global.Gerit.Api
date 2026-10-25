@@ -33,7 +33,7 @@ public class ClientDocumentsEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Documento do Client
     /// </summary>
-    public ClientDocumentsEntity(int tenantId, int clientId, int documentTypeId, string documentNumber,
+    public ClientDocumentsEntity(int tenantId, int clientId, int documentTypeId, string? documentNumber,
         string? issuingCountryCode, DateTime? issuedAt, DateTime? expiresAt, bool isPrimary, int createdBy)
     {
         TenantId = tenantId;
@@ -53,7 +53,7 @@ public class ClientDocumentsEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string documentNumber, string? issuingCountryCode,
+    public void Update(string? documentNumber, string? issuingCountryCode,
         DateTime? issuedAt, DateTime? expiresAt, bool isPrimary, int modifiedBy)
     {
         DocumentNumber = documentNumber;

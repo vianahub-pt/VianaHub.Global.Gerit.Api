@@ -21,7 +21,7 @@ public class FileTypeTranslationsEntity
     /// <summary>
     /// Construtor para criação de uma nova tradução de FileType
     /// </summary>
-    public FileTypeTranslationsEntity(int fileTypeId, string languageCode, string name, string? description)
+    public FileTypeTranslationsEntity(int fileTypeId, string? languageCode, string? name, string? description)
     {
         FileTypeId = fileTypeId;
         LanguageCode = languageCode;
@@ -29,7 +29,7 @@ public class FileTypeTranslationsEntity
         Description = description;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string? name, string? description)
     {
         Name = name;
         Description = description;

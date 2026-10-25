@@ -10,7 +10,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Business;
 public interface IStatusDefinitionAppService
 {
     Task<IEnumerable<StatusDefinitionResponse>> GetAllAsync(CancellationToken ct);
-    Task<StatusDefinitionDetailResponse> GetByIdAsync(int id, CancellationToken ct);
+    Task<StatusDefinitionDetailResponse?> GetByIdAsync(int id, CancellationToken ct);
     Task<ListPageResponse<StatusDefinitionResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct);
     Task<int> CreateAsync(CreateStatusDefinitionRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int id, UpdateStatusDefinitionRequest request, CancellationToken ct);

@@ -9,6 +9,8 @@ namespace VianaHub.Global.Gerit.Infra.Data.Repository.Business;
 
 public class FileTypeDataRepository : IFileTypeDataRepository
 {
+    public Task<bool> ExistsByCodeAsync(string? code, CancellationToken ct) => _context.Set<FileTypeEntity>().AnyAsync(x => x.Code == code, ct);
+
     private readonly GeritDbContext _context;
 
     public FileTypeDataRepository(GeritDbContext context)
@@ -26,7 +28,7 @@ public class FileTypeDataRepository : IFileTypeDataRepository
             .ToListAsync(ct);
     }
 
-    public async Task<FileTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<FileTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<FileTypeEntity>()
             .AsNoTracking()
@@ -45,8 +47,8 @@ public class FileTypeDataRepository : IFileTypeDataRepository
         {
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
-                EF.Functions.Like(x.MimeType.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.Extension.ToLower(), $"%{search}%"));
+                (x.MimeType != null && EF.Functions.Like(x.MimeType.ToLower(), $"%{search}%")) ||
+                (x.Extension != null && EF.Functions.Like(x.Extension.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -81,7 +83,7 @@ public class FileTypeDataRepository : IFileTypeDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByMimeTypeAsync(string mimeType, CancellationToken ct)
+    public async Task<bool> ExistsByMimeTypeAsync(string? mimeType, CancellationToken ct)
     {
         return await _context.Set<FileTypeEntity>()
             .AsNoTracking()

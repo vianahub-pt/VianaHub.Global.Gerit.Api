@@ -14,7 +14,7 @@ public class NoOpEmailSender : IEmailSender
         _localization = localization;
     }
 
-    public Task SendAsync(string to, string subjectKey, string bodyKey, params object[] args)
+    public Task SendAsync(string to, string subjectKey, string bodyKey, params object?[] args)
     {
         var subject = _localization?.GetMessage(subjectKey) ?? subjectKey;
         var body = _localization?.GetMessage(bodyKey, args) ?? bodyKey;

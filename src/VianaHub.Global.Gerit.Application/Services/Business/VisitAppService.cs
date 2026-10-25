@@ -58,7 +58,7 @@ public class VisitAppService : IVisitAppService
         return _mapper.Map<IEnumerable<VisitResponse>>(entities);
     }
 
-    public async Task<VisitDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -181,7 +181,7 @@ public class VisitAppService : IVisitAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -202,7 +202,7 @@ public class VisitAppService : IVisitAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadVisitItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadVisitItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

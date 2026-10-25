@@ -7,11 +7,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Business.AcquisitionSourceType
 
 public class AcquisitionSourceTypeValidator : BaseEntityValidator<AcquisitionSourceTypeEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public AcquisitionSourceTypeValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override async Task<ValidationResult> ValidateForCreateAsync(AcquisitionSourceTypeEntity entity)

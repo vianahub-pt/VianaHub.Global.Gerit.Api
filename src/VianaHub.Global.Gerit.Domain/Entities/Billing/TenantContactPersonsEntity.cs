@@ -20,7 +20,7 @@ public class TenantContactPersonsEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Property
-    public TenantEntity Tenant { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
 
     // Construtor protegido para o EF Core
     protected TenantContactPersonsEntity() { }
@@ -30,8 +30,8 @@ public class TenantContactPersonsEntity : Entity
     /// </summary>
     public TenantContactPersonsEntity(
         int tenantId,
-        string name,
-        string email,
+        string? name,
+        string? email,
         string? phone,
         string? jobTitle,
         string? department,
@@ -56,8 +56,8 @@ public class TenantContactPersonsEntity : Entity
     }
 
     public void Update(
-        string name,
-        string email,
+        string? name,
+        string? email,
         string? phone,
         string? jobTitle,
         string? department,

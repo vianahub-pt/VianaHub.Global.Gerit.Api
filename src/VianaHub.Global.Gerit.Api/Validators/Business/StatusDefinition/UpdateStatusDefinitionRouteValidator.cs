@@ -11,11 +11,6 @@ public class UpdateStatusDefinitionRouteValidator : AbstractValidator<UpdateStat
 {
     public UpdateStatusDefinitionRouteValidator(ILocalizationService localization)
     {
-        RuleFor(x => x.Code)
-            .NotEmpty()
-            .WithMessage(localization.GetMessage("Api.Validator.StatusDefinition.Update.Code"))
-            .MaximumLength(50)
-            .WithMessage(localization.GetMessage("Api.Validator.StatusDefinition.Update.Code.MaximumLength", 50));
 
         RuleFor(x => x.DisplayOrder)
             .GreaterThanOrEqualTo(0)

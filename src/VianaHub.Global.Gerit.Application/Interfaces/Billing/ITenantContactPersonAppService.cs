@@ -7,9 +7,9 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Billing;
 
 public interface ITenantContactPersonAppService
 {
-    Task<TenantContactPersonDetailResponse> GetByIdAsync(int id, CancellationToken ct);
+    Task<TenantContactPersonDetailResponse?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<TenantContactPersonResponse>> GetByTenantIdAsync(int tenantId, CancellationToken ct);
-    Task<TenantContactPersonResponse> GetPrimaryByTenantIdAsync(int tenantId, CancellationToken ct);
+    Task<TenantContactPersonResponse?> GetPrimaryByTenantIdAsync(int tenantId, CancellationToken ct);
     Task<IEnumerable<TenantContactPersonResponse>> GetAllAsync(CancellationToken ct);
     Task<IEnumerable<TenantContactPersonResponse>> GetActiveAsync(CancellationToken ct);
     Task<ListPageResponse<TenantContactPersonResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct);

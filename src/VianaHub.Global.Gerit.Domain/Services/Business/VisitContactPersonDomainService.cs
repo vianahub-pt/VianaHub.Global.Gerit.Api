@@ -26,7 +26,7 @@ public class VisitContactPersonDomainService : IVisitContactDomainService
         _notify = notify;
     }
 
-    public async Task<VisitContactPersonsEntity> GetByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitContactPersonsEntity?> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(visitId, id, ct);
     }

@@ -21,7 +21,7 @@ public class AcquisitionSourceTypeTranslationsEntity
     /// <summary>
     /// Construtor para criação de uma nova tradução de AcquisitionSourceType
     /// </summary>
-    public AcquisitionSourceTypeTranslationsEntity(int acquisitionSourceTypeId, string languageCode, string name, string? description)
+    public AcquisitionSourceTypeTranslationsEntity(int acquisitionSourceTypeId, string? languageCode, string? name, string? description)
     {
         AcquisitionSourceTypeId = acquisitionSourceTypeId;
         LanguageCode = languageCode;
@@ -29,7 +29,7 @@ public class AcquisitionSourceTypeTranslationsEntity
         Description = description;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string? name, string? description)
     {
         Name = name;
         Description = description;

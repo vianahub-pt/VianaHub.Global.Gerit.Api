@@ -20,7 +20,7 @@ public class RefreshTokenDataRepository : IRefreshTokenDataRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<RefreshTokensEntity> GetByTokenAsync(string token, int tenantId)
+    public async Task<RefreshTokensEntity?> GetByTokenAsync(string? token, int tenantId)
     {
         return await _context.Set<RefreshTokensEntity>()
             .AsNoTracking()
@@ -35,7 +35,7 @@ public class RefreshTokenDataRepository : IRefreshTokenDataRepository
             .ToListAsync();
     }
 
-    public async Task RevokeAsync(string token, int revokedBy, int tenantId)
+    public async Task RevokeAsync(string? token, int revokedBy, int tenantId)
     {
         var entity = await _context.Set<RefreshTokensEntity>()
             .FirstOrDefaultAsync(x => x.TokenHash == token && x.TenantId == tenantId);

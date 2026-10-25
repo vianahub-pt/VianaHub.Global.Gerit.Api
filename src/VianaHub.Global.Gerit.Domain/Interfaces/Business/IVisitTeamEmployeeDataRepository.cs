@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 
 public interface IVisitTeamEmployeeDataRepository
 {
-    Task<VisitTeamEmployeeEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<VisitTeamEmployeeEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<VisitTeamEmployeeEntity>> GetAllAsync(CancellationToken ct);
     Task<IEnumerable<VisitTeamEmployeeEntity>> GetByVisitTeamIdAsync(int visitTeamId, CancellationToken ct);
     Task<IEnumerable<VisitTeamEmployeeEntity>> GetByEmployeeIdAsync(int employeeId, CancellationToken ct);

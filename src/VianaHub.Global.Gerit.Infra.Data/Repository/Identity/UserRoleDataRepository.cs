@@ -24,7 +24,7 @@ public class UserRoleDataRepository : IUserRoleDataRepository
             .Where(x => x.TenantId == tenantId)
             .ToListAsync(ct);
     }
-    public async Task<UserRolesEntity> GetByIdAsync(int tenantId, int userId, int roleId, CancellationToken ct)
+    public async Task<UserRolesEntity?> GetByIdAsync(int tenantId, int userId, int roleId, CancellationToken ct)
     {
         return await _context.UserRoles
             .AsNoTracking()
@@ -68,6 +68,7 @@ public class UserRoleDataRepository : IUserRoleDataRepository
         var entity = await _context.UserRoles.FirstOrDefaultAsync(x => x.TenantId == tenantId &&
                                                                        x.UserId == userId &&
                                                                        x.RoleId == roleId, ct);
+        if (entity is null) return false;
         _context.UserRoles.Remove(entity);
         return await _context.SaveChangesAsync(ct) > 0;
     }

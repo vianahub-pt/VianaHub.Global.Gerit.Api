@@ -17,13 +17,13 @@ public class VisitTeamVehicleDataRepository : IVisitTeamVehicleDataRepository
         _context = context;
     }
 
-    public async Task<VisitTeamVehicleEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitTeamVehicleEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<VisitTeamVehicleEntity>()
             .AsNoTracking()
             .Include(x => x.Vehicle)
             .Include(x => x.VisitTeam)
-            .Include(x => x.VisitTeam.Visit)
+            .Include($"{nameof(VisitTeamVehicleEntity.VisitTeam)}.{nameof(VisitTeamEntity.Visit)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -33,7 +33,7 @@ public class VisitTeamVehicleDataRepository : IVisitTeamVehicleDataRepository
             .AsNoTracking()
             .Include(x => x.Vehicle)
             .Include(x => x.VisitTeam)
-            .Include(x => x.VisitTeam.Visit)
+            .Include($"{nameof(VisitTeamVehicleEntity.VisitTeam)}.{nameof(VisitTeamEntity.Visit)}")
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.Id)
             .ToListAsync(ct);
@@ -45,15 +45,15 @@ public class VisitTeamVehicleDataRepository : IVisitTeamVehicleDataRepository
             .AsNoTracking()
             .Include(x => x.Vehicle)
             .Include(x => x.VisitTeam)
-            .Include(x => x.VisitTeam.Visit)
+            .Include($"{nameof(VisitTeamVehicleEntity.VisitTeam)}.{nameof(VisitTeamEntity.Visit)}")
             .Where(x => !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => 
-                EF.Functions.Like(x.Vehicle.Plate.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.VisitTeam.Visit.Title.ToLower(), $"%{search}%"));
+            query = query.Where(x =>
+                (x.Vehicle != null && x.Vehicle.Plate != null && EF.Functions.Like(x.Vehicle.Plate.ToLower(), $"%{search}%")) ||
+                (x.VisitTeam != null && x.VisitTeam.Visit != null && x.VisitTeam.Visit.Title != null && EF.Functions.Like(x.VisitTeam.Visit.Title.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -82,7 +82,7 @@ public class VisitTeamVehicleDataRepository : IVisitTeamVehicleDataRepository
     {
         return await _context.Set<VisitTeamVehicleEntity>()
             .AsNoTracking()
-            .AnyAsync(x => x.TenantId == tenantId && x.VisitTeamId == interventionTeamId && x.VehicleId == vehicleId &&  !x.IsDeleted, ct);
+            .AnyAsync(x => x.TenantId == tenantId && x.VisitTeamId == interventionTeamId && x.VehicleId == vehicleId && !x.IsDeleted, ct);
     }
 
     public async Task<bool> AddAsync(VisitTeamVehicleEntity entity, CancellationToken ct)

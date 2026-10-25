@@ -49,7 +49,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
         return _mapper.Map<IEnumerable<UserPreferencesResponse>>(entities);
     }
 
-    public async Task<UserPreferencesDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<UserPreferencesDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -60,7 +60,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
         return _mapper.Map<UserPreferencesDetailResponse>(entity);
     }
 
-    public async Task<UserPreferencesResponse> GetByUserAsync(int userId, CancellationToken ct)
+    public async Task<UserPreferencesResponse?> GetByUserAsync(int userId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var entity = await _repo.GetByUserAsync(tenantId, userId, ct);

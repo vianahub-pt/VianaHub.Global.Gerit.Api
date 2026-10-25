@@ -40,7 +40,7 @@ public class JobAppService : IJobAppService
         _scheduler = scheduler;
     }
 
-    public async Task<JobDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<JobDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null)

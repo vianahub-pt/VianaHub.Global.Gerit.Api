@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System.Data.Common;
 using VianaHub.Global.Gerit.Infra.Data.Telemetry;
@@ -230,6 +230,6 @@ public class TelemetryInterceptor : DbCommandInterceptor
     private void RecordErrorMetrics(CommandErrorEventData eventData)
     {
         DatabaseTelemetry.QueriesWithError.Add(1,
-            new KeyValuePair<string, object>("error.type", eventData.Exception.GetType().Name));
+            new KeyValuePair<string, object?>("error.type", eventData.Exception.GetType().Name));
     }
 }

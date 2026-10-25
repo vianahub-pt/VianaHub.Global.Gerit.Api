@@ -55,7 +55,7 @@ public class FileTypeAppService : IFileTypeAppService
         return _mapper.Map<IEnumerable<FileTypeResponse>>(entities);
     }
 
-    public async Task<FileTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<FileTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -76,6 +76,17 @@ public class FileTypeAppService : IFileTypeAppService
 
     public async Task<int> CreateAsync(CreateFileTypeRequest request, CancellationToken ct)
     {
+        var code = CatalogCodeGenerator.ForFileExtension(request.Extension);
+        if (string.IsNullOrEmpty(code))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CodeSourceRequired"), 400);
+            return 0;
+        }
+        if (await _repo.ExistsByCodeAsync(code, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CodeAlreadyExists"), 409);
+            return 0;
+        }
         var exists = await _repo.ExistsByMimeTypeAsync(request.MimeType, ct);
         if (exists)
         {
@@ -83,7 +94,7 @@ public class FileTypeAppService : IFileTypeAppService
             return 0;
         }
 
-        var entity = new FileTypeEntity(request.MimeType, request.Extension, _currentUser.GetUserId());
+        var entity = new FileTypeEntity(request.MimeType, request.Extension, code, _currentUser.GetUserId());
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -147,7 +158,7 @@ public class FileTypeAppService : IFileTypeAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -165,7 +176,7 @@ public class FileTypeAppService : IFileTypeAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadFileTypeItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadFileTypeItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -255,12 +266,25 @@ public class FileTypeAppService : IFileTypeAppService
             var exists = await _repo.ExistsByMimeTypeAsync(item.MimeType, ct);
             if (exists)
             {
-                _notify.Add(_localization.GetMessage("Application.Service.FileType.ProcessBulkItems.ExistsByMimeType", item.MimeType), 400);
+                _notify.Add(_localization.GetMessage("Application.Service.FileType.ProcessBulkItems.ExistsByMimeType", item.MimeType), 409);
                 hasErrors = true;
                 continue;
             }
 
-            var entity = new FileTypeEntity(item.MimeType, item.Extension, _currentUser.GetUserId());
+            var code = CatalogCodeGenerator.ForFileExtension(item.Extension);
+            if (string.IsNullOrEmpty(code))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.CodeSourceRequired"), 400);
+                hasErrors = true;
+                continue;
+            }
+            if (await _repo.ExistsByCodeAsync(code, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.CodeAlreadyExists"), 409);
+                hasErrors = true;
+                continue;
+            }
+            var entity = new FileTypeEntity(item.MimeType, item.Extension, code, _currentUser.GetUserId());
             var success = await _domain.CreateAsync(entity, ct);
 
             if (!success)

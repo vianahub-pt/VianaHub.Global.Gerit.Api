@@ -60,7 +60,7 @@ public class ClientAppService : IClientAppService
         return _mapper.Map<IEnumerable<ClientResponse>>(entities);
     }
 
-    public async Task<ClientDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ClientDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -187,7 +187,7 @@ public class ClientAppService : IClientAppService
         return await _domain.DeleteAsync(client, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servico centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -272,7 +272,7 @@ public class ClientAppService : IClientAppService
         return true;
     }
 
-    private List<BulkUploadClientItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadClientItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

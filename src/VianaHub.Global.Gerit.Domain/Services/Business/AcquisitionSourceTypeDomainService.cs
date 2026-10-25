@@ -23,7 +23,7 @@ public class AcquisitionSourceTypeDomainService : IAcquisitionSourceTypeDomainSe
         _notify = notify;
     }
 
-    public async Task<AcquisitionSourceTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<AcquisitionSourceTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
         => await _repo.GetByIdAsync(id, ct);
 
     public async Task<IEnumerable<AcquisitionSourceTypeEntity>> GetAllAsync(CancellationToken ct)

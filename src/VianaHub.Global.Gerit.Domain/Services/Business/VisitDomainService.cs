@@ -23,7 +23,7 @@ public class VisitDomainService : IVisitDomainService
         _notify = notify;
     }
 
-    public async Task<VisitEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }

@@ -17,12 +17,12 @@ public class TenantDataRepository : ITenantDataRepository
         _context = context;
     }
 
-    public async Task<TenantEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<TenantEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<TenantEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<TenantEntity> GetByUserEmailAsync(string email, CancellationToken ct)
+    public async Task<TenantEntity?> GetByUserEmailAsync(string? email, CancellationToken ct)
     {
         await _context.Database.OpenConnectionAsync(ct);
         await _context.Database.ExecuteSqlRawAsync(
@@ -68,7 +68,7 @@ public class TenantDataRepository : ITenantDataRepository
             var search = request.Search.Trim().ToLower();
 
             query = query.Where(x =>
-                EF.Functions.Like(x.Name.ToLower(), $"%{search}%")
+                (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%"))
             );
         }
 
@@ -104,7 +104,7 @@ public class TenantDataRepository : ITenantDataRepository
         return await _context.Set<TenantEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(string? name, CancellationToken ct)
     {
         return await _context.Set<TenantEntity>().AsNoTracking().AnyAsync(x => x.Name == name && !x.IsDeleted, ct);
     }

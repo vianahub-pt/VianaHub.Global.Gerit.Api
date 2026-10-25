@@ -55,7 +55,7 @@ public class AddressTypeAppService : IAddressTypeAppService
         return _mapper.Map<IEnumerable<AddressTypeResponse>>(entities);
     }
 
-    public async Task<AddressTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<AddressTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -75,19 +75,32 @@ public class AddressTypeAppService : IAddressTypeAppService
 
     public async Task<int> CreateAsync(CreateAddressTypeRequest request, CancellationToken ct)
     {
-        var tenantId = _currentUser.GetTenantId();
-        var exists = await _repo.ExistsByNameAsync(request.Name, ct);
-        if (exists)
+        var code = CatalogCodeGenerator.FromCanonicalTranslation(request.Translations, t => t.LanguageCode, t => t.Name);
+        if (string.IsNullOrEmpty(code))
         {
-            _notify.Add(_localization.GetMessage("Application.Service.AddressType.Create.ResourceAlreadyExists"), 409);
+            _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
             return 0;
         }
+        if (await _repo.ExistsByCodeAsync(code, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CodeAlreadyExists"), 409);
+            return 0;
+        }
+        var tenantId = _currentUser.GetTenantId();
 
-        var entity = new AddressTypeEntity(_currentUser.GetUserId());
-        // Persistir Name e Description na tabela de traduções (idioma padrão: pt-PT)
-        var translation = new AddressTypeTranslationsEntity(0, "pt-PT", request.Name, request.Description);
-        entity.AddTranslation(translation);
-
+        foreach (var translation in request.Translations!)
+        {
+            if (await _repo.ExistsByTranslationAsync(translation.LanguageCode, translation.Name, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.TranslationAlreadyExists"), 409);
+                return 0;
+            }
+        }
+        var entity = new AddressTypeEntity(code, _currentUser.GetUserId());
+        foreach (var translation in request.Translations!)
+        {
+            entity.Translations.Add(new AddressTypeTranslationsEntity(entity.Id, translation.LanguageCode, translation.Name, translation.Description));
+        }
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -121,6 +134,7 @@ public class AddressTypeAppService : IAddressTypeAppService
             entity.AddTranslation(new AddressTypeTranslationsEntity(entity.Id, "pt-PT", request.Name, request.Description));
         }
 
+        entity.MarkModified(_currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
 
@@ -163,7 +177,7 @@ public class AddressTypeAppService : IAddressTypeAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -184,7 +198,7 @@ public class AddressTypeAppService : IAddressTypeAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadAddressTypeItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadAddressTypeItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -219,6 +233,8 @@ public class AddressTypeAppService : IAddressTypeAppService
                     {
                         // Sanitiza e normaliza campos
                         record.Name = record.Name?.SanitizeCsvInput().NormalizeUtf8();
+                        record.EnglishName = record.EnglishName?.SanitizeCsvInput().NormalizeUtf8();
+                        record.EnglishDescription = record.EnglishDescription?.SanitizeCsvInput().NormalizeUtf8();
                         record.Description = record.Description?.SanitizeCsvInput().NormalizeUtf8();
 
                         // Valida se os campos n�o cont�m conte�do perigoso
@@ -277,17 +293,31 @@ public class AddressTypeAppService : IAddressTypeAppService
             }
 
             // Verifica duplicidade
-            var exists = await _repo.ExistsByNameAsync(item.Name, ct);
+            var exists = await _repo.ExistsByTranslationAsync(Domain.Constants.SupportedLanguages.Default, item.Name, ct) || await _repo.ExistsByTranslationAsync(CatalogCodeGenerator.CanonicalLanguageCode, item.EnglishName, ct);
             if (exists)
             {
-                _notify.Add(_localization.GetMessage("Application.Service.AddressType.ProcessBulkItems.ExistsByName", item.Name), 400);
+                _notify.Add(_localization.GetMessage("Application.Catalog.TranslationAlreadyExists"), 409);
                 hasErrors = true;
                 continue;
             }
 
             // Cria a entidade com tradução pt-PT
-            var entity = new AddressTypeEntity(_currentUser.GetUserId());
+            var code = CatalogCodeGenerator.FromCanonicalTranslation(new[] { item }, _ => CatalogCodeGenerator.CanonicalLanguageCode, t => t.EnglishName);
+            if (string.IsNullOrEmpty(code))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+                hasErrors = true;
+                continue;
+            }
+            if (await _repo.ExistsByCodeAsync(code, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.CodeAlreadyExists"), 409);
+                hasErrors = true;
+                continue;
+            }
+            var entity = new AddressTypeEntity(code, _currentUser.GetUserId());
             entity.AddTranslation(new AddressTypeTranslationsEntity(0, "pt-PT", item.Name, item.Description));
+            entity.AddTranslation(new AddressTypeTranslationsEntity(0, CatalogCodeGenerator.CanonicalLanguageCode, item.EnglishName, item.EnglishDescription));
 
             // Tenta criar no domínio
             var success = await _domain.CreateAsync(entity, ct);
@@ -304,6 +334,22 @@ public class AddressTypeAppService : IAddressTypeAppService
 
     private bool ValidateBulkItem(BulkUploadAddressTypeItem item)
     {
+        if (string.IsNullOrEmpty(CatalogCodeGenerator.FromCanonicalTranslation(new[] { item }, _ => CatalogCodeGenerator.CanonicalLanguageCode, t => t.EnglishName)))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+            return false;
+        }
+
+        if (item.EnglishName?.Length > 200 || !item.EnglishName.IsSafeCsvValue())
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.TranslationNameInvalid", 200), 400);
+            return false;
+        }
+        if (item.EnglishDescription?.Length > 500 || (!string.IsNullOrEmpty(item.EnglishDescription) && !item.EnglishDescription.IsSafeCsvValue()))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.TranslationDescriptionInvalid", 500), 400);
+            return false;
+        }
         if (string.IsNullOrWhiteSpace(item.Name))
         {
             _notify.Add(_localization.GetMessage("Application.Service.AddressType.ValidateBulkItem.Name", item.Name ?? "N/A"), 400);

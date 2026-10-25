@@ -22,9 +22,9 @@ public class VisitAttachmentsEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public FileTypeEntity FileType { get; private set; }
-    public VisitEntity Visit { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public FileTypeEntity? FileType { get; private set; }
+    public VisitEntity? Visit { get; private set; }
 
     protected VisitAttachmentsEntity() { }
 
@@ -32,7 +32,7 @@ public class VisitAttachmentsEntity : Entity
     /// Construtor para criação de um novo anexo de visita
     /// </summary>
     public VisitAttachmentsEntity(int tenantId, int fileTypeId, int visitId,
-        string s3Key, string fileName, long fileSizeBytes, int displayOrder, bool isPrimary, int createdBy)
+        string? s3Key, string? fileName, long fileSizeBytes, int displayOrder, bool isPrimary, int createdBy)
     {
         if (fileSizeBytes <= 0)
             throw new ArgumentException("Domain.VisitAttachment.FileSizeInvalid");
@@ -58,7 +58,7 @@ public class VisitAttachmentsEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string fileName, int displayOrder, bool isPrimary, int modifiedBy)
+    public void Update(string? fileName, int displayOrder, bool isPrimary, int modifiedBy)
     {
         FileName = fileName;
         DisplayOrder = displayOrder;

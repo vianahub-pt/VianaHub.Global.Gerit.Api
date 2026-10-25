@@ -48,7 +48,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
         _logger = logger;
     }
 
-    public async Task<VisitAttachmentDetailResponse> GetByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitAttachmentDetailResponse?> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -59,7 +59,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
         return _mapper.Map<VisitAttachmentDetailResponse>(entity);
     }
 
-    public async Task<VisitAttachmentResponse> GetByPublicIdAsync(Guid publicId, CancellationToken ct)
+    public async Task<VisitAttachmentResponse?> GetByPublicIdAsync(Guid publicId, CancellationToken ct)
     {
         var entity = await _repo.GetByPublicIdAsync(publicId, ct);
         if (entity == null || entity.IsDeleted)
@@ -70,7 +70,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
         return _mapper.Map<VisitAttachmentResponse>(entity);
     }
 
-    public async Task<VisitAttachmentDetailResponse> GetDetailByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitAttachmentDetailResponse?> GetDetailByIdAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -81,7 +81,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
         return _mapper.Map<VisitAttachmentDetailResponse>(entity);
     }
 
-    public async Task<VisitAttachmentDetailResponse> GetDetailByPublicIdAsync(Guid publicId, CancellationToken ct)
+    public async Task<VisitAttachmentDetailResponse?> GetDetailByPublicIdAsync(Guid publicId, CancellationToken ct)
     {
         var entity = await _repo.GetByPublicIdAsync(publicId, ct);
         if (entity == null || entity.IsDeleted)
@@ -104,7 +104,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
         return _mapper.Map<IEnumerable<VisitAttachmentResponse>>(entities);
     }
 
-    public async Task<VisitAttachmentResponse> GetPrimaryByVisitIdAsync(int visitId, CancellationToken ct)
+    public async Task<VisitAttachmentResponse?> GetPrimaryByVisitIdAsync(int visitId, CancellationToken ct)
     {
         var entity = await _repo.GetPrimaryByVisitIdAsync(visitId, ct);
         if (entity == null || entity.IsDeleted)

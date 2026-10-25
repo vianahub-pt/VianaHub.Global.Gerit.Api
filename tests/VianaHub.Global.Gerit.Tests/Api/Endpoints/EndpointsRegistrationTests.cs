@@ -1,3 +1,5 @@
+using VianaHub.Global.Gerit.Api.Endpoints.Business;
+using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,6 +56,12 @@ namespace VianaHub.Global.Gerit.Tests.Api.Endpoints
             services.AddSingleton(new Mock<IAuthAppService>().Object);
             services.AddSingleton(new Mock<ITenantContactPersonAppService>().Object);
             services.AddSingleton(new Mock<ILocalizationService>().Object);
+            services.AddSingleton(new Mock<IAddressTypeAppService>().Object);
+            services.AddSingleton(new Mock<IAcquisitionSourceTypeAppService>().Object);
+            services.AddSingleton(new Mock<IDocumentTypeAppService>().Object);
+            services.AddSingleton(new Mock<IPartyTypeAppService>().Object);
+            services.AddSingleton(new Mock<IStatusDomainAppService>().Object);
+            services.AddSingleton(new Mock<IStatusDefinitionAppService>().Object);
 
             var sp = services.BuildServiceProvider();
             return new TestEndpointRouteBuilder(sp);
@@ -82,6 +90,82 @@ namespace VianaHub.Global.Gerit.Tests.Api.Endpoints
 
             var app = builder.Build();
             return app;
+        }
+
+        [Theory]
+        [InlineData("CreateAddressType", typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.AddressType.CreateAddressTypeRequest))]
+        [InlineData("CreateAcquisitionSourceType", typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.AcquisitionSourceType.CreateAcquisitionSourceTypeRequest))]
+        [InlineData("CreateDocumentType", typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.DocumentType.CreateDocumentTypeRequest))]
+        [InlineData("CreatePartyType", typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType.CreatePartyTypeRequest))]
+        [InlineData("CreateStatusDomain", typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDomain.CreateStatusDomainRequest))]
+        [InlineData("CreateStatusDefinition", typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDefinition.CreateStatusDefinitionRequest))]
+        [InlineData("CreatePlan", typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Billing.Plan.CreatePlanRequest))]
+        public void CanonicalCatalogCreates_ExposeTranslationRequestAndActualResponses(string endpointName, Type requestType)
+        {
+            var routes = CreateRouteBuilder();
+            switch (endpointName)
+            {
+                case "CreateAddressType": routes.MapAddressTypeEndpoints(); break;
+                case "CreateAcquisitionSourceType": routes.MapAcquisitionSourceTypeEndpoints(); break;
+                case "CreateDocumentType": routes.MapDocumentTypeEndpoints(); break;
+                case "CreatePartyType": routes.MapPartyTypeEndpoints(); break;
+                case "CreateStatusDomain": routes.MapStatusDomainEndpoints(); break;
+                case "CreateStatusDefinition": routes.MapStatusDefinitionEndpoints(); break;
+                case "CreatePlan": routes.MapPlanEndpoints(); break;
+            }
+            var endpoint = routes.DataSources.SelectMany(source => source.Endpoints)
+                .Single(item => item.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName == endpointName);
+            var accepts = endpoint.Metadata.GetMetadata<Microsoft.AspNetCore.Http.Metadata.IAcceptsMetadata>();
+            Assert.NotNull(accepts);
+            Assert.Equal(requestType, accepts.RequestType);
+            Assert.Contains("application/json", accepts.ContentTypes);
+            Assert.NotNull(requestType.GetProperty("Translations"));
+            Assert.True(Attribute.IsDefined(requestType.GetProperty("Translations")!, typeof(System.ComponentModel.DataAnnotations.RequiredAttribute)));
+            Assert.Null(requestType.GetProperty("Code"));
+            Assert.Null(requestType.GetProperty("Name"));
+            var responses = endpoint.Metadata.GetOrderedMetadata<Microsoft.AspNetCore.Http.Metadata.IProducesResponseTypeMetadata>();
+            Assert.Contains(responses, response => response.StatusCode == 201 && response.Type == typeof(VianaHub.Global.Gerit.Application.Dtos.Base.GenericResponse));
+            Assert.Contains(responses, response => response.StatusCode == 400 && response.Type == typeof(VianaHub.Global.Gerit.Application.Dtos.Base.ErrorResponse));
+            Assert.Contains(responses, response => response.StatusCode == 409 && response.Type == typeof(VianaHub.Global.Gerit.Application.Dtos.Base.ErrorResponse));
+        }
+
+        [Theory]
+        [InlineData(typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.AddressType.CreateAddressTypeRequest))]
+        [InlineData(typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.AcquisitionSourceType.CreateAcquisitionSourceTypeRequest))]
+        [InlineData(typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.DocumentType.CreateDocumentTypeRequest))]
+        [InlineData(typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType.CreatePartyTypeRequest))]
+        [InlineData(typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDomain.CreateStatusDomainRequest))]
+        [InlineData(typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDefinition.CreateStatusDefinitionRequest))]
+        [InlineData(typeof(VianaHub.Global.Gerit.Application.Dtos.Request.Billing.Plan.CreatePlanRequest))]
+        public async Task CanonicalCatalogCreateValidators_AreRegisteredAndRejectMissingEnglish(Type requestType)
+        {
+            var localization = new Mock<ILocalizationService>();
+            localization.Setup(service => service.GetMessage(It.IsAny<string>())).Returns((string key) => key);
+            localization.Setup(service => service.GetMessage(It.IsAny<string>(), It.IsAny<object[]>())).Returns((string key, object[] arguments) => key);
+            var services = new ServiceCollection();
+            services.AddSingleton(localization.Object);
+            VianaHub.Global.Gerit.Api.Configuration.RouteValidatorSetup.AddRouteValidatorSetup(services);
+            using var provider = services.BuildServiceProvider();
+            using var scope = provider.CreateScope();
+            var validator = (FluentValidation.IValidator)scope.ServiceProvider.GetRequiredService(typeof(FluentValidation.IValidator<>).MakeGenericType(requestType));
+            var request = Activator.CreateInstance(requestType)!;
+            var result = await validator.ValidateAsync(new FluentValidation.ValidationContext<object>(request));
+            Assert.False(result.IsValid);
+            Assert.Contains(result.Errors, failure => failure.ErrorMessage == "Application.Catalog.CanonicalEnglishNameRequired");
+        }
+
+        [Theory]
+        [InlineData("GetAllActions", typeof(IEnumerable<VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Action.ActionResponse>))]
+        [InlineData("GetActionById", typeof(VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Action.ActionDetailResponse))]
+        public void ActionEndpoints_DeclareActualSuccessBody(string endpointName, Type responseType)
+        {
+            var routes = CreateRouteBuilder();
+            ActionEndpoint.MapActionEndpoints(routes);
+            var endpoint = routes.DataSources.SelectMany(source => source.Endpoints)
+                .Single(item => item.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName == endpointName);
+            var response = endpoint.Metadata.GetOrderedMetadata<Microsoft.AspNetCore.Http.Metadata.IProducesResponseTypeMetadata>()
+                .Last(item => item.StatusCode == 200);
+            Assert.Equal(responseType, response.Type);
         }
 
         [Fact(DisplayName = "Endpoints - MapPlanEndpoints n�o lan�a exce��o")]

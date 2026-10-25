@@ -23,7 +23,7 @@ public class EquipmentTypeDomainService : IEquipmentTypeDomainService
         _notify = notify;
     }
 
-    public async Task<EquipmentTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<EquipmentTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }

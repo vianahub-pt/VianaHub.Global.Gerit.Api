@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 
 public interface IFileTypeDomainService
 {
-    Task<FileTypeEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<FileTypeEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<FileTypeEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<FileTypeEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

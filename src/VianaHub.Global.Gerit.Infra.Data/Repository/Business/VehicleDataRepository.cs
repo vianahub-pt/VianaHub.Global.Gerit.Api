@@ -16,15 +16,12 @@ public class VehicleDataRepository : IVehicleDataRepository
         _context = context;
     }
 
-    public async Task<VehicleEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VehicleEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<VehicleEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VehicleEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(VehicleEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -32,11 +29,8 @@ public class VehicleDataRepository : IVehicleDataRepository
     {
         return await _context.Set<VehicleEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VehicleEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(VehicleEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted).OrderBy(x => x.Plate).ToListAsync(ct);
     }
 
@@ -44,11 +38,8 @@ public class VehicleDataRepository : IVehicleDataRepository
     {
         var query = _context.Set<VehicleEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VehicleEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(VehicleEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -59,20 +50,20 @@ public class VehicleDataRepository : IVehicleDataRepository
             // Se for um número válido, permite busca exata por ano
             if (int.TryParse(rawSearch, out var searchYear))
             {
-                query = query.Where(x => EF.Functions.Like(x.Plate.ToLower(), $"%{searchLower}%") ||
-                                         EF.Functions.Like(x.Brand.ToLower(), $"%{searchLower}%") ||
+                query = query.Where(x => (x.Plate != null && EF.Functions.Like(x.Plate.ToLower(), $"%{searchLower}%")) ||
+                                         (x.Brand != null && EF.Functions.Like(x.Brand.ToLower(), $"%{searchLower}%")) ||
                                          x.Year == searchYear ||
-                                         EF.Functions.Like(x.Model.ToLower(), $"%{searchLower}%") ||
-                                         EF.Functions.Like(x.Color.ToLower(), $"%{searchLower}%") ||
-                                         EF.Functions.Like(x.FuelType.ToLower(), $"%{searchLower}%"));
+                                         (x.Model != null && EF.Functions.Like(x.Model.ToLower(), $"%{searchLower}%")) ||
+                                         (x.Color != null && EF.Functions.Like(x.Color.ToLower(), $"%{searchLower}%")) ||
+                                         (x.FuelType != null && EF.Functions.Like(x.FuelType.ToLower(), $"%{searchLower}%")));
             }
             else
             {
-                query = query.Where(x => EF.Functions.Like(x.Plate.ToLower(), $"%{searchLower}%") ||
-                                         EF.Functions.Like(x.Brand.ToLower(), $"%{searchLower}%") ||
-                                         EF.Functions.Like(x.Model.ToLower(), $"%{searchLower}%") ||
-                                         EF.Functions.Like(x.Color.ToLower(), $"%{searchLower}%") ||
-                                         EF.Functions.Like(x.FuelType.ToLower(), $"%{searchLower}%"));
+                query = query.Where(x => (x.Plate != null && EF.Functions.Like(x.Plate.ToLower(), $"%{searchLower}%")) ||
+                                         (x.Brand != null && EF.Functions.Like(x.Brand.ToLower(), $"%{searchLower}%")) ||
+                                         (x.Model != null && EF.Functions.Like(x.Model.ToLower(), $"%{searchLower}%")) ||
+                                         (x.Color != null && EF.Functions.Like(x.Color.ToLower(), $"%{searchLower}%")) ||
+                                         (x.FuelType != null && EF.Functions.Like(x.FuelType.ToLower(), $"%{searchLower}%")));
             }
         }
 
@@ -103,7 +94,7 @@ public class VehicleDataRepository : IVehicleDataRepository
         return await _context.Set<VehicleEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByPlateAsync(int tenantId, string plate, CancellationToken ct)
+    public async Task<bool> ExistsByPlateAsync(int tenantId, string? plate, CancellationToken ct)
     {
         return await _context.Set<VehicleEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Plate == plate && !x.IsDeleted, ct);
     }

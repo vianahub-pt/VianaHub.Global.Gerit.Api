@@ -26,8 +26,8 @@ public class TenantAddressesEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public AddressTypeEntity AddressType { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public AddressTypeEntity? AddressType { get; private set; }
 
     // Construtor protegido para o EF Core
     protected TenantAddressesEntity() { }
@@ -36,20 +36,20 @@ public class TenantAddressesEntity : Entity
     /// Construtor para cria��o de um novo endere�o do Tenant
     /// </summary>
     public TenantAddressesEntity(
-        int tenantId, 
+        int tenantId,
         int addressTypeId,
         string countryCode,
-        string street,
-        string neighborhood,
-        string city, 
+        string? street,
+        string? neighborhood,
+        string? city,
         string? district,
-        string postalCode, 
+        string? postalCode,
         string? streetNumber,
         string? complement,
         decimal? latitude,
         decimal? longitude,
         string? note,
-        bool isPrimary, 
+        bool isPrimary,
         int createdBy)
     {
         TenantId = tenantId;
@@ -75,11 +75,11 @@ public class TenantAddressesEntity : Entity
     public void Update(
         int addressTypeId,
         string countryCode,
-        string street,
-        string neighborhood,
-        string city, 
+        string? street,
+        string? neighborhood,
+        string? city,
         string? district,
-        string postalCode, 
+        string? postalCode,
         string? streetNumber,
         string? complement,
         decimal? latitude,
@@ -102,7 +102,7 @@ public class TenantAddressesEntity : Entity
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }
-    
+
     public void SetAsPrimary()
     {
         IsPrimary = true;

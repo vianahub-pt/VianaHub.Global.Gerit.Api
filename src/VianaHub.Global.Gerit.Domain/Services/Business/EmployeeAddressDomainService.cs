@@ -27,7 +27,7 @@ public class EmployeeAddressDomainService : IEmployeeAddressDomainService
         _notify = notify;
     }
 
-    public async Task<EmployeeAddressesEntity> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeAddressesEntity?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(employeeId, id, ct);
     }

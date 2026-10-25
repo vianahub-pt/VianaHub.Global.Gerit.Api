@@ -16,7 +16,7 @@ public class VisitAttachmentDataRepository : IVisitAttachmentDataRepository
         _context = context;
     }
 
-    public async Task<VisitAttachmentsEntity> GetByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitAttachmentsEntity?> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         return await _context.Set<VisitAttachmentsEntity>()
             .AsNoTracking()
@@ -25,7 +25,7 @@ public class VisitAttachmentDataRepository : IVisitAttachmentDataRepository
             .FirstOrDefaultAsync(x => x.VisitId == visitId && x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<VisitAttachmentsEntity> GetByPublicIdAsync(Guid publicId, CancellationToken ct)
+    public async Task<VisitAttachmentsEntity?> GetByPublicIdAsync(Guid publicId, CancellationToken ct)
     {
         return await _context.Set<VisitAttachmentsEntity>()
             .AsNoTracking()
@@ -56,7 +56,7 @@ public class VisitAttachmentDataRepository : IVisitAttachmentDataRepository
             .ToListAsync(ct);
     }
 
-    public async Task<VisitAttachmentsEntity> GetPrimaryByVisitIdAsync(int visitId, CancellationToken ct)
+    public async Task<VisitAttachmentsEntity?> GetPrimaryByVisitIdAsync(int visitId, CancellationToken ct)
     {
         return await _context.Set<VisitAttachmentsEntity>()
             .AsNoTracking()
@@ -75,8 +75,8 @@ public class VisitAttachmentDataRepository : IVisitAttachmentDataRepository
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => EF.Functions.Like(x.FileName.ToLower(), $"%{search}%") ||
-                                     EF.Functions.Like(x.S3Key.ToLower(), $"%{search}%"));
+            query = query.Where(x => (x.FileName != null && EF.Functions.Like(x.FileName.ToLower(), $"%{search}%")) ||
+                                     (x.S3Key != null && EF.Functions.Like(x.S3Key.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -108,7 +108,7 @@ public class VisitAttachmentDataRepository : IVisitAttachmentDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByS3KeyAsync(int tenantId, string s3Key, CancellationToken ct)
+    public async Task<bool> ExistsByS3KeyAsync(int tenantId, string? s3Key, CancellationToken ct)
     {
         return await _context.Set<VisitAttachmentsEntity>()
             .AsNoTracking()

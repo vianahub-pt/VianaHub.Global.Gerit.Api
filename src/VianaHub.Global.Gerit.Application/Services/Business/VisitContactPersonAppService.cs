@@ -58,7 +58,7 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
         return _mapper.Map<IEnumerable<VisitContactPersonResponse>>(entities);
     }
 
-    public async Task<VisitContactPersonDetailResponse> GetByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitContactPersonDetailResponse?> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -165,7 +165,7 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int visitId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int visitId, IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -183,7 +183,7 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
         return await ProcessBulkItemsAsync(visitId, items, ct);
     }
 
-    private List<BulkUploadVisitContactPersonItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadVisitContactPersonItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

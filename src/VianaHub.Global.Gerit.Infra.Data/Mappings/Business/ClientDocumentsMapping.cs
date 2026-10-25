@@ -132,13 +132,13 @@ public class ClientDocumentsMapping : IEntityTypeConfiguration<ClientDocumentsEn
             .HasFilter("[IsDeleted] = 0");
 
         // Check constraint: ExpiresAt >= IssuedAt quando ambos preenchidos
-        builder.HasCheckConstraint(
+        builder.ToTable(table => table.HasCheckConstraint(
             "CK_ClientDocuments_ExpiresAt_Gte_IssuedAt",
-            "[IssuedAt] IS NULL OR [ExpiresAt] IS NULL OR [ExpiresAt] >= [IssuedAt]");
+            "[IssuedAt] IS NULL OR [ExpiresAt] IS NULL OR [ExpiresAt] >= [IssuedAt]"));
 
         // Check constraint: não pode estar ativo e deletado ao mesmo tempo
-        builder.HasCheckConstraint(
+        builder.ToTable(table => table.HasCheckConstraint(
             "CK_ClientDocuments_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
     }
 }

@@ -26,6 +26,8 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Actions", "GetAll")
         .WithName("GetAllActions")
         .WithSummary("Swagger.Endpoint.Action.GetAll.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<IEnumerable<ActionResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -37,6 +39,9 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Actions", "GetBy")
         .WithName("GetActionById")
         .WithSummary("Swagger.Endpoint.Action.GetById.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ActionDetailResponse?>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -49,6 +54,8 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Actions", "GetPaged")
         .WithName("GetActionsPaged")
         .WithSummary("Swagger.Endpoint.Action.GetPaged.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ListPageResponse<ActionResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -60,6 +67,9 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice", "Actions", "Create")
         .WithName("CreateAction")
         .WithSummary("Swagger.Endpoint.Action.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -73,7 +83,10 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice", "Actions", "Update")
         .WithName("UpdateAction")
         .WithSummary("Swagger.Endpoint.Action.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -87,7 +100,10 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice", "Actions", "Activate")
         .WithName("ActivateAction")
         .WithSummary("Swagger.Endpoint.Action.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -99,7 +115,10 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice", "Actions", "Deactivate")
         .WithName("DeactivateAction")
         .WithSummary("Swagger.Endpoint.Action.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -111,7 +130,10 @@ public static class ActionEndpoint
         .CustomAuthorize("Admin,BackOffice", "Actions", "Delete")
         .WithName("DeleteAction")
         .WithSummary("Swagger.Endpoint.Action.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -134,7 +156,10 @@ public static class ActionEndpoint
         .WithSummary("Swagger.Endpoint.Action.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

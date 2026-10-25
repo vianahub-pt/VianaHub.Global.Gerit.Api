@@ -1,4 +1,12 @@
 {
+  "Application.Catalog.TranslationLanguagesUnique": "Each language can have only one translation per catalog.",
+  "Application.Catalog.TranslationDescriptionInvalid": "The translation description must not exceed {0} characters.",
+  "Application.Catalog.TranslationNameInvalid": "A translation name of up to {0} characters is required.",
+  "Application.Catalog.TranslationLanguageInvalid": "A valid language code of up to 10 characters is required.",
+  "Application.Catalog.TranslationAlreadyExists": "A translation with this name already exists in the same language and catalog scope.",
+  "Application.Catalog.CanonicalEnglishNameRequired": "Exactly one en-US translation with a valid canonical English name is required to generate the catalog code.",
+  "Application.Catalog.CodeSourceRequired": "A valid name in the default language (pt-PT), or a valid file extension, is required to generate the catalog code.",
+  "Application.Catalog.CodeAlreadyExists": "A catalog entry with the generated code already exists.",
   "Api.Authorization.AccessDenied": "Access Denied",
   "Api.Authorization.Forbidden.Permission.Detail": "You do not have permission to perform this action",
   "Api.Authorization.Forbidden.Roles.Detail": "You do not have the required roles to access this resource",

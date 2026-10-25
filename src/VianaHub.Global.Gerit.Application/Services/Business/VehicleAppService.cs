@@ -51,7 +51,7 @@ public class VehicleAppService : IVehicleAppService
         return _mapper.Map<IEnumerable<VehicleResponse>>(entities);
     }
 
-    public async Task<VehicleDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VehicleDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -136,7 +136,7 @@ public class VehicleAppService : IVehicleAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -157,7 +157,7 @@ public class VehicleAppService : IVehicleAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadVehicleItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadVehicleItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -220,7 +220,7 @@ public class VehicleAppService : IVehicleAppService
                     }
                     rowCount++;
                 }
-                catch (CsvHelperException ex)
+                catch (CsvHelperException)
                 {
                     // Log linha com erro mas continua processamento
                     _notify.Add(_localization.GetMessage("Application.Service.Vehicle.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
@@ -237,7 +237,7 @@ public class VehicleAppService : IVehicleAppService
 
             return records;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Vehicle.ReadCsvFile.Exception"), 400);
             return null;

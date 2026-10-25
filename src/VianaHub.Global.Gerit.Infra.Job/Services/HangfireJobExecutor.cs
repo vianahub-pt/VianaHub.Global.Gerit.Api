@@ -27,14 +27,15 @@ public class HangfireJobExecutor : IJobExecutor
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(jobDefinition.TimeZoneId);
             var timeZone = TimeZoneInfo.FindSystemTimeZoneById(jobDefinition.TimeZoneId);
 
             RecurringJob.AddOrUpdate(
                 jobDefinition.JobName,
+                jobDefinition.Queue,
                 () => ExecuteJobInternal(jobDefinition.JobType, jobDefinition.JobMethod),
                 jobDefinition.CronExpression,
-                timeZone,
-                jobDefinition.Queue
+                new RecurringJobOptions { TimeZone = timeZone }
             );
 
             return Task.FromResult(true);
@@ -60,7 +61,7 @@ public class HangfireJobExecutor : IJobExecutor
         }
     }
 
-    public Task<string> EnqueueJobAsync(JobDefinitionsEntity jobDefinition)
+    public Task<string?> EnqueueJobAsync(JobDefinitionsEntity jobDefinition)
     {
         try
         {
@@ -68,12 +69,12 @@ public class HangfireJobExecutor : IJobExecutor
                 () => ExecuteJobInternal(jobDefinition.JobType, jobDefinition.JobMethod)
             );
 
-            return Task.FromResult(jobId);
+            return Task.FromResult<string?>(jobId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to enqueue job {JobName}", jobDefinition.JobName);
-            return Task.FromResult<string>(null);
+            return Task.FromResult<string?>(null);
         }
     }
 
@@ -82,7 +83,7 @@ public class HangfireJobExecutor : IJobExecutor
     /// Este método usa reflexão para instanciar e executar dinamicamente jobs registrados.
     /// </summary>
     [AutomaticRetry(Attempts = 0)]
-    public async Task ExecuteJobInternal(string jobType, string jobMethod)
+    public async Task ExecuteJobInternal(string? jobType, string? jobMethod)
     {
         // Criar um escopo para resolver dependências do job
         using var scope = _serviceProvider.CreateScope();
@@ -93,6 +94,7 @@ public class HangfireJobExecutor : IJobExecutor
             logger.LogInformation("Starting execution of job {JobType}.{JobMethod}", jobType, jobMethod);
 
             // Validar e carregar o tipo do job via reflexão
+            ArgumentNullException.ThrowIfNull(jobType);
             var type = Type.GetType(jobType);
             if (type == null)
             {

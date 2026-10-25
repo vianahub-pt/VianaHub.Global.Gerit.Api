@@ -40,15 +40,15 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         _secretProvider = secretProvider;
     }
 
-    public async Task<JwtKeysEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
-    public async Task<JwtKeysEntity> GetByKeyIdAsync(Guid keyId, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetByKeyIdAsync(Guid keyId, CancellationToken ct)
     {
         return await _repo.GetByKeyIdAsync(keyId, ct);
     }
-    public async Task<JwtKeysEntity> GetActiveKeyAsync(int tenantId, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetActiveKeyAsync(int tenantId, CancellationToken ct)
     {
         return await _repo.GetActiveKeyAsync(tenantId, ct);
     }
@@ -61,7 +61,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         return await _repo.GetByTenantAsync(tenantId, ct);
     }
 
-    public async Task<JwtKeysEntity> CreateAsync(JwtKeysEntity entity, CancellationToken ct)
+    public async Task<JwtKeysEntity?> CreateAsync(JwtKeysEntity entity, CancellationToken ct)
     {
         // Validar tenant
         if (!await ValidateTenantAsync(entity.TenantId, ct))
@@ -286,7 +286,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         existing.UpdateRotationSchedule(rotationPolicyDays, overlapPeriodDays, modifiedBy);
         return await _repo.UpdateAsync(existing, ct);
     }
-    public async Task<(string PublicKey, string PrivateKeyEncrypted)> GenerateKeyPairAsync(string algorithm, int keySize, CancellationToken ct)
+    public async Task<(string PublicKey, string PrivateKeyEncrypted)> GenerateKeyPairAsync(string? algorithm, int keySize, CancellationToken ct)
     {
         await Task.CompletedTask; // Para evitar warning de async sem await
 
@@ -432,7 +432,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
 
         return deletedCount;
     }
-    public async Task<JwtKeysEntity> EnsureKeyExistsAsync(int tenantId, int createdBy, CancellationToken ct)
+    public async Task<JwtKeysEntity?> EnsureKeyExistsAsync(int tenantId, int createdBy, CancellationToken ct)
     {
         _logger.LogInformation("?? [EnsureKeyExistsAsync] Verificando exist�ncia de chave JWT. TenantId={TenantId}", tenantId);
 

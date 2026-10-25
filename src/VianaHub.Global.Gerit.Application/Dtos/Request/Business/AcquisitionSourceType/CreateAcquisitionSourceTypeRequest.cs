@@ -2,7 +2,6 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.AcquisitionSou
 
 public class CreateAcquisitionSourceTypeRequest
 {
-    public string? Code { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
+    [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
+    public List<CreateAcquisitionSourceTypeTranslationRequest>? Translations { get; set; }
 }

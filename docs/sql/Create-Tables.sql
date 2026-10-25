@@ -12,7 +12,7 @@ CONSTRAINT PK_PartyTypes PRIMARY KEY CLUSTERED (Id),
 CONSTRAINT CK_PartyTypes_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1))
 );
 GO
-INSERT INTO dbo.PartyTypes (Id, Code, CreatedBy) VALUES (1, N'Individual', 1), (2, N'Organization', 1);
+INSERT INTO dbo.PartyTypes (Id, Code, CreatedBy) VALUES (1, N'INDIVIDUAL', 1), (2, N'ORGANIZATION', 1);
 GO
 CREATE TABLE dbo.PartyTypeTranslations (
 Id              INT IDENTITY(1,1) NOT NULL,
@@ -473,7 +473,6 @@ GO
 CREATE TABLE dbo.Roles (
 Id				INT IDENTITY(1,1)	NOT NULL,
 TenantId		INT					NOT NULL,
-Code            NVARCHAR(50)        NOT NULL,
 Name			NVARCHAR(100)		NOT NULL,
 Description     NVARCHAR(500)		NOT NULL,
 IsActive		BIT					NOT NULL DEFAULT 1,
@@ -490,7 +489,6 @@ CONSTRAINT FK_Roles_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id)
 GO
 CREATE TABLE dbo.Resources (
 Id				INT IDENTITY(1,1)	NOT NULL,
-Code            NVARCHAR(50)        NOT NULL,
 Name			NVARCHAR(100)		NOT NULL,
 Description     NVARCHAR(500)		NOT NULL,
 IsActive		BIT					NOT NULL DEFAULT 1,
@@ -505,7 +503,6 @@ CONSTRAINT CK_Resources_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 
 GO
 CREATE TABLE dbo.Actions (
 Id				INT IDENTITY(1,1)	NOT NULL,
-Code            NVARCHAR(50)        NOT NULL,
 Name			NVARCHAR(50)		NOT NULL,
 Description     NVARCHAR(500)		NOT NULL,
 IsActive		BIT					NOT NULL DEFAULT 1,
@@ -1248,11 +1245,11 @@ CREATE UNIQUE INDEX UX_ClientFiscalData_TaxNumber                               
 CREATE UNIQUE INDEX UX_TenantFiscalData_TaxNumber                                   ON dbo.TenantFiscalData (TenantId, FiscalCountry, TaxNumber) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_EmployeeFiscalData_TaxNumber                                 ON dbo.EmployeeFiscalData (TenantId, FiscalCountry, TaxNumber) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_Roles_Tenant_Name                                            ON dbo.Roles (TenantId, Name) WHERE IsDeleted = 0;
+CREATE UNIQUE INDEX UX_Actions_Name                                                ON dbo.Actions (Name) WHERE IsDeleted = 0;
+CREATE UNIQUE INDEX UX_Resources_Name                                              ON dbo.Resources (Name) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_Teams_Tenant_Name                                            ON dbo.Teams (TenantId, Name) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_EquipmentTypes_Tenant_Name                                   ON dbo.EquipmentTypes (TenantId, Name) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_Vehicles_Tenant_Plate                                        ON dbo.Vehicles (TenantId, Plate) WHERE IsDeleted = 0;
-CREATE UNIQUE INDEX UX_Resources_Code                                               ON dbo.Resources (Code) WHERE IsDeleted = 0;
-CREATE UNIQUE INDEX UX_Actions_Code                                                 ON dbo.Actions (Code) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_SubscriptionPlanFileRules_Plan_FileType                      ON dbo.SubscriptionPlanFileRules (SubscriptionPlanId, FileTypeId) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_FileTypes_MimeType_Extension                                 ON dbo.FileTypes (MimeType, Extension) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_JobDefinitions_JobName                                       ON dbo.JobDefinitions (JobName) WHERE IsDeleted = 0;

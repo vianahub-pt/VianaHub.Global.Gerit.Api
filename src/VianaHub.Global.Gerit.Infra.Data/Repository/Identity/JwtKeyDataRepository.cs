@@ -19,19 +19,19 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
         _logger = logger;
     }
 
-    public async Task<JwtKeysEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<JwtKeysEntity>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<JwtKeysEntity> GetByKeyIdAsync(Guid keyId, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetByKeyIdAsync(Guid keyId, CancellationToken ct)
     {
         return await _context.Set<JwtKeysEntity>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.KeyId == keyId && !x.IsDeleted, ct);
     }
 
-    public async Task<JwtKeysEntity> GetActiveKeyAsync(int tenantId, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetActiveKeyAsync(int tenantId, CancellationToken ct)
     {
         return await _context.Set<JwtKeysEntity>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.IsActive && !x.IsDeleted && x.RevokedAt == null, ct);
@@ -79,8 +79,8 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
             var search = request.Search.Trim().ToLower();
 
             query = query.Where(x =>
-                EF.Functions.Like(x.PlainPrivateKey.ToLower(), $"%{search}%")
-                || EF.Functions.Like(x.PublicKey.ToLower(), $"%{search}%")
+                (x.PlainPrivateKey != null && EF.Functions.Like(x.PlainPrivateKey.ToLower(), $"%{search}%"))
+                || (x.PublicKey != null && EF.Functions.Like(x.PublicKey.ToLower(), $"%{search}%"))
             );
         }
 

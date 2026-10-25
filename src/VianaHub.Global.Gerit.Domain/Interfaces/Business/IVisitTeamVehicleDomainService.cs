@@ -7,7 +7,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 public interface IVisitTeamVehicleDomainService
 {
     Task<IEnumerable<VisitTeamVehicleEntity>> GetAllAsync(CancellationToken ct);
-    Task<VisitTeamVehicleEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<VisitTeamVehicleEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<ListPage<VisitTeamVehicleEntity>> GetPagedAsync(PagedFilter filter, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int tenantId, int interventionId, int vehicleId, CancellationToken ct);
     Task<bool> CreateAsync(VisitTeamVehicleEntity entity, CancellationToken ct);

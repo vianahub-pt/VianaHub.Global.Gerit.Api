@@ -159,7 +159,7 @@ public class UserAppService : IUserAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -180,7 +180,7 @@ public class UserAppService : IUserAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadUserItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadUserItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -236,7 +236,7 @@ public class UserAppService : IUserAppService
                     }
                     rowCount++;
                 }
-                catch (CsvHelperException ex)
+                catch (CsvHelperException)
                 {
                     // Log linha com erro mas continua processamento
                     _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
@@ -253,7 +253,7 @@ public class UserAppService : IUserAppService
 
             return records;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.Exception"), 400);
             return null;

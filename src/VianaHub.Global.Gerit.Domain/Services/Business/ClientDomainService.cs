@@ -26,7 +26,7 @@ public class ClientDomainService : IClientDomainService
         _notify = notify;
     }
 
-    public async Task<ClientEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ClientEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
