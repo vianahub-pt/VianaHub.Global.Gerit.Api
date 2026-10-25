@@ -243,7 +243,7 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
                 }
                 catch (CsvHelperException ex)
                 {
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de VisitContactPersons", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de VisitContactPersons | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.VisitContactPerson.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -260,7 +260,7 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de VisitContactPersons: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de VisitContactPersons: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.VisitContactPerson.ReadCsvFile.Exception"), 400);
             return null;
         }

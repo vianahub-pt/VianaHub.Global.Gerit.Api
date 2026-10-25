@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Domain.Interfaces.Job;
 using VianaHub.Global.Gerit.Domain.Entities.Job;
@@ -24,7 +25,7 @@ public class HangfireJobService : VianaHub.Global.Gerit.Domain.Interfaces.Job.IJ
 
         if (string.IsNullOrWhiteSpace(jobDef.CronExpression))
         {
-            _logger.LogWarning("Skipping registration for recurring job '{JobName}' because CronExpression is empty", jobDef.JobName);
+            _logger.LogWarning("Skipping registration for recurring job '{JobName}' because CronExpression is empty", LogValueSanitizer.Sanitize(jobDef.JobName));
             return;
         }
 
@@ -38,7 +39,7 @@ public class HangfireJobService : VianaHub.Global.Gerit.Domain.Interfaces.Job.IJ
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "TimeZone '{TimeZoneId}' not found for job '{JobName}', falling back to UTC", jobDef.TimeZoneId, jobDef.JobName);
+                _logger.LogWarning("TimeZone '{TimeZoneId}' not found for job '{JobName}', falling back to UTC. Details: {ExceptionDetails}", LogValueSanitizer.Sanitize(jobDef.TimeZoneId), LogValueSanitizer.Sanitize(jobDef.JobName), LogValueSanitizer.ExceptionDetails(ex));
                 timeZone = TimeZoneInfo.Utc;
             }
         }
@@ -47,18 +48,18 @@ public class HangfireJobService : VianaHub.Global.Gerit.Domain.Interfaces.Job.IJ
         var registered = await _jobExecutor.RegisterRecurringJobAsync(jobDef);
         if (registered)
         {
-            _logger.LogInformation("Registered recurring job {JobName} in Hangfire", jobDef.JobName);
+            _logger.LogInformation("Registered recurring job {JobName} in Hangfire", LogValueSanitizer.Sanitize(jobDef.JobName));
         }
         else
         {
-            _logger.LogWarning("Failed to register recurring job {JobName} via job executor", jobDef.JobName);
+            _logger.LogWarning("Failed to register recurring job {JobName} via job executor", LogValueSanitizer.Sanitize(jobDef.JobName));
         }
     }
 
     public async Task RemoveRecurringAsync(string jobName)
     {
         await _jobExecutor.RemoveRecurringJobAsync(jobName);
-        _logger.LogInformation("Removed recurring job {JobName} from Hangfire", jobName);
+        _logger.LogInformation("Removed recurring job {JobName} from Hangfire", LogValueSanitizer.Sanitize(jobName));
     }
 
     public async Task<string?> EnqueueJobAsync(JobDefinitionsEntity jobDef)
@@ -66,7 +67,7 @@ public class HangfireJobService : VianaHub.Global.Gerit.Domain.Interfaces.Job.IJ
         if (jobDef == null) throw new ArgumentNullException(nameof(jobDef));
 
         var jobId = await _jobExecutor.EnqueueJobAsync(jobDef);
-        _logger.LogInformation("Enqueued job {JobName} with Hangfire id {JobId}", jobDef.JobName, jobId);
+        _logger.LogInformation("Enqueued job {JobName} with Hangfire id {JobId}", LogValueSanitizer.Sanitize(jobDef.JobName), LogValueSanitizer.Sanitize(jobId));
         return jobId;
     }
 }

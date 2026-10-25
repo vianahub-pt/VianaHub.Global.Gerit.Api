@@ -255,7 +255,7 @@ public class VisitAppService : IVisitAppService
                 }
                 catch (CsvHelperException ex)
                 {
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de Visits", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de Visits | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.Visit.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -272,7 +272,7 @@ public class VisitAppService : IVisitAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de Visits: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de Visits: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Visit.ReadCsvFile.Exception"), 400);
             return null;
         }

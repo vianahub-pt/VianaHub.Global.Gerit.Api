@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Domain.Base;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
@@ -74,8 +75,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         var validation = await _validator.ValidateForCreateAsync(entity);
         if (!validation.IsValid)
         {
-            _logger.LogWarning("?? [CreateAsync] Valida��o de JwtKey falhou. Errors={Errors}",
-                string.Join(", ", validation.Errors.Select(e => e.ErrorMessage)));
+            _logger.LogWarning("?? [CreateAsync] Valida��o de JwtKey falhou. Errors={Errors}", LogValueSanitizer.Sanitize(string.Join(", ", validation.Errors.Select(e => e.ErrorMessage))));
 
             foreach (var error in validation.Errors)
                 _notify.Add(error.ErrorMessage, 400);
@@ -97,7 +97,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
             _logger.LogError("? [CreateAsync] Falha ao persistir JwtKey. TenantId={TenantId}", entity.TenantId);
             if (_notify.HasNotify())
             {
-                _logger.LogDebug("? [CreateAsync] Notifica��es acumuladas: {Notifications}", string.Join("; ", _notify.GetErrorMessage()));
+                _logger.LogDebug("? [CreateAsync] Notifica��es acumuladas: {Notifications}", LogValueSanitizer.Sanitize(string.Join("; ", _notify.GetErrorMessage())));
             }
             return null;
         }
@@ -231,7 +231,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
 
         if (updated)
         {
-            _logger.LogWarning("?? [RevokeAsync] JwtKey revogada. Id={Id}, KeyId={KeyId}, Reason={Reason}", existing.Id, existing.KeyId, reason);
+            _logger.LogWarning("?? [RevokeAsync] JwtKey revogada. Id={Id}, KeyId={KeyId}, Reason={Reason}", existing.Id, existing.KeyId, LogValueSanitizer.Sanitize(reason));
         }
 
         return updated;
@@ -290,7 +290,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
     {
         await Task.CompletedTask; // Para evitar warning de async sem await
 
-        _logger.LogInformation("?? [GenerateKeyPairAsync] Gerando par de chaves. Algorithm={Algorithm}, KeySize={KeySize}", algorithm, keySize);
+        _logger.LogInformation("?? [GenerateKeyPairAsync] Gerando par de chaves. Algorithm={Algorithm}, KeySize={KeySize}", LogValueSanitizer.Sanitize(algorithm), keySize);
 
         // Gerar par de chaves RSA
         var (publicKeyPem, privateKeyPem) = CryptoRSA.GenerateKeyPair(keySize);
@@ -315,7 +315,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "? [GenerateKeyPairAsync] Erro ao criptografar chave privada");
+            _logger.LogError("? [GenerateKeyPairAsync] Erro ao criptografar chave privada | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Domain.JwtKey.CreateFailed"), 500);
             throw;
         }
@@ -338,7 +338,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "? [DecryptPrivateKeyAsync] Erro ao descriptografar chave privada");
+            _logger.LogError("? [DecryptPrivateKeyAsync] Erro ao descriptografar chave privada | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Domain.JwtKey.InvalidPrivateKey"), 500);
             throw;
         }
@@ -487,7 +487,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
             var validation = await _validator.ValidateForCreateAsync(newKey);
             if (!validation.IsValid)
             {
-                _logger.LogWarning("?? [EnsureKeyExistsAsync] Valida��o da nova chave falhou. Errors={Errors}", string.Join(", ", validation.Errors.Select(e => e.ErrorMessage)));
+                _logger.LogWarning("?? [EnsureKeyExistsAsync] Valida��o da nova chave falhou. Errors={Errors}", LogValueSanitizer.Sanitize(string.Join(", ", validation.Errors.Select(e => e.ErrorMessage))));
 
                 foreach (var error in validation.Errors)
                     _notify.Add(error.ErrorMessage, 400);
@@ -512,7 +512,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
 
                 if (_notify.HasNotify())
                 {
-                    _logger.LogError("? [EnsureKeyExistsAsync] Notifica��es: {Notifications}", string.Join("; ", _notify.GetErrorMessage()));
+                    _logger.LogError("? [EnsureKeyExistsAsync] Notifica��es: {Notifications}", LogValueSanitizer.Sanitize(string.Join("; ", _notify.GetErrorMessage())));
                 }
 
                 _notify.Add(_localization.GetMessage("Domain.JwtKey.CreateFailed"), 400);
@@ -523,10 +523,10 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "? [EnsureKeyExistsAsync] Erro ao criar chave JWT para Tenant {TenantId}", tenantId);
+            _logger.LogError("? [EnsureKeyExistsAsync] Erro ao criar chave JWT para Tenant {TenantId} | Exception: {ExceptionDetails}", tenantId, LogValueSanitizer.ExceptionDetails(ex));
             if (_notify.HasNotify())
             {
-                _logger.LogError("? [EnsureKeyExistsAsync] Notifica��es antes da exce��o: {Notifications}", string.Join("; ", _notify.GetErrorMessage()));
+                _logger.LogError("? [EnsureKeyExistsAsync] Notifica��es antes da exce��o: {Notifications}", LogValueSanitizer.Sanitize(string.Join("; ", _notify.GetErrorMessage())));
             }
 
             // Repassar uma notifica��o amig�vel

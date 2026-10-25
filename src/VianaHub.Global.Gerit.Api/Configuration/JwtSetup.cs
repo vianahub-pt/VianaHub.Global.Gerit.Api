@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using VianaHub.Global.Gerit.Domain.Helpers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using VianaHub.Global.Gerit.Application.Configuration;
@@ -166,7 +167,7 @@ public static class JwtSetup
                             }
                             catch (Exception ex)
                             {
-                                logger.LogError(ex, "❌ Erro ao processar chave pública. KeyId={KeyId}", key.KeyId);
+                                logger.LogError("❌ Erro ao processar chave pública. KeyId={KeyId} | Exception: {ExceptionDetails}", key.KeyId, LogValueSanitizer.ExceptionDetails(ex));
                                 return null;
                             }
                         })
@@ -190,7 +191,7 @@ public static class JwtSetup
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex, "❌ Erro ao carregar chaves JWT do banco de dados");
+                        logger.LogError("❌ Erro ao carregar chaves JWT do banco de dados | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
                         var msg = localization?.GetMessage("Api.Configuration.Jwt.FailedToLoadSigningKeys") ?? "Api.Configuration.Jwt.FailedToLoadSigningKeys";
                         context.Fail(msg);
                     }
@@ -203,8 +204,8 @@ public static class JwtSetup
 
                     logger.LogWarning(
                         "❌ JWT Authentication failed: {Error} | Path: {Path} | IP: {IP}",
-                        context.Exception.Message,
-                        context.Request.Path,
+                        LogValueSanitizer.Sanitize(context.Exception.Message),
+                        LogValueSanitizer.Sanitize(context.Request.Path.Value),
                         context.HttpContext.Connection.RemoteIpAddress);
 
                     return Task.CompletedTask;
@@ -219,8 +220,8 @@ public static class JwtSetup
 
                     logger.LogInformation(
                         "✅ JWT Token validated successfully | User: {UserId} | Path: {Path}",
-                        userId,
-                        context.Request.Path);
+                        LogValueSanitizer.Sanitize(userId),
+                        LogValueSanitizer.Sanitize(context.Request.Path.Value));
 
                     return Task.CompletedTask;
                 },
@@ -232,8 +233,8 @@ public static class JwtSetup
 
                     logger.LogWarning(
                         "⚠️ JWT Challenge issued | Path: {Path} | Error: {Error}",
-                        context.Request.Path,
-                        context.Error);
+                        LogValueSanitizer.Sanitize(context.Request.Path.Value),
+                        LogValueSanitizer.Sanitize(context.Error));
 
                     return Task.CompletedTask;
                 }
@@ -278,7 +279,7 @@ public static class JwtSetup
         }
         catch (Exception ex)
         {
-            logger.LogDebug(ex, "[JWT] Falha ao decodificar token para extração do tenant_id (pré-validação)");
+            logger.LogDebug("[JWT] Falha ao decodificar token para extração do tenant_id (pré-validação) | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             return null;
         }
     }

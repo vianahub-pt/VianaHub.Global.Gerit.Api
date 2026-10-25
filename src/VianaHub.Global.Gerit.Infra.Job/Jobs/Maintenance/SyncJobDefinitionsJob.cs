@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -37,7 +38,7 @@ public class SyncJobDefinitionsJob : VianaHub.Global.Gerit.Infra.Job.Interfaces.
         }
         catch (System.Exception ex)
         {
-            _logger.LogError(ex, "[SyncJobDefinitionsJob] Error while synchronizing JobDefinitions with Hangfire");
+            _logger.LogError("[SyncJobDefinitionsJob] Error while synchronizing JobDefinitions with Hangfire | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             throw; // rethrow to let Hangfire handle retries if configured
         }
     }
