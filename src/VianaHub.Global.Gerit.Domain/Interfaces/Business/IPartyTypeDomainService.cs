@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 
 public interface IPartyTypeDomainService
 {
-    Task<PartyTypeEntity> GetByIdAsync(byte id, CancellationToken ct);
+    Task<PartyTypeEntity?> GetByIdAsync(byte id, CancellationToken ct);
     Task<IEnumerable<PartyTypeEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<PartyTypeEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(byte id, CancellationToken ct);

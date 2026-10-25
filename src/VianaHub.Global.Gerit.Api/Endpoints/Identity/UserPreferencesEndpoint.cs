@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.UserPreferences;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
@@ -24,7 +25,9 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "GetAll")
         .WithName("GetAllUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<UserPreferencesResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async ([FromRoute] int id, [FromServices] IUserPreferencesAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -35,7 +38,10 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "GetBy")
         .WithName("GetUserPreferencesById")
         .WithSummary("Swagger.Endpoint.UserPreferences.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<UserPreferencesDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -47,7 +53,10 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "GetBy")
         .WithName("GetUserPreferencesByUser")
         .WithSummary("Swagger.Endpoint.UserPreferences.GetByUser.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<UserPreferencesResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -59,7 +68,9 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "GetPaged")
         .WithName("GetUserPreferencesPaged")
         .WithSummary("Swagger.Endpoint.UserPreferences.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<UserPreferencesResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async ([FromBody] CreateUserPreferencesRequest request, [FromServices] IUserPreferencesAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -70,6 +81,8 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Create")
         .WithName("CreateUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -83,7 +96,10 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Update")
         .WithName("UpdateUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -97,7 +113,10 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Activate")
         .WithName("ActivateUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -109,7 +128,10 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Deactivate")
         .WithName("DeactivateUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -121,7 +143,10 @@ public static class UserPreferencesEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Delete")
         .WithName("DeleteUserPreferences")
         .WithSummary("Swagger.Endpoint.UserPreferences.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

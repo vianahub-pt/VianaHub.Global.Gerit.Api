@@ -14,7 +14,7 @@ public class AcquisitionSourceTypeEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public ICollection<AcquisitionSourceTypeTranslationsEntity> Translations { get; private set; }
+    public ICollection<AcquisitionSourceTypeTranslationsEntity> Translations { get; private set; } = new List<AcquisitionSourceTypeTranslationsEntity>();
 
     protected AcquisitionSourceTypeEntity() { }
 
@@ -22,7 +22,7 @@ public class AcquisitionSourceTypeEntity : Entity
     /// Construtor para criação de um novo AcquisitionSourceType.
     /// Name e Description devem ser persistidos via AddTranslation() na tabela de traduções.
     /// </summary>
-    public AcquisitionSourceTypeEntity(string code, int createdBy)
+    public AcquisitionSourceTypeEntity(string? code, int createdBy)
     {
         Code = code;
         IsActive = true;
@@ -42,11 +42,10 @@ public class AcquisitionSourceTypeEntity : Entity
     }
 
     /// <summary>
-    /// Atualiza o código do AcquisitionSourceType.
+    /// Regista a modificação sem alterar a chave natural.
     /// </summary>
-    public void UpdateCode(string code, int modifiedBy)
+    public void MarkModified(int modifiedBy)
     {
-        Code = code;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

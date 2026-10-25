@@ -6,8 +6,8 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDefiniti
 public class CreateStatusDefinitionRequest
 {
     public int StatusDomainId { get; set; }
-    public string? Code { get; set; }
     public int DisplayOrder { get; set; }
     public bool IsSystem { get; set; }
+    [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
     public List<CreateStatusDefinitionTranslationRequest>? Translations { get; set; }
 }

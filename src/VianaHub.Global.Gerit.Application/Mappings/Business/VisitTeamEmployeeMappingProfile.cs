@@ -10,12 +10,12 @@ public class VisitTeamEmployeeMappingProfile : Profile
     public VisitTeamEmployeeMappingProfile()
     {
         CreateMap<VisitTeamEmployeeEntity, VisitTeamEmployeeResponse>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.Name))
-            .ForMember(dest => dest.VisitTeamFunctionName, opt => opt.MapFrom(src => src.Function.Name));
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee == null ? null : src.Employee.Name))
+            .ForMember(dest => dest.VisitTeamFunctionName, opt => opt.MapFrom(src => src.Function == null ? null : src.Function.Name));
 
         CreateMap<VisitTeamEmployeeEntity, VisitTeamEmployeeDetailResponse>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee.Name))
-            .ForMember(dest => dest.VisitTeamFunctionName, opt => opt.MapFrom(src => src.Function.Name));
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee == null ? null : src.Employee.Name))
+            .ForMember(dest => dest.VisitTeamFunctionName, opt => opt.MapFrom(src => src.Function == null ? null : src.Function.Name));
 
         CreateMap<CreateVisitTeamEmployeeRequest, VisitTeamEmployeeEntity>();
 

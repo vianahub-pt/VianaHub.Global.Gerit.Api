@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Restore solution
-        run: dotnet restore VianaHub.Global.Gerit.sln
+        run: dotnet restore VianaHub.Global.Gerit.sln -warnaserror
 
       - name: Verify formatting of changed C# files
         if: github.event_name == 'pull_request'
@@ -77,10 +77,10 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore solution
-        run: dotnet restore VianaHub.Global.Gerit.sln
+        run: dotnet restore VianaHub.Global.Gerit.sln -warnaserror
 
-      - name: Build Release
-        run: dotnet build VianaHub.Global.Gerit.sln --configuration Release --no-restore
+      - name: Build Release (zero warning gate)
+        run: dotnet build VianaHub.Global.Gerit.sln --configuration Release --no-restore --no-incremental -warnaserror
 
   tests:
     name: Tests
@@ -97,10 +97,10 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore solution
-        run: dotnet restore VianaHub.Global.Gerit.sln
+        run: dotnet restore VianaHub.Global.Gerit.sln -warnaserror
 
-      - name: Build Release
-        run: dotnet build VianaHub.Global.Gerit.sln --configuration Release --no-restore
+      - name: Build Release (zero warning gate)
+        run: dotnet build VianaHub.Global.Gerit.sln --configuration Release --no-restore --no-incremental -warnaserror
 
       - name: Test Release
         run: dotnet test VianaHub.Global.Gerit.sln --configuration Release --no-build

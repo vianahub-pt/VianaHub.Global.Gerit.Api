@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -171,7 +171,7 @@ public static class DatabaseExtensions
                     {
                         checkCmd.CommandText = "SELECT COUNT(*) FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.name = @name AND s.name = 'dbo'";
                         var p = checkCmd.CreateParameter(); p.ParameterName = "@name"; p.Value = tableName; checkCmd.Parameters.Add(p);
-                        var exists = (int)await checkCmd.ExecuteScalarAsync() > 0;
+                        var exists = (int)(await checkCmd.ExecuteScalarAsync() ?? throw new InvalidOperationException("COUNT query did not return a value.")) > 0;
                         if (!exists)
                         {
                             logger.LogInformation("?? Tabela {Table} ausente. Criando...", tableName);
@@ -196,7 +196,7 @@ public static class DatabaseExtensions
                                     if (string.IsNullOrWhiteSpace(line)) continue;
                                     // stop at CONSTRAINT / PRIMARY / UNIQUE / FOREIGN
                                     var up = line.ToUpperInvariant();
-                                    if (up.StartsWith("CONSTRAINT") || up.StartsWith("PRIMARY KEY") || up.StartsWith("UNIQUE") || up.StartsWith("FOREIGN KEY") ) continue;
+                                    if (up.StartsWith("CONSTRAINT") || up.StartsWith("PRIMARY KEY") || up.StartsWith("UNIQUE") || up.StartsWith("FOREIGN KEY")) continue;
 
                                     var m = Regex.Match(line, @"^\[?(?<col>\w+)\]?\s+(?<def>.+)$", RegexOptions.Singleline);
                                     if (m.Success)
@@ -214,7 +214,7 @@ public static class DatabaseExtensions
                                     colCmd.CommandText = "SELECT COUNT(*) FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.name = @t AND c.name = @c AND s.name = 'dbo'";
                                     var p1 = colCmd.CreateParameter(); p1.ParameterName = "@t"; p1.Value = tableName; colCmd.Parameters.Add(p1);
                                     var p2 = colCmd.CreateParameter(); p2.ParameterName = "@c"; p2.Value = Name; colCmd.Parameters.Add(p2);
-                                    var colExists = (int)await colCmd.ExecuteScalarAsync() > 0;
+                                    var colExists = (int)(await colCmd.ExecuteScalarAsync() ?? throw new InvalidOperationException("COUNT query did not return a value.")) > 0;
                                     if (!colExists)
                                     {
                                         // Attempt to add column. Use definition as-is for type and nullability.
@@ -243,7 +243,7 @@ public static class DatabaseExtensions
                     await using var checkCmd = connection.CreateCommand();
                     checkCmd.CommandText = "SELECT COUNT(*) FROM sys.objects WHERE object_id = OBJECT_ID(@name)";
                     var p = checkCmd.CreateParameter(); p.ParameterName = "@name"; p.Value = name; checkCmd.Parameters.Add(p);
-                    var exists = (int)await checkCmd.ExecuteScalarAsync() > 0;
+                    var exists = (int)(await checkCmd.ExecuteScalarAsync() ?? throw new InvalidOperationException("COUNT query did not return a value.")) > 0;
                     if (!exists)
                     {
                         logger.LogInformation("?? Função {Name} ausente. Criando...", name);
@@ -260,7 +260,7 @@ public static class DatabaseExtensions
                         checkCmd.CommandText = "SELECT COUNT(*) FROM sys.indexes i JOIN sys.tables t ON i.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE i.name = @iname AND t.name = @tname AND s.name = 'dbo'";
                         var p1 = checkCmd.CreateParameter(); p1.ParameterName = "@iname"; p1.Value = Name; checkCmd.Parameters.Add(p1);
                         var p2 = checkCmd.CreateParameter(); p2.ParameterName = "@tname"; p2.Value = Table; checkCmd.Parameters.Add(p2);
-                        var exists = (int)await checkCmd.ExecuteScalarAsync() > 0;
+                        var exists = (int)(await checkCmd.ExecuteScalarAsync() ?? throw new InvalidOperationException("COUNT query did not return a value.")) > 0;
                         if (!exists)
                         {
                             logger.LogInformation("?? Índice {Index} na tabela {Table} ausente. Criando...", Name, Table);
@@ -285,7 +285,7 @@ public static class DatabaseExtensions
                         await using var checkCmd = connection.CreateCommand();
                         checkCmd.CommandText = "SELECT COUNT(*) FROM sys.security_policies WHERE name = @pname";
                         var pp = checkCmd.CreateParameter(); pp.ParameterName = "@pname"; pp.Value = policyName; checkCmd.Parameters.Add(pp);
-                        var exists = (int)await checkCmd.ExecuteScalarAsync() > 0;
+                        var exists = (int)(await checkCmd.ExecuteScalarAsync() ?? throw new InvalidOperationException("COUNT query did not return a value.")) > 0;
                         if (!exists)
                         {
                             logger.LogInformation("?? Security Policy {Name} ausente. Criando...", policyName);

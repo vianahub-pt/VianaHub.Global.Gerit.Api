@@ -16,7 +16,7 @@ public class ClientContactPersonsMappingProfile : Profile
         CreateMap<ClientContactPersonsEntity, ClientContactPersonResponse>();
 
         CreateMap<ClientContactPersonsEntity, ClientContactPersonDetailResponse>()
-            .ForMember(dest => dest.Client, opt => opt.MapFrom(src => src.Client.Name));
+            .ForMember(dest => dest.Client, opt => opt.MapFrom(src => src.Client == null ? null : src.Client.Name));
 
         CreateMap<ListPage<ClientContactPersonsEntity>, ListPageResponse<ClientContactPersonResponse>>();
     }

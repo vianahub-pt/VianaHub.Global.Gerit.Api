@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Linq;
@@ -16,8 +16,8 @@ namespace VianaHub.Global.Gerit.Api.Filters;
 public class AuthorizationFilter : IEndpointFilter
 {
     private readonly string[] _allowedRoles;
-    private readonly string _resource;
-    private readonly string _action;
+    private readonly string? _resource;
+    private readonly string? _action;
     private readonly ILogger<AuthorizationFilter> _logger;
     private readonly ILocalizationService _localization;
 
@@ -31,8 +31,8 @@ public class AuthorizationFilter : IEndpointFilter
     /// <param name="localization">Serviço de localização para mensagens</param>
     public AuthorizationFilter(
         string allowedRoles,
-        string resource,
-        string action,
+        string? resource,
+        string? action,
         ILogger<AuthorizationFilter> logger,
         ILocalizationService localization)
     {
@@ -51,7 +51,7 @@ public class AuthorizationFilter : IEndpointFilter
     /// 2. Se possui uma das roles permitidas
     /// 3. Se tem permissão para o recurso e ação especificados (via claims do token)
     /// </summary>
-    public async ValueTask<object> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         var httpContext = context.HttpContext;
         var user = httpContext.User;

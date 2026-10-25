@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 
@@ -97,7 +97,7 @@ public class CurrentUserApiService : ICurrentUserService
     /// Obtém o nome do usuário logado
     /// Ordem de busca: 1) Token JWT (claims: name, username) 2) Header x-user-name
     /// </summary>
-    public string? GetUserName()
+    public string GetUserName()
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)
@@ -129,7 +129,7 @@ public class CurrentUserApiService : ICurrentUserService
     /// Obtém o email do usuário logado
     /// Ordem de busca: 1) Token JWT (claim: email) 2) Header x-user-email
     /// </summary>
-    public string? GetUserEmail()
+    public string GetUserEmail()
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)
@@ -171,7 +171,7 @@ public class CurrentUserApiService : ICurrentUserService
     /// Obtém o identificador do usuário para usar em CreatedBy/ModifiedBy
     /// Ordem de preferência: 1) Email 2) Nome de usuário 3) ID do usuário 4) "system"
     /// </summary>
-    public string? GetUserIdentifier()
+    public string GetUserIdentifier()
     {
         var email = GetUserEmail();
         if (!string.IsNullOrWhiteSpace(email))
@@ -204,7 +204,7 @@ public class CurrentUserApiService : ICurrentUserService
     /// <summary>
     /// Obtém o endereço IP do usuário
     /// </summary>
-    public string? GetUserIpAddress()
+    public string GetUserIpAddress()
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)
@@ -223,7 +223,7 @@ public class CurrentUserApiService : ICurrentUserService
     /// <summary>
     /// Obtém o User Agent do navegador
     /// </summary>
-    public string? GetUserAgent()
+    public string GetUserAgent()
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)

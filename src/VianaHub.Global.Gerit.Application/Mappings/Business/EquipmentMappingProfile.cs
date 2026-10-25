@@ -26,11 +26,11 @@ public class EquipmentMappingProfile : Profile
             .ForMember(dest => dest.StatusDefinitionId, opt => opt.MapFrom(src => src.StatusDefinitionId))
             .ForMember(dest => dest.StatusDomainId, opt => opt.MapFrom(src => src.StatusDomainId))
             .ForMember(dest => dest.StatusDefinition, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.StatusDefinitionName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.StatusDomainName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.StatusDomain?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.StatusDomain?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.SerialNumber, opt => opt.MapFrom(src => src.SerialNumber))
             .ForMember(dest => dest.UrlImage, opt => opt.MapFrom(src => src.UrlImage))

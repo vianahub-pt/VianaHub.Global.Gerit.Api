@@ -16,7 +16,7 @@ public class TeamDataRepository : ITeamDataRepository
         _context = context;
     }
 
-    public async Task<TeamEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<TeamEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<TeamEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
@@ -33,8 +33,8 @@ public class TeamDataRepository : ITeamDataRepository
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => EF.Functions.Like(x.Name.ToLower(), $"%{search}%") ||
-                                     EF.Functions.Like(x.Description.ToLower(), $"%{search}%"));
+            query = query.Where(x => (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%")) ||
+                                     (x.Description != null && EF.Functions.Like(x.Description.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -64,7 +64,7 @@ public class TeamDataRepository : ITeamDataRepository
         return await _context.Set<TeamEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(int tenantId, string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(int tenantId, string? name, CancellationToken ct)
     {
         return await _context.Set<TeamEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Name == name && !x.IsDeleted, ct);
     }

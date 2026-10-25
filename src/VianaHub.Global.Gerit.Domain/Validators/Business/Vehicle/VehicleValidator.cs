@@ -7,11 +7,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Business.Vehicle;
 
 public class VehicleValidator : BaseEntityValidator<VehicleEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public VehicleValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override async Task<ValidationResult> ValidateForCreateAsync(VehicleEntity entity)

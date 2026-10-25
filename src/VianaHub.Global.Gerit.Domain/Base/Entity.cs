@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Domain.Base;
+namespace VianaHub.Global.Gerit.Domain.Base;
 
 public class Entity : IEquatable<Entity>
 {
@@ -21,7 +21,7 @@ public class Entity : IEquatable<Entity>
 
 
     // Equality baseada no Id
-    public bool Equals(Entity other)
+    public bool Equals(Entity? other)
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -30,7 +30,7 @@ public class Entity : IEquatable<Entity>
         return Id == other.Id;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return Equals(obj as Entity);
     }
@@ -40,14 +40,14 @@ public class Entity : IEquatable<Entity>
         return Id.GetHashCode();
     }
 
-    public static bool operator ==(Entity left, Entity right)
+    public static bool operator ==(Entity? left, Entity? right)
     {
         if (left is null && right is null) return true;
         if (left is null || right is null) return false;
         return left.Equals(right);
     }
 
-    public static bool operator !=(Entity left, Entity right)
+    public static bool operator !=(Entity? left, Entity? right)
     {
         return !(left == right);
     }

@@ -23,7 +23,7 @@ public class FileTypeDomainService : IFileTypeDomainService
         _notify = notify;
     }
 
-    public async Task<FileTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<FileTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }

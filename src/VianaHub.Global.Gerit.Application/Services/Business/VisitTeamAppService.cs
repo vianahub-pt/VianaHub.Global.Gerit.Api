@@ -51,7 +51,7 @@ public class VisitTeamAppService : IVisitTeamsAppService
         return _mapper.Map<IEnumerable<VisitTeamResponse>>(entities);
     }
 
-    public async Task<VisitTeamDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitTeamDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -136,7 +136,7 @@ public class VisitTeamAppService : IVisitTeamsAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -154,7 +154,7 @@ public class VisitTeamAppService : IVisitTeamsAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadVisitTeamItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadVisitTeamItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

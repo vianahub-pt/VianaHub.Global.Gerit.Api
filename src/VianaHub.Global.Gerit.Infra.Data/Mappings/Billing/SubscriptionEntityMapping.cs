@@ -111,10 +111,10 @@ public class SubscriptionEntityMapping : IEntityTypeConfiguration<SubscriptionEn
             .IsRequired(false);
 
         // Constraint: Se IsDeleted = 1, ento IsActive = 0
-        builder.HasCheckConstraint("CK_Subscriptions_DeletedImpliesInactive", "[IsDeleted] = 0 OR [IsActive] = 0");
+        builder.ToTable(table => table.HasCheckConstraint("CK_Subscriptions_DeletedImpliesInactive", "[IsDeleted] = 0 OR [IsActive] = 0"));
 
         // Constraint: AgreedAmount >= 0
-        builder.HasCheckConstraint("CK_Subscriptions_AgreedAmount_NonNegative", "[AgreedAmount] >= 0");
+        builder.ToTable(table => table.HasCheckConstraint("CK_Subscriptions_AgreedAmount_NonNegative", "[AgreedAmount] >= 0"));
 
         // Navegao - Relacionamento com Tenant
         builder.HasOne(x => x.Tenant)

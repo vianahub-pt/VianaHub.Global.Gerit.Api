@@ -13,7 +13,7 @@ public class EmployeeFiscalDataMappingProfile : Profile
         CreateMap<EmployeeFiscalDataEntity, EmployeeFiscalDataResponse>();
 
         CreateMap<EmployeeFiscalDataEntity, EmployeeFiscalDataDetailResponse>()
-            .ForMember(dest => dest.Employee, opt => opt.MapFrom(src => src.Employee.Name));
+            .ForMember(dest => dest.Employee, opt => opt.MapFrom(src => src.Employee == null ? null : src.Employee.Name));
 
         CreateMap<ListPage<EmployeeFiscalDataEntity>, ListPageResponse<EmployeeFiscalDataResponse>>();
     }

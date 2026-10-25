@@ -55,7 +55,7 @@ public class TeamAppService : ITeamAppService
         return _mapper.Map<IEnumerable<TeamResponse>>(entities);
     }
 
-    public async Task<TeamDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<TeamDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -141,7 +141,7 @@ public class TeamAppService : ITeamAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -162,7 +162,7 @@ public class TeamAppService : ITeamAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadTeamItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadTeamItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

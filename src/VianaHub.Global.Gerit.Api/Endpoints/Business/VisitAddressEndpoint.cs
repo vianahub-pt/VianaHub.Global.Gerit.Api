@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.VisitAddress;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -26,7 +27,9 @@ public static class VisitAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAddresses", "GetAll")
         .WithName("GetVisitAddresses")
         .WithSummary("Swagger.Endpoint.VisitAddress.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<VisitAddressResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{visitId}/addresses/{id}", async ([FromRoute] int visitId, [FromRoute] int id, [FromServices] IVisitAddressAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -37,7 +40,9 @@ public static class VisitAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAddresses", "GetBy")
         .WithName("GetVisitAddressById")
         .WithSummary("Swagger.Endpoint.VisitAddress.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<VisitAddressDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -49,7 +54,9 @@ public static class VisitAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAddresses", "GetPaged")
         .WithName("GetVisitAddressesPaged")
         .WithSummary("Swagger.Endpoint.VisitAddress.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<VisitAddressResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/{visitId}/addresses", async ([FromRoute] int visitId, [FromBody] CreateVisitAddressRequest request, [FromServices] IVisitAddressAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -60,6 +67,8 @@ public static class VisitAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAddresses", "Create")
         .WithName("CreateVisitAddress")
         .WithSummary("Swagger.Endpoint.VisitAddress.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -74,7 +83,9 @@ public static class VisitAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAddresses", "Update")
         .WithName("UpdateVisitAddress")
         .WithSummary("Swagger.Endpoint.VisitAddress.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -88,7 +99,9 @@ public static class VisitAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAddresses", "Activate")
         .WithName("ActivateVisitAddress")
         .WithSummary("Swagger.Endpoint.VisitAddress.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -100,7 +113,9 @@ public static class VisitAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAddresses", "Deactivate")
         .WithName("DeactivateVisitAddress")
         .WithSummary("Swagger.Endpoint.VisitAddress.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -112,7 +127,9 @@ public static class VisitAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAddresses", "Delete")
         .WithName("DeleteVisitAddress")
         .WithSummary("Swagger.Endpoint.VisitAddress.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -133,7 +150,9 @@ public static class VisitAddressEndpoint
         .WithSummary("Swagger.Endpoint.VisitAddress.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.ReadModels;
@@ -16,7 +16,7 @@ public class ResourceDataRepository : IResourceDataRepository
         _context = context;
     }
 
-    public async Task<ResourceEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ResourceEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<ResourceEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
@@ -39,8 +39,8 @@ public class ResourceDataRepository : IResourceDataRepository
             var search = request.Search.Trim().ToLower();
 
             query = query.Where(x =>
-                EF.Functions.Like(x.Name.ToLower(), $"%{search}%")
-                || EF.Functions.Like(x.Description.ToLower(), $"%{search}%")
+                (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%"))
+                || (x.Description != null && EF.Functions.Like(x.Description.ToLower(), $"%{search}%"))
             );
         }
 
@@ -76,7 +76,7 @@ public class ResourceDataRepository : IResourceDataRepository
         return await _context.Set<ResourceEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(string? name, CancellationToken ct)
     {
         return await _context.Set<ResourceEntity>().AsNoTracking().AnyAsync(x => x.Name == name && !x.IsDeleted, ct);
     }

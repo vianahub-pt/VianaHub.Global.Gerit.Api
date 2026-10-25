@@ -75,7 +75,7 @@ public class VisitTeamFunctionsMapping : IEntityTypeConfiguration<VisitTeamFunct
             .OnDelete(DeleteBehavior.Restrict);
 
         // Constraints
-        builder.HasCheckConstraint("CK_VisitTeamFunctions_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+        builder.ToTable(table => table.HasCheckConstraint("CK_VisitTeamFunctions_Active_Deleted",
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
     }
 }

@@ -23,7 +23,7 @@ public class ResourceDomainService : IResourceDomainService
         _notify = notify;
     }
 
-    public async Task<ResourceEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ResourceEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
@@ -55,7 +55,7 @@ public class ResourceDomainService : IResourceDomainService
             }
             return false;
         }
-        
+
         return await _repo.AddAsync(entity, ct);
     }
     public async Task<bool> UpdateAsync(ResourceEntity entity, CancellationToken ct)
@@ -69,7 +69,7 @@ public class ResourceDomainService : IResourceDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(ResourceEntity entity, CancellationToken ct)

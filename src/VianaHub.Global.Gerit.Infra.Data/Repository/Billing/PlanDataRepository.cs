@@ -9,6 +9,10 @@ namespace VianaHub.Global.Gerit.Infra.Data.Repository.Billing;
 
 public class PlanDataRepository : IPlanDataRepository
 {
+    public Task<bool> ExistsByTranslationAsync(string? languageCode, string? name, CancellationToken ct) => _context.Set<SubscriptionPlanTranslationsEntity>().AnyAsync(x => x.LanguageCode == languageCode && x.Name == name, ct);
+
+    public Task<bool> ExistsByCodeAsync(string? code, CancellationToken ct) => _context.Set<SubscriptionPlanEntity>().AnyAsync(x => x.Code == code, ct);
+
     private readonly GeritDbContext _context;
 
     public PlanDataRepository(GeritDbContext context)
@@ -16,7 +20,7 @@ public class PlanDataRepository : IPlanDataRepository
         _context = context;
     }
 
-    public async Task<SubscriptionPlanEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<SubscriptionPlanEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<SubscriptionPlanEntity>()
             .AsNoTracking()
@@ -47,10 +51,10 @@ public class PlanDataRepository : IPlanDataRepository
 
             query = query.Where(x =>
                 x.Translations.Any(t =>
-                    EF.Functions.Like(t.Name.ToLower(), $"%{search}%")
-                    || (t.Description != null && EF.Functions.Like(t.Description.ToLower(), $"%{search}%"))
+                    (t.Name != null && EF.Functions.Like(t.Name.ToLower(), $"%{search}%"))
+                    || (t.Description != null && (t.Description != null && EF.Functions.Like(t.Description.ToLower(), $"%{search}%")))
                 )
-                || EF.Functions.Like(x.Currency.ToLower(), $"%{search}%")
+                || (x.Currency != null && EF.Functions.Like(x.Currency.ToLower(), $"%{search}%"))
             );
         }
 
@@ -86,14 +90,14 @@ public class PlanDataRepository : IPlanDataRepository
         return await _context.Set<SubscriptionPlanEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(string? name, CancellationToken ct)
     {
         return await _context.Set<SubscriptionPlanTranslationsEntity>()
             .AsNoTracking()
             .AnyAsync(x => x.Name == name && !x.SubscriptionPlan.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, string languageCode, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(string? name, string? languageCode, CancellationToken ct)
     {
         return await _context.Set<SubscriptionPlanTranslationsEntity>()
             .AsNoTracking()

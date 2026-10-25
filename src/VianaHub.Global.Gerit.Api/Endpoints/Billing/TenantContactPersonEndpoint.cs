@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.TenantContactPerson;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -23,7 +24,9 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "GetAll")
         .WithName("GetTenantContacts")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<TenantContactPersonResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{tenantId}/contacts/{id}", async ([FromRoute] int tenantId, [FromRoute] int id, [FromServices] ITenantContactPersonAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -34,7 +37,9 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "GetBy")
         .WithName("GetTenantContactById")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<TenantContactPersonDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -46,7 +51,9 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "GetPrimary")
         .WithName("GetPrimaryTenantContact")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.GetPrimary.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<TenantContactPersonResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -58,7 +65,9 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "GetPaged")
         .WithName("GetTenantContactsPaged")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<TenantContactPersonResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/{tenantId}/contacts", async ([FromRoute] int tenantId, [FromBody] CreateTenantContactPersonRequest request, [FromServices] ITenantContactPersonAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -69,6 +78,8 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "Create")
         .WithName("CreateTenantContact")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -83,6 +94,8 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "Update")
         .WithName("UpdateTenantContact")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.Update.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
@@ -97,6 +110,8 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "SetAsPrimary")
         .WithName("SetPrimaryTenantContact")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.SetAsPrimary.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -109,6 +124,8 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "Activate")
         .WithName("ActivateTenantContact")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.Activate.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -121,6 +138,8 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "Deactivate")
         .WithName("DeactivateTenantContact")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.Deactivate.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -133,6 +152,8 @@ public static class TenantContactPersonEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "TenantContactPersons", "Delete")
         .WithName("DeleteTenantContact")
         .WithSummary("Swagger.Endpoint.TenantContactPerson.Delete.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);

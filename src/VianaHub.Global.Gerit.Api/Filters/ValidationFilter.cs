@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using System.Net;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
@@ -10,7 +10,7 @@ namespace VianaHub.Global.Gerit.Api.Filters;
 /// </summary>
 public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
 {
-    private readonly IValidator<TRequest> _validator;
+    private readonly IValidator<TRequest>? _validator;
     private readonly ILogger<ValidationFilter<TRequest>> _logger;
 
     /// <summary>
@@ -25,7 +25,7 @@ public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
     /// <summary>
     /// Executa a validação do request e retorna erros agrupados, se houver.
     /// </summary>
-    public async ValueTask<object> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         _logger.LogDebug("ValidationFilter<{RequestType}> executando", typeof(TRequest).Name);
 
@@ -36,7 +36,7 @@ public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
         }
 
         var notify = context.HttpContext.RequestServices.GetService<INotify>();
-        TRequest request = null;
+        TRequest? request = null;
 
         _logger.LogDebug("Total de argumentos: {Count}", context.Arguments.Count);
         for (int i = 0; i < context.Arguments.Count; i++)

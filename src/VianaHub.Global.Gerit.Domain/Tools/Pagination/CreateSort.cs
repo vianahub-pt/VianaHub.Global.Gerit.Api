@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace VianaHub.Global.Gerit.Domain.Tools.Pagination;
@@ -62,19 +62,19 @@ public static class CreateSort
         var currentType = typeof(TEntity);
 
         // Helper local to build a safe fallback (Id or constant)
-        static Expression<Func<TEntity, object>> SafeFallback<TEntity>(ParameterExpression param)
+        static Expression<Func<TFallback, object>> SafeFallback<TFallback>(ParameterExpression param)
         {
-            var type = typeof(TEntity);
+            var type = typeof(TFallback);
             var idProp = GetPropertySafe(type, "Id", BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
             if (idProp != null)
             {
                 var prop = Expression.Property(param, idProp);
                 var conv = Expression.Convert(prop, typeof(object));
-                return Expression.Lambda<Func<TEntity, object>>(conv, param);
+                return Expression.Lambda<Func<TFallback, object>>(conv, param);
             }
 
             var constExpr = Expression.Convert(Expression.Constant(0), typeof(object));
-            return Expression.Lambda<Func<TEntity, object>>(constExpr, param);
+            return Expression.Lambda<Func<TFallback, object>>(constExpr, param);
         }
 
         try

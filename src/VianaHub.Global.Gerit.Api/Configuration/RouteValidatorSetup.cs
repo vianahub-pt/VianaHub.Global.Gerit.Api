@@ -1,4 +1,10 @@
-﻿using FluentValidation;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.AddressType;
+using VianaHub.Global.Gerit.Api.Validators.Business.AddressType;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType;
+using VianaHub.Global.Gerit.Api.Validators.Business.PartyType;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDomain;
+using VianaHub.Global.Gerit.Api.Validators.Business.StatusDomain;
+using FluentValidation;
 using VianaHub.Global.Gerit.Api.Validators.Billing.Plan;
 using VianaHub.Global.Gerit.Api.Validators.Billing.Subscription;
 using VianaHub.Global.Gerit.Api.Validators.Billing.Tenant;
@@ -137,7 +143,7 @@ public static class RouteValidatorSetup
         // Vehicle Route Validators
         services.AddScoped<IValidator<CreateVehicleRequest>, CreateVehicleRouteValidator>();
         services.AddScoped<IValidator<UpdateVehicleRequest>, UpdateVehicleRouteValidator>();
-        
+
         // Equipment Route Validators
         services.AddScoped<IValidator<CreateEquipmentRequest>, CreateEquipmentRouteValidator>();
         services.AddScoped<IValidator<UpdateEquipmentRequest>, UpdateEquipmentRouteValidator>();
@@ -170,6 +176,11 @@ public static class RouteValidatorSetup
         // StatusDefinition Route Validators
         services.AddScoped<IValidator<CreateStatusDefinitionRequest>, CreateStatusDefinitionRouteValidator>();
         services.AddScoped<IValidator<UpdateStatusDefinitionRequest>, UpdateStatusDefinitionRouteValidator>();
+
+        // Validators dos novos contratos multilingues de catálogo
+        services.AddScoped<IValidator<CreateAddressTypeRequest>, CreateAddressTypeRouteValidator>();
+        services.AddScoped<IValidator<CreatePartyTypeRequest>, CreatePartyTypeRouteValidator>();
+        services.AddScoped<IValidator<CreateStatusDomainRequest>, CreateStatusDomainRouteValidator>();
 
         // DocumentType Route Validators
         services.AddScoped<IValidator<CreateDocumentTypeRequest>, CreateDocumentTypeRouteValidator>();

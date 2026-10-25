@@ -51,7 +51,7 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
         return _mapper.Map<IEnumerable<EmployeeContactPersonResponse>>(entities);
     }
 
-    public async Task<EmployeeContactPersonDetailResponse> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeContactPersonDetailResponse?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(employeeId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -166,7 +166,7 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int employeeId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int employeeId, IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -184,7 +184,7 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
         return await ProcessBulkItemsAsync(employeeId, items, ct);
     }
 
-    private List<BulkUploadEmployeeContactPersonItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadEmployeeContactPersonItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

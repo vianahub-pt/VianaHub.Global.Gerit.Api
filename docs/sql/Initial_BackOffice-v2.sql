@@ -49,8 +49,8 @@ BEGIN TRY
     );
     INSERT INTO @PartyTypeSeed (Id, Code, PtName, PtDescription, EnName, EnDescription)
     VALUES
-        (1, N'Individual', N'Pessoa singular', N'Representa uma pessoa singular.', N'Individual', N'Represents a natural person.'),
-        (2, N'Organization', N'Organizacao', N'Representa uma empresa, associacao ou outra pessoa coletiva.', N'Organization', N'Represents a company, association, or other legal entity.');
+        (1, N'INDIVIDUAL', N'Pessoa singular', N'Representa uma pessoa singular.', N'Individual', N'Represents a natural person.'),
+        (2, N'ORGANIZATION', N'Organizacao', N'Representa uma empresa, associacao ou outra pessoa coletiva.', N'Organization', N'Represents a company, association, or other legal entity.');
 
     UPDATE pt SET pt.Code = s.Code, pt.IsActive = 1, pt.IsDeleted = 0, pt.ModifiedBy = @SeedActorId, pt.ModifiedAt = @UtcNow
     FROM dbo.PartyTypes pt INNER JOIN @PartyTypeSeed s ON s.Id = pt.Id;
@@ -362,89 +362,89 @@ BEGIN TRY
        8. ACOES E RECURSOS DE AUTORIZACAO
        ========================================================= */
 
-    DECLARE @ActionSeed TABLE (Code NVARCHAR(50) PRIMARY KEY, Name NVARCHAR(50) NOT NULL, Description NVARCHAR(500) NOT NULL);
-    INSERT INTO @ActionSeed (Code, Name, Description)
+    DECLARE @ActionSeed TABLE (Name NVARCHAR(50) PRIMARY KEY, Description NVARCHAR(500) NOT NULL);
+    INSERT INTO @ActionSeed (Name, Description)
     VALUES
-        (N'GET_ALL', N'GetAll', N'Obter todos os registos.'),
-        (N'GET_BY', N'GetBy', N'Obter um registo por identificador ou criterio.'),
-        (N'GET_PAGED', N'GetPaged', N'Obter uma lista paginada com filtros.'),
-        (N'CREATE', N'Create', N'Criar um novo registo.'),
-        (N'UPDATE', N'Update', N'Atualizar um registo existente.'),
-        (N'ACTIVATE', N'Activate', N'Ativar um registo.'),
-        (N'DEACTIVATE', N'Deactivate', N'Desativar um registo.'),
-        (N'DELETE', N'Delete', N'Eliminar logicamente um registo.'),
-        (N'BULK_UPLOAD', N'BulkUpload', N'Efetuar cadastro em massa de registos.'),
-        (N'EXECUTE', N'Execute', N'Executar uma acao especifica.'),
-        (N'GET_ACTIVE', N'GetActive', N'Obter registos ativos.'),
-        (N'GET_EXPIRING', N'GetExpiring', N'Obter registos proximos da expiracao.'),
-        (N'CANCEL', N'Cancel', N'Cancelar uma operacao ou entidade.'),
-        (N'RENEW', N'Renew', N'Renovar um contrato, assinatura ou entidade.');
+        (N'GetAll', N'Obter todos os registos.'),
+        (N'GetBy', N'Obter um registo por identificador ou criterio.'),
+        (N'GetPaged', N'Obter uma lista paginada com filtros.'),
+        (N'Create', N'Criar um novo registo.'),
+        (N'Update', N'Atualizar um registo existente.'),
+        (N'Activate', N'Ativar um registo.'),
+        (N'Deactivate', N'Desativar um registo.'),
+        (N'Delete', N'Eliminar logicamente um registo.'),
+        (N'BulkUpload', N'Efetuar cadastro em massa de registos.'),
+        (N'Execute', N'Executar uma acao especifica.'),
+        (N'GetActive', N'Obter registos ativos.'),
+        (N'GetExpiring', N'Obter registos proximos da expiracao.'),
+        (N'Cancel', N'Cancelar uma operacao ou entidade.'),
+        (N'Renew', N'Renovar um contrato, assinatura ou entidade.');
 
-    UPDATE a SET a.Name = s.Name, a.Description = s.Description, a.IsActive = 1, a.ModifiedBy = @SeedActorId, a.ModifiedAt = @UtcNow
-    FROM dbo.Actions a INNER JOIN @ActionSeed s ON s.Code = a.Code WHERE a.IsDeleted = 0;
+    UPDATE a SET a.Description = s.Description, a.IsActive = 1, a.ModifiedBy = @SeedActorId, a.ModifiedAt = @UtcNow
+    FROM dbo.Actions a INNER JOIN @ActionSeed s ON s.Name = a.Name WHERE a.IsDeleted = 0;
 
-    INSERT INTO dbo.Actions (Code, Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
-    SELECT s.Code, s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow FROM @ActionSeed s
-    WHERE NOT EXISTS (SELECT 1 FROM dbo.Actions a WHERE a.Code = s.Code AND a.IsDeleted = 0);
+    INSERT INTO dbo.Actions (Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
+    SELECT s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow FROM @ActionSeed s
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.Actions a WHERE a.Name = s.Name AND a.IsDeleted = 0);
 
-    DECLARE @ResourceSeed TABLE (Code NVARCHAR(50) PRIMARY KEY, Name NVARCHAR(100) NOT NULL, Description NVARCHAR(500) NOT NULL);
-    INSERT INTO @ResourceSeed (Code, Name, Description)
+    DECLARE @ResourceSeed TABLE (Name NVARCHAR(100) PRIMARY KEY, Description NVARCHAR(500) NOT NULL);
+    INSERT INTO @ResourceSeed (Name, Description)
     VALUES
-        (N'PARTY_TYPES', N'PartyTypes', N'Tipos de partes: pessoa singular ou organizacao.'),
-        (N'ACQUISITION_SOURCE_TYPES', N'AcquisitionSourceTypes', N'Tipos de origem de aquisicao comercial.'),
-        (N'ADDRESS_TYPES', N'AddressTypes', N'Tipos de morada disponiveis.'),
-        (N'DOCUMENT_TYPES', N'DocumentTypes', N'Tipos de documentos.'),
-        (N'FILE_TYPES', N'FileTypes', N'Tipos de ficheiros.'),
-        (N'STATUS_DOMAINS', N'StatusDomains', N'Dominios funcionais de status.'),
-        (N'SUBSCRIPTION_PLANS', N'SubscriptionPlans', N'Planos de assinatura.'),
-        (N'SUBSCRIPTION_PLAN_FILE_RULES', N'SubscriptionPlanFileRules', N'Regras de ficheiros por plano.'),
-        (N'TENANTS', N'Tenants', N'Tenants do sistema.'),
-        (N'TENANT_CONTACT_PERSONS', N'TenantContactPersons', N'Pessoas de contacto dos tenants.'),
-        (N'TENANT_ADDRESSES', N'TenantAddresses', N'Moradas dos tenants.'),
-        (N'TENANT_FISCAL_DATA', N'TenantFiscalData', N'Dados fiscais dos tenants.'),
-        (N'TENANT_DOCUMENTS', N'TenantDocuments', N'Documentos dos tenants.'),
-        (N'STATUS_DEFINITIONS', N'StatusDefinitions', N'Definicoes de status por tenant e dominio.'),
-        (N'SUBSCRIPTIONS', N'Subscriptions', N'Assinaturas dos tenants.'),
-        (N'USERS', N'Users', N'Utilizadores do sistema.'),
-        (N'USER_PREFERENCES', N'UserPreferences', N'Preferencias dos utilizadores.'),
-        (N'ROLES', N'Roles', N'Papeis ou perfis de acesso.'),
-        (N'RESOURCES', N'Resources', N'Recursos protegidos pelo sistema de autorizacao.'),
-        (N'ACTIONS', N'Actions', N'Acoes disponiveis no sistema de autorizacao.'),
-        (N'ROLE_PERMISSIONS', N'RolePermissions', N'Permissoes associadas aos papeis.'),
-        (N'USER_ROLES', N'UserRoles', N'Papeis associados aos utilizadores.'),
-        (N'REFRESH_TOKENS', N'RefreshTokens', N'Tokens de atualizacao.'),
-        (N'JWT_KEYS', N'JwtKeys', N'Chaves de assinatura JWT.'),
-        (N'JOB_DEFINITIONS', N'JobDefinitions', N'Definicoes de jobs e processos.'),
-        (N'CLIENTS', N'Clients', N'Clientes do sistema.'),
-        (N'CLIENT_ADDRESSES', N'ClientAddresses', N'Moradas dos clientes.'),
-        (N'CLIENT_CONTACT_PERSONS', N'ClientContactPersons', N'Pessoas de contacto dos clientes.'),
-        (N'CLIENT_DOCUMENTS', N'ClientDocuments', N'Documentos dos clientes.'),
-        (N'CLIENT_FISCAL_DATA', N'ClientFiscalData', N'Dados fiscais dos clientes.'),
-        (N'TEAMS', N'Teams', N'Equipas.'),
-        (N'EMPLOYEES', N'Employees', N'Colaboradores.'),
-        (N'EMPLOYEE_CONTACT_PERSONS', N'EmployeeContactPersons', N'Pessoas de contacto dos colaboradores.'),
-        (N'EMPLOYEE_ADDRESSES', N'EmployeeAddresses', N'Moradas dos colaboradores.'),
-        (N'EMPLOYEE_FISCAL_DATA', N'EmployeeFiscalData', N'Dados fiscais dos colaboradores.'),
-        (N'EMPLOYEE_TEAM', N'EmployeeTeam', N'Relacao historica entre colaboradores e equipas.'),
-        (N'EQUIPMENT_TYPES', N'EquipmentTypes', N'Tipos de equipamentos.'),
-        (N'EQUIPMENTS', N'Equipments', N'Equipamentos.'),
-        (N'VEHICLES', N'Vehicles', N'Veiculos.'),
-        (N'VISITS', N'Visits', N'Visitas ou intervencoes.'),
-        (N'VISIT_CONTACT_PERSONS', N'VisitContactPersons', N'Pessoas de contacto das visitas.'),
-        (N'VISIT_ADDRESSES', N'VisitAddresses', N'Moradas das visitas.'),
-        (N'VISIT_TEAM', N'VisitTeams', N'Equipas associadas as visitas.'),
-        (N'VISIT_TEAM_FUNCTIONS', N'VisitTeamFunctions', N'Funcoes operacionais nas equipas de visita.'),
-        (N'VISIT_TEAM_EMPLOYEE', N'VisitTeamEmployee', N'Colaboradores associados as equipas de visita.'),
-        (N'VISIT_TEAM_VEHICLE', N'VisitTeamVehicles', N'Veiculos associados as equipas de visita.'),
-        (N'VISIT_TEAM_EQUIPMENT', N'VisitTeamEquipments', N'Equipamentos associados as equipas de visita.'),
-        (N'VISIT_ATTACHMENTS', N'VisitAttachments', N'Anexos das visitas.');
+        (N'PartyTypes', N'Tipos de partes: pessoa singular ou organizacao.'),
+        (N'AcquisitionSourceTypes', N'Tipos de origem de aquisicao comercial.'),
+        (N'AddressTypes', N'Tipos de morada disponiveis.'),
+        (N'DocumentTypes', N'Tipos de documentos.'),
+        (N'FileTypes', N'Tipos de ficheiros.'),
+        (N'StatusDomains', N'Dominios funcionais de status.'),
+        (N'SubscriptionPlans', N'Planos de assinatura.'),
+        (N'SubscriptionPlanFileRules', N'Regras de ficheiros por plano.'),
+        (N'Tenants', N'Tenants do sistema.'),
+        (N'TenantContactPersons', N'Pessoas de contacto dos tenants.'),
+        (N'TenantAddresses', N'Moradas dos tenants.'),
+        (N'TenantFiscalData', N'Dados fiscais dos tenants.'),
+        (N'TenantDocuments', N'Documentos dos tenants.'),
+        (N'StatusDefinitions', N'Definicoes de status por tenant e dominio.'),
+        (N'Subscriptions', N'Assinaturas dos tenants.'),
+        (N'Users', N'Utilizadores do sistema.'),
+        (N'UserPreferences', N'Preferencias dos utilizadores.'),
+        (N'Roles', N'Papeis ou perfis de acesso.'),
+        (N'Resources', N'Recursos protegidos pelo sistema de autorizacao.'),
+        (N'Actions', N'Acoes disponiveis no sistema de autorizacao.'),
+        (N'RolePermissions', N'Permissoes associadas aos papeis.'),
+        (N'UserRoles', N'Papeis associados aos utilizadores.'),
+        (N'RefreshTokens', N'Tokens de atualizacao.'),
+        (N'JwtKeys', N'Chaves de assinatura JWT.'),
+        (N'JobDefinitions', N'Definicoes de jobs e processos.'),
+        (N'Clients', N'Clientes do sistema.'),
+        (N'ClientAddresses', N'Moradas dos clientes.'),
+        (N'ClientContactPersons', N'Pessoas de contacto dos clientes.'),
+        (N'ClientDocuments', N'Documentos dos clientes.'),
+        (N'ClientFiscalData', N'Dados fiscais dos clientes.'),
+        (N'Teams', N'Equipas.'),
+        (N'Employees', N'Colaboradores.'),
+        (N'EmployeeContactPersons', N'Pessoas de contacto dos colaboradores.'),
+        (N'EmployeeAddresses', N'Moradas dos colaboradores.'),
+        (N'EmployeeFiscalData', N'Dados fiscais dos colaboradores.'),
+        (N'EmployeeTeam', N'Relacao historica entre colaboradores e equipas.'),
+        (N'EquipmentTypes', N'Tipos de equipamentos.'),
+        (N'Equipments', N'Equipamentos.'),
+        (N'Vehicles', N'Veiculos.'),
+        (N'Visits', N'Visitas ou intervencoes.'),
+        (N'VisitContactPersons', N'Pessoas de contacto das visitas.'),
+        (N'VisitAddresses', N'Moradas das visitas.'),
+        (N'VisitTeams', N'Equipas associadas as visitas.'),
+        (N'VisitTeamFunctions', N'Funcoes operacionais nas equipas de visita.'),
+        (N'VisitTeamEmployee', N'Colaboradores associados as equipas de visita.'),
+        (N'VisitTeamVehicles', N'Veiculos associados as equipas de visita.'),
+        (N'VisitTeamEquipments', N'Equipamentos associados as equipas de visita.'),
+        (N'VisitAttachments', N'Anexos das visitas.');
 
-    UPDATE r SET r.Name = s.Name, r.Description = s.Description, r.IsActive = 1, r.ModifiedBy = @SeedActorId, r.ModifiedAt = @UtcNow
-    FROM dbo.Resources r INNER JOIN @ResourceSeed s ON s.Code = r.Code WHERE r.IsDeleted = 0;
+    UPDATE r SET r.Description = s.Description, r.IsActive = 1, r.ModifiedBy = @SeedActorId, r.ModifiedAt = @UtcNow
+    FROM dbo.Resources r INNER JOIN @ResourceSeed s ON s.Name = r.Name WHERE r.IsDeleted = 0;
 
-    INSERT INTO dbo.Resources (Code, Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
-    SELECT s.Code, s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow FROM @ResourceSeed s
-    WHERE NOT EXISTS (SELECT 1 FROM dbo.Resources r WHERE r.Code = s.Code AND r.IsDeleted = 0);
+    INSERT INTO dbo.Resources (Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
+    SELECT s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow FROM @ResourceSeed s
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.Resources r WHERE r.Name = s.Name AND r.IsDeleted = 0);
 
     /* =========================================================
        9. TENANT - GERIT DEMO LDA
@@ -456,7 +456,7 @@ BEGIN TRY
            1, 0, @SeedActorId, @UtcNow
     FROM dbo.PartyTypes pt
     INNER JOIN dbo.AcquisitionSourceTypes ast ON ast.Code = N'OTHER' AND ast.IsDeleted = 0
-    WHERE pt.Code = N'Organization' AND pt.IsDeleted = 0
+    WHERE pt.Code = N'ORGANIZATION' AND pt.IsDeleted = 0
       AND NOT EXISTS (SELECT 1 FROM dbo.Tenants t WHERE t.Email = N'demo@gerit.pt' AND t.IsDeleted = 0);
 
     UPDATE t SET t.Name = N'Gerit Demo Lda', t.WebsiteUrl = N'https://demo.gerit.pt',
@@ -669,18 +669,18 @@ BEGIN TRY
        18. ROLES
        ========================================================= */
 
-    DECLARE @RoleSeed TABLE (Code NVARCHAR(50) PRIMARY KEY, Name NVARCHAR(100) NOT NULL, Description NVARCHAR(500) NOT NULL);
-    INSERT INTO @RoleSeed (Code, Name, Description)
+    DECLARE @RoleSeed TABLE (Name NVARCHAR(100) PRIMARY KEY, Description NVARCHAR(500) NOT NULL);
+    INSERT INTO @RoleSeed (Name, Description)
     VALUES
-        (N'ADMIN', N'Admin', N'Acesso administrativo completo ao tenant.'),
-        (N'BACKOFFICE', N'BackOffice', N'Acesso a operacoes internas e administrativas.'),
-        (N'MANAGER', N'Manager', N'Gestao de equipas, clientes e operacoes.'),
-        (N'OPERATOR', N'Operator', N'Execucao de tarefas operacionais.'),
-        (N'USER', N'User', N'Acesso basico ao sistema.'),
-        (N'SUPER_ADMIN', N'SuperAdmin', N'Acesso total ao sistema e configuracoes avancadas.');
+        (N'Admin', N'Acesso administrativo completo ao tenant.'),
+        (N'BackOffice', N'Acesso a operacoes internas e administrativas.'),
+        (N'Manager', N'Gestao de equipas, clientes e operacoes.'),
+        (N'Operator', N'Execucao de tarefas operacionais.'),
+        (N'User', N'Acesso basico ao sistema.'),
+        (N'SuperAdmin', N'Acesso total ao sistema e configuracoes avancadas.');
 
-    INSERT INTO dbo.Roles (TenantId, Code, Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
-    SELECT @DemoTenantId, s.Code, s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow
+    INSERT INTO dbo.Roles (TenantId, Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
+    SELECT @DemoTenantId, s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow
     FROM @RoleSeed s
     WHERE NOT EXISTS (SELECT 1 FROM dbo.Roles r WHERE r.TenantId = @DemoTenantId AND r.Name = s.Name AND r.IsDeleted = 0);
 
@@ -690,7 +690,7 @@ BEGIN TRY
 
     -- BackOffice: acesso total
     ;WITH BackOfficeRole AS (
-        SELECT r.Id AS RoleId FROM dbo.Roles r WHERE r.TenantId = @DemoTenantId AND r.Code = N'BACKOFFICE' AND r.IsDeleted = 0
+        SELECT r.Id AS RoleId FROM dbo.Roles r WHERE r.TenantId = @DemoTenantId AND r.Name = N'BackOffice' AND r.IsDeleted = 0
     )
     INSERT INTO dbo.RolePermissions (TenantId, RoleId, ResourceId, ActionId)
     SELECT @DemoTenantId, bor.RoleId, res.Id, act.Id
@@ -700,25 +700,25 @@ BEGIN TRY
       AND NOT EXISTS (SELECT 1 FROM dbo.RolePermissions rp WHERE rp.TenantId = @DemoTenantId AND rp.RoleId = bor.RoleId AND rp.ResourceId = res.Id AND rp.ActionId = act.Id);
 
     -- Manager: acesso de gestao (clientes, visitas, equipas, colaboradores, veiculos, equipamentos)
-    DECLARE @ManagerResources TABLE (ResourceCode NVARCHAR(50) PRIMARY KEY);
-    INSERT INTO @ManagerResources (ResourceCode)
+    DECLARE @ManagerResources TABLE (ResourceName NVARCHAR(50) PRIMARY KEY);
+    INSERT INTO @ManagerResources (ResourceName)
     VALUES
-        (N'CLIENTS'),(N'CLIENT_ADDRESSES'),(N'CLIENT_CONTACT_PERSONS'),(N'CLIENT_DOCUMENTS'),(N'CLIENT_FISCAL_DATA'),
-        (N'VISITS'),(N'VISIT_CONTACT_PERSONS'),(N'VISIT_ADDRESSES'),
-        (N'VISIT_TEAM'),(N'VISIT_TEAM_EMPLOYEE'),(N'VISIT_TEAM_VEHICLE'),(N'VISIT_TEAM_EQUIPMENT'),
-        (N'VISIT_TEAM_FUNCTIONS'),(N'VISIT_ATTACHMENTS'),
-        (N'TEAMS'),(N'EMPLOYEES'),(N'EMPLOYEE_CONTACT_PERSONS'),(N'EMPLOYEE_ADDRESSES'),
-        (N'EMPLOYEE_FISCAL_DATA'),(N'EMPLOYEE_TEAM'),
-        (N'EQUIPMENT_TYPES'),(N'EQUIPMENTS'),(N'VEHICLES');
+        (N'Clients'),(N'ClientAddresses'),(N'ClientContactPersons'),(N'ClientDocuments'),(N'ClientFiscalData'),
+        (N'Visits'),(N'VisitContactPersons'),(N'VisitAddresses'),
+        (N'VisitTeams'),(N'VisitTeamEmployee'),(N'VisitTeamVehicles'),(N'VisitTeamEquipments'),
+        (N'VisitTeamFunctions'),(N'VisitAttachments'),
+        (N'Teams'),(N'Employees'),(N'EmployeeContactPersons'),(N'EmployeeAddresses'),
+        (N'EmployeeFiscalData'),(N'EmployeeTeam'),
+        (N'EquipmentTypes'),(N'Equipments'),(N'Vehicles');
 
     ;WITH ManagerRole AS (
-        SELECT r.Id AS RoleId FROM dbo.Roles r WHERE r.TenantId = @DemoTenantId AND r.Code = N'MANAGER' AND r.IsDeleted = 0
+        SELECT r.Id AS RoleId FROM dbo.Roles r WHERE r.TenantId = @DemoTenantId AND r.Name = N'Manager' AND r.IsDeleted = 0
     )
     INSERT INTO dbo.RolePermissions (TenantId, RoleId, ResourceId, ActionId)
     SELECT @DemoTenantId, mr.RoleId, res.Id, act.Id
     FROM ManagerRole mr
     CROSS JOIN @ManagerResources mr2
-    INNER JOIN dbo.Resources res ON res.Code = mr2.ResourceCode AND res.IsDeleted = 0
+    INNER JOIN dbo.Resources res ON res.Name = mr2.ResourceName AND res.IsDeleted = 0
     CROSS JOIN dbo.Actions act
     WHERE act.IsActive = 1 AND act.IsDeleted = 0
       AND NOT EXISTS (SELECT 1 FROM dbo.RolePermissions rp WHERE rp.TenantId = @DemoTenantId AND rp.RoleId = mr.RoleId AND rp.ResourceId = res.Id AND rp.ActionId = act.Id);
@@ -732,8 +732,8 @@ BEGIN TRY
         FROM @UserSeed s
         INNER JOIN dbo.Users u ON u.TenantId = @DemoTenantId AND u.NormalizedEmail = s.NormalizedEmail AND u.IsDeleted = 0
         INNER JOIN dbo.Roles r ON r.TenantId = @DemoTenantId AND r.IsDeleted = 0
-        WHERE (s.Email = N'viana.dener@gmail.com' AND r.Code = N'BACKOFFICE')
-           OR (s.Email = N'admin@geritapp.com' AND r.Code = N'MANAGER')
+        WHERE (s.Email = N'viana.dener@gmail.com' AND r.Name = N'BackOffice')
+           OR (s.Email = N'admin@geritapp.com' AND r.Name = N'Manager')
     )
     INSERT INTO dbo.UserRoles (TenantId, UserId, RoleId)
     SELECT @DemoTenantId, tu.UserId, tu.RoleId FROM TargetUsers tu
@@ -760,25 +760,25 @@ BEGIN TRY
     );
     INSERT INTO @ClientSeed (SeedKey, PartyTypeCode, Name, PhoneNumber, CellPhoneNumber, IsWhatsapp, Email, WebsiteUrl, BirthDate, Gender, Nationality, CompanyRegistrationNumber, EconomicActivityCode, NumberOfEmployees, Note, AcquisitionSourceCode, StatusCode, TaxNumber, VatNumber, IsVatRegistered, FiscalEmail, AddressTypeCode, Street, Neighborhood, City, District, PostalCode, StreetNumber, Complement, Latitude, Longitude, ContactName, ContactJobTitle, DocumentTypeCode, DocumentNumber)
     VALUES
-        (N'CLI-001', N'Individual', N'Maria Joao Ferreira', N'222000001', N'912345001', 1, N'maria.jferreira@email.pt', NULL, '1985-03-15', N'Feminino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - moradia Porto', N'INSTAGRAM', N'ACTIVE', N'220111222', NULL, 0, N'maria.jferreira@email.pt', N'RESIDENTIAL', N'Rua de Cedofeita', N'Cedofeita', N'Porto', N'Porto', N'4050-174', N'45', N'1. Esq.', 41.155000, -8.619000, N'Maria Joao Ferreira', NULL, N'CITIZEN_CARD', N'14523678'),
-        (N'CLI-002', N'Individual', N'Pedro Santos', N'211000002', N'912345002', 1, N'pedro.santos@email.pt', NULL, '1990-07-22', N'Masculino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - apartamento Lisboa', N'GOOGLE', N'ACTIVE', N'220111333', NULL, 0, N'pedro.santos@email.pt', N'RESIDENTIAL', N'Avenida da Republica', N'Avenidas Novas', N'Lisboa', N'Lisboa', N'1000-190', N'120', N'5. Dt.', 38.739000, -9.147000, N'Pedro Santos', NULL, N'CITIZEN_CARD', N'14523679'),
-        (N'CLI-003', N'Individual', N'Ana Oliveira', N'253000003', N'912345003', 1, N'ana.oliveira@email.pt', NULL, '1992-11-08', N'Feminino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Braga centro', N'FACEBOOK', N'ACTIVE', N'220111444', NULL, 0, N'ana.oliveira@email.pt', N'RESIDENTIAL', N'Avenida Central', N'Centro', N'Braga', N'Braga', N'4710-229', N'33', N'2. Esq.', 41.551000, -8.422000, N'Ana Oliveira', NULL, N'CITIZEN_CARD', N'14523680'),
-        (N'CLI-004', N'Individual', N'Rui Goncalves', N'239000004', N'912345004', 1, N'rui.goncalves@email.pt', NULL, '1988-04-30', N'Masculino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Coimbra sul', N'REFERRAL', N'ACTIVE', N'220111555', NULL, 0, N'rui.goncalves@email.pt', N'RESIDENTIAL', N'Rua Ferreira Borges', N'Baixa', N'Coimbra', N'Coimbra', N'3000-179', N'76', N'R/C Dt.', 40.207000, -8.428000, N'Rui Goncalves', NULL, N'CITIZEN_CARD', N'14523681'),
-        (N'CLI-005', N'Individual', N'Carla Martins', N'289000005', N'912345005', 1, N'carla.martins@email.pt', NULL, '1983-09-12', N'Feminino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Faro centro', N'INSTAGRAM', N'ACTIVE', N'220111666', NULL, 0, N'carla.martins@email.pt', N'RESIDENTIAL', N'Rua de Santo Antonio', N'Centro', N'Faro', N'Faro', N'8000-283', N'22', N'3.', 37.016000, -7.935000, N'Carla Martins', NULL, N'CITIZEN_CARD', N'14523682'),
-        (N'CLI-006', N'Individual', N'Manuel Rodrigues', N'234000006', N'912345006', 1, N'manuel.rodrigues@email.pt', NULL, '1978-01-25', N'Masculino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Aveiro', N'WHATSAPP', N'ACTIVE', N'220111777', NULL, 0, N'manuel.rodrigues@email.pt', N'RESIDENTIAL', N'Rua Direita', N'Centro', N'Aveiro', N'Aveiro', N'3810-005', N'15', NULL, 40.641000, -8.654000, N'Manuel Rodrigues', NULL, N'CITIZEN_CARD', N'14523683'),
-        (N'CLI-007', N'Individual', N'Patricia Mendes', N'265000007', N'912345007', 1, N'patricia.mendes@email.pt', NULL, '1991-06-17', N'Feminino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Setubal', N'LINKEDIN', N'ACTIVE', N'220111888', NULL, 0, N'patricia.mendes@email.pt', N'RESIDENTIAL', N'Avenida Luisa Todi', N'Centro', N'Setubal', N'Setubal', N'2900-452', N'88', N'1. Dt.', 38.524000, -8.893000, N'Patricia Mendes', NULL, N'CITIZEN_CARD', N'14523684'),
-        (N'CLI-008', N'Organization', N'Silva & Filhos, Lda', N'222000008', N'912345008', 1, N'geral@silvaefilhos.pt', N'https://silvaefilhos.pt', NULL, NULL, NULL, N'510111222', N'43320', 25, N'Empresa de construcao civil - Porto', N'GOOGLE', N'ACTIVE', N'510111222', N'PT510111222', 1, N'fiscal@silvaefilhos.pt', N'COMMERCIAL', N'Rua de Costa Cabral', N'Paranhos', N'Porto', N'Porto', N'4200-216', N'150', N'Armazem B', 41.169000, -8.601000, N'Antonio Silva', N'Gerente', N'COMPANY_REGISTRATION', N'510111222'),
-        (N'CLI-009', N'Organization', N'Tech Solutions, Unipessoal Lda', N'211000009', N'912345009', 1, N'info@techsolutions.pt', N'https://techsolutions.pt', NULL, NULL, NULL, N'510111333', N'62010', 12, N'Empresa de desenvolvimento de software - Lisboa', N'LINKEDIN', N'ACTIVE', N'510111333', N'PT510111333', 1, N'fiscal@techsolutions.pt', N'COMMERCIAL', N'Avenida da Liberdade', N'Santo Antonio', N'Lisboa', N'Lisboa', N'1250-096', N'200', N'7. Andar', 38.720000, -9.142000, N'Joao Teixeira', N'CEO', N'COMPANY_REGISTRATION', N'510111333'),
-        (N'CLI-010', N'Organization', N'Farmacia Central, Lda', N'222000010', N'912345010', 1, N'farmacia.central@email.pt', NULL, NULL, NULL, NULL, N'510111444', N'47730', 8, N'Farmacia - Porto centro', N'EVENTS', N'ACTIVE', N'510111444', N'PT510111444', 1, N'fiscal@farmaciacentral.pt', N'COMMERCIAL', N'Rua de Santa Catarina', N'Santo Ildefonso', N'Porto', N'Porto', N'4000-447', N'350', N'Loja 2', 41.149000, -8.608000, N'Dr. Sofia Almeida', N'Diretora Tecnica', N'COMPANY_REGISTRATION', N'510111444'),
-        (N'CLI-011', N'Organization', N'Restaurante O Forno, Lda', N'253000011', N'912345011', 1, N'reservas@oforno.pt', N'https://oforno.pt', NULL, NULL, NULL, N'510111555', N'56101', 15, N'Restaurante - Braga centro historico', N'INSTAGRAM', N'ACTIVE', N'510111555', N'PT510111555', 1, N'fiscal@oforno.pt', N'COMMERCIAL', N'Rua do Souto', N'Centro Historico', N'Braga', N'Braga', N'4700-329', N'22', N'R/C', 41.550000, -8.427000, N'Miguel Oliveira', N'Gerente', N'COMPANY_REGISTRATION', N'510111555'),
-        (N'CLI-012', N'Organization', N'Porto Creative Agency, Lda', N'222000012', N'912345012', 1, N'hello@portocreative.pt', N'https://portocreative.pt', NULL, NULL, NULL, N'510111666', N'73110', 14, N'Agencia de publicidade - Porto', N'TIKTOK', N'ACTIVE', N'510111666', N'PT510111666', 1, N'fiscal@portocreative.pt', N'COMMERCIAL', N'Rua Miguel Bombarda', N'Cedofeita', N'Porto', N'Porto', N'4050-379', N'110', N'Galeria 3', 41.152000, -8.619000, N'Helena Pinto', N'Diretora Criativa', N'COMPANY_REGISTRATION', N'510111666'),
-        (N'CLI-013', N'Organization', N'Lisboa Digital Services, Lda', N'211000013', N'912345013', 1, N'contacto@lisboadigital.pt', N'https://lisboadigital.pt', NULL, NULL, NULL, N'510111777', N'63110', 32, N'Servicos de transformacao digital - Lisboa', N'GOOGLE', N'ACTIVE', N'510111777', N'PT510111777', 1, N'fiscal@lisboadigital.pt', N'COMMERCIAL', N'Rua Augusta', N'Baixa', N'Lisboa', N'Lisboa', N'1100-048', N'250', N'4. Andar', 38.711000, -9.137000, N'Patricia Ramos', N'COO', N'COMPANY_REGISTRATION', N'510111777'),
-        (N'CLI-014', N'Organization', N'Coimbra Business Consulting, Lda', N'239000014', N'912345014', 1, N'geral@coimbraconsulting.pt', N'https://coimbraconsulting.pt', NULL, NULL, NULL, N'510111888', N'70220', 22, N'Consultoria empresarial - Coimbra', N'LINKEDIN', N'ACTIVE', N'510111888', N'PT510111888', 1, N'fiscal@coimbraconsulting.pt', N'COMMERCIAL', N'Rua do Brasil', N'Celas', N'Coimbra', N'Coimbra', N'3030-175', N'45', N'2.', 40.213000, -8.418000, N'Miguel Santos', N'Socio-Gerente', N'COMPANY_REGISTRATION', N'510111888'),
-        (N'CLI-015', N'Individual', N'Joao Costa', N'282000015', N'912345015', 1, N'joao.costa@email.pt', NULL, '1995-12-03', N'Masculino', N'Portuguesa', NULL, NULL, NULL, N'Lead em prospecao - contactou via site', N'GOOGLE', N'PROSPECT', N'220111999', NULL, 0, N'joao.costa@email.pt', N'RESIDENTIAL', N'Avenida da Republica', N'Centro', N'Portimao', N'Faro', N'8500-300', N'70', N'2. Esq.', 37.138000, -8.538000, N'Joao Costa', NULL, N'CITIZEN_CARD', N'14523685');
+        (N'CLI-001', N'INDIVIDUAL', N'Maria Joao Ferreira', N'222000001', N'912345001', 1, N'maria.jferreira@email.pt', NULL, '1985-03-15', N'Feminino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - moradia Porto', N'INSTAGRAM', N'ACTIVE', N'220111222', NULL, 0, N'maria.jferreira@email.pt', N'RESIDENTIAL', N'Rua de Cedofeita', N'Cedofeita', N'Porto', N'Porto', N'4050-174', N'45', N'1. Esq.', 41.155000, -8.619000, N'Maria Joao Ferreira', NULL, N'CITIZEN_CARD', N'14523678'),
+        (N'CLI-002', N'INDIVIDUAL', N'Pedro Santos', N'211000002', N'912345002', 1, N'pedro.santos@email.pt', NULL, '1990-07-22', N'Masculino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - apartamento Lisboa', N'GOOGLE', N'ACTIVE', N'220111333', NULL, 0, N'pedro.santos@email.pt', N'RESIDENTIAL', N'Avenida da Republica', N'Avenidas Novas', N'Lisboa', N'Lisboa', N'1000-190', N'120', N'5. Dt.', 38.739000, -9.147000, N'Pedro Santos', NULL, N'CITIZEN_CARD', N'14523679'),
+        (N'CLI-003', N'INDIVIDUAL', N'Ana Oliveira', N'253000003', N'912345003', 1, N'ana.oliveira@email.pt', NULL, '1992-11-08', N'Feminino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Braga centro', N'FACEBOOK', N'ACTIVE', N'220111444', NULL, 0, N'ana.oliveira@email.pt', N'RESIDENTIAL', N'Avenida Central', N'Centro', N'Braga', N'Braga', N'4710-229', N'33', N'2. Esq.', 41.551000, -8.422000, N'Ana Oliveira', NULL, N'CITIZEN_CARD', N'14523680'),
+        (N'CLI-004', N'INDIVIDUAL', N'Rui Goncalves', N'239000004', N'912345004', 1, N'rui.goncalves@email.pt', NULL, '1988-04-30', N'Masculino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Coimbra sul', N'REFERRAL', N'ACTIVE', N'220111555', NULL, 0, N'rui.goncalves@email.pt', N'RESIDENTIAL', N'Rua Ferreira Borges', N'Baixa', N'Coimbra', N'Coimbra', N'3000-179', N'76', N'R/C Dt.', 40.207000, -8.428000, N'Rui Goncalves', NULL, N'CITIZEN_CARD', N'14523681'),
+        (N'CLI-005', N'INDIVIDUAL', N'Carla Martins', N'289000005', N'912345005', 1, N'carla.martins@email.pt', NULL, '1983-09-12', N'Feminino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Faro centro', N'INSTAGRAM', N'ACTIVE', N'220111666', NULL, 0, N'carla.martins@email.pt', N'RESIDENTIAL', N'Rua de Santo Antonio', N'Centro', N'Faro', N'Faro', N'8000-283', N'22', N'3.', 37.016000, -7.935000, N'Carla Martins', NULL, N'CITIZEN_CARD', N'14523682'),
+        (N'CLI-006', N'INDIVIDUAL', N'Manuel Rodrigues', N'234000006', N'912345006', 1, N'manuel.rodrigues@email.pt', NULL, '1978-01-25', N'Masculino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Aveiro', N'WHATSAPP', N'ACTIVE', N'220111777', NULL, 0, N'manuel.rodrigues@email.pt', N'RESIDENTIAL', N'Rua Direita', N'Centro', N'Aveiro', N'Aveiro', N'3810-005', N'15', NULL, 40.641000, -8.654000, N'Manuel Rodrigues', NULL, N'CITIZEN_CARD', N'14523683'),
+        (N'CLI-007', N'INDIVIDUAL', N'Patricia Mendes', N'265000007', N'912345007', 1, N'patricia.mendes@email.pt', NULL, '1991-06-17', N'Feminino', N'Portuguesa', NULL, NULL, NULL, N'Cliente residencial - Setubal', N'LINKEDIN', N'ACTIVE', N'220111888', NULL, 0, N'patricia.mendes@email.pt', N'RESIDENTIAL', N'Avenida Luisa Todi', N'Centro', N'Setubal', N'Setubal', N'2900-452', N'88', N'1. Dt.', 38.524000, -8.893000, N'Patricia Mendes', NULL, N'CITIZEN_CARD', N'14523684'),
+        (N'CLI-008', N'ORGANIZATION', N'Silva & Filhos, Lda', N'222000008', N'912345008', 1, N'geral@silvaefilhos.pt', N'https://silvaefilhos.pt', NULL, NULL, NULL, N'510111222', N'43320', 25, N'Empresa de construcao civil - Porto', N'GOOGLE', N'ACTIVE', N'510111222', N'PT510111222', 1, N'fiscal@silvaefilhos.pt', N'COMMERCIAL', N'Rua de Costa Cabral', N'Paranhos', N'Porto', N'Porto', N'4200-216', N'150', N'Armazem B', 41.169000, -8.601000, N'Antonio Silva', N'Gerente', N'COMPANY_REGISTRATION', N'510111222'),
+        (N'CLI-009', N'ORGANIZATION', N'Tech Solutions, Unipessoal Lda', N'211000009', N'912345009', 1, N'info@techsolutions.pt', N'https://techsolutions.pt', NULL, NULL, NULL, N'510111333', N'62010', 12, N'Empresa de desenvolvimento de software - Lisboa', N'LINKEDIN', N'ACTIVE', N'510111333', N'PT510111333', 1, N'fiscal@techsolutions.pt', N'COMMERCIAL', N'Avenida da Liberdade', N'Santo Antonio', N'Lisboa', N'Lisboa', N'1250-096', N'200', N'7. Andar', 38.720000, -9.142000, N'Joao Teixeira', N'CEO', N'COMPANY_REGISTRATION', N'510111333'),
+        (N'CLI-010', N'ORGANIZATION', N'Farmacia Central, Lda', N'222000010', N'912345010', 1, N'farmacia.central@email.pt', NULL, NULL, NULL, NULL, N'510111444', N'47730', 8, N'Farmacia - Porto centro', N'EVENTS', N'ACTIVE', N'510111444', N'PT510111444', 1, N'fiscal@farmaciacentral.pt', N'COMMERCIAL', N'Rua de Santa Catarina', N'Santo Ildefonso', N'Porto', N'Porto', N'4000-447', N'350', N'Loja 2', 41.149000, -8.608000, N'Dr. Sofia Almeida', N'Diretora Tecnica', N'COMPANY_REGISTRATION', N'510111444'),
+        (N'CLI-011', N'ORGANIZATION', N'Restaurante O Forno, Lda', N'253000011', N'912345011', 1, N'reservas@oforno.pt', N'https://oforno.pt', NULL, NULL, NULL, N'510111555', N'56101', 15, N'Restaurante - Braga centro historico', N'INSTAGRAM', N'ACTIVE', N'510111555', N'PT510111555', 1, N'fiscal@oforno.pt', N'COMMERCIAL', N'Rua do Souto', N'Centro Historico', N'Braga', N'Braga', N'4700-329', N'22', N'R/C', 41.550000, -8.427000, N'Miguel Oliveira', N'Gerente', N'COMPANY_REGISTRATION', N'510111555'),
+        (N'CLI-012', N'ORGANIZATION', N'Porto Creative Agency, Lda', N'222000012', N'912345012', 1, N'hello@portocreative.pt', N'https://portocreative.pt', NULL, NULL, NULL, N'510111666', N'73110', 14, N'Agencia de publicidade - Porto', N'TIKTOK', N'ACTIVE', N'510111666', N'PT510111666', 1, N'fiscal@portocreative.pt', N'COMMERCIAL', N'Rua Miguel Bombarda', N'Cedofeita', N'Porto', N'Porto', N'4050-379', N'110', N'Galeria 3', 41.152000, -8.619000, N'Helena Pinto', N'Diretora Criativa', N'COMPANY_REGISTRATION', N'510111666'),
+        (N'CLI-013', N'ORGANIZATION', N'Lisboa Digital Services, Lda', N'211000013', N'912345013', 1, N'contacto@lisboadigital.pt', N'https://lisboadigital.pt', NULL, NULL, NULL, N'510111777', N'63110', 32, N'Servicos de transformacao digital - Lisboa', N'GOOGLE', N'ACTIVE', N'510111777', N'PT510111777', 1, N'fiscal@lisboadigital.pt', N'COMMERCIAL', N'Rua Augusta', N'Baixa', N'Lisboa', N'Lisboa', N'1100-048', N'250', N'4. Andar', 38.711000, -9.137000, N'Patricia Ramos', N'COO', N'COMPANY_REGISTRATION', N'510111777'),
+        (N'CLI-014', N'ORGANIZATION', N'Coimbra Business Consulting, Lda', N'239000014', N'912345014', 1, N'geral@coimbraconsulting.pt', N'https://coimbraconsulting.pt', NULL, NULL, NULL, N'510111888', N'70220', 22, N'Consultoria empresarial - Coimbra', N'LINKEDIN', N'ACTIVE', N'510111888', N'PT510111888', 1, N'fiscal@coimbraconsulting.pt', N'COMMERCIAL', N'Rua do Brasil', N'Celas', N'Coimbra', N'Coimbra', N'3030-175', N'45', N'2.', 40.213000, -8.418000, N'Miguel Santos', N'Socio-Gerente', N'COMPANY_REGISTRATION', N'510111888'),
+        (N'CLI-015', N'INDIVIDUAL', N'Joao Costa', N'282000015', N'912345015', 1, N'joao.costa@email.pt', NULL, '1995-12-03', N'Masculino', N'Portuguesa', NULL, NULL, NULL, N'Lead em prospecao - contactou via site', N'GOOGLE', N'PROSPECT', N'220111999', NULL, 0, N'joao.costa@email.pt', N'RESIDENTIAL', N'Avenida da Republica', N'Centro', N'Portimao', N'Faro', N'8500-300', N'70', N'2. Esq.', 37.138000, -8.538000, N'Joao Costa', NULL, N'CITIZEN_CARD', N'14523685');
 
     ;WITH ResolvedClients AS (
         SELECT s.*,
-               CASE WHEN s.PartyTypeCode = N'Individual' THEN CONVERT(TINYINT, 1) ELSE CONVERT(TINYINT, 2) END AS PartyTypeId,
+               CASE WHEN s.PartyTypeCode = N'INDIVIDUAL' THEN CONVERT(TINYINT, 1) ELSE CONVERT(TINYINT, 2) END AS PartyTypeId,
                ast.Id AS AcquisitionSourceTypeId, d.Id AS StatusDomainId, sd.Id AS StatusDefinitionId
         FROM @ClientSeed s
         INNER JOIN dbo.AcquisitionSourceTypes ast ON ast.Code = s.AcquisitionSourceCode AND ast.IsDeleted = 0
@@ -832,7 +832,7 @@ BEGIN TRY
 
     INSERT INTO dbo.ClientContactPersons (TenantId, ClientId, JobTitle, Department, Name, PhoneNumber, CellPhoneNumber, IsCellPhoneWhatsapp, Email, IsPrimary, IsActive, IsDeleted, CreatedBy, CreatedAt)
     SELECT @DemoTenantId, c.Id,
-           CASE WHEN s.PartyTypeCode = N'Organization' THEN s.ContactJobTitle ELSE NULL END,
+           CASE WHEN s.PartyTypeCode = N'ORGANIZATION' THEN s.ContactJobTitle ELSE NULL END,
            NULL, s.ContactName, s.PhoneNumber, s.CellPhoneNumber, s.IsWhatsapp, s.Email,
            1, 1, 0, @SeedActorId, @UtcNow
     FROM @ClientSeed s

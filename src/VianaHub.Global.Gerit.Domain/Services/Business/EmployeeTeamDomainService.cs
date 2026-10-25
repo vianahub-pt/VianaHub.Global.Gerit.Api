@@ -1,4 +1,4 @@
-﻿using VianaHub.Global.Gerit.Domain.Base;
+using VianaHub.Global.Gerit.Domain.Base;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.ReadModels;
@@ -20,7 +20,7 @@ public class EmployeeTeamDomainService : IEmployeeTeamDomainService
         _notify = notify;
     }
 
-    public async Task<EmployeeTeamEntity> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeTeamEntity?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(employeeId, id, ct);
     }

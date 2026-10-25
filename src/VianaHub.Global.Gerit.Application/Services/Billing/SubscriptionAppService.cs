@@ -210,7 +210,7 @@ public class SubscriptionAppService : ISubscriptionAppService
         return await _domain.RenewAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -231,7 +231,7 @@ public class SubscriptionAppService : ISubscriptionAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadSubscriptionItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadSubscriptionItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -265,7 +265,7 @@ public class SubscriptionAppService : ISubscriptionAppService
                     if (record != null)
                     {
                         // Valida se os campos n�o cont�m conte�do perigoso
-                        if (record.TenantId <= 0 )
+                        if (record.TenantId <= 0)
                         {
                             _notify.Add(_localization.GetMessage("Application.Service.Subscription.ReadCsvFile.TenantId.IsSafeCsvValue", rowCount + 2), 400);
                             continue;
@@ -377,7 +377,7 @@ public class SubscriptionAppService : ISubscriptionAppService
 
     private bool ValidateBulkItem(BulkUploadSubscriptionItem item)
     {
-        if (item.TenantId <= 0 )
+        if (item.TenantId <= 0)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Subscription.ValidateBulkItem.TenantId", item.TenantId), 400);
             return false;

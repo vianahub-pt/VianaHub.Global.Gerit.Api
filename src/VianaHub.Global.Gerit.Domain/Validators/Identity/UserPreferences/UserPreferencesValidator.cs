@@ -7,11 +7,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Identity.UserPreferences;
 
 public class UserPreferencesValidator : BaseEntityValidator<UserPreferencesEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public UserPreferencesValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override Task<ValidationResult> ValidateForCreateAsync(UserPreferencesEntity entity)

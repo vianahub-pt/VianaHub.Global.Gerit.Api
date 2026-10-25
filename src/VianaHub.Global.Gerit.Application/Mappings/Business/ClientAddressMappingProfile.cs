@@ -18,7 +18,7 @@ public class ClientAddressesMappingProfile : Profile
         CreateMap<ClientAddressesEntity, ClientAddressResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.AddressTypeName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.AddressType.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.AddressType?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.CountryCode, opt => opt.MapFrom(src => src.CountryCode))
             .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.Street))
             .ForMember(dest => dest.IsPrimary, opt => opt.MapFrom(src => src.IsPrimary))
@@ -28,10 +28,10 @@ public class ClientAddressesMappingProfile : Profile
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.TenantId, opt => opt.MapFrom(src => src.TenantId))
             .ForMember(dest => dest.ClientId, opt => opt.MapFrom(src => src.ClientId))
-            .ForMember(dest => dest.ClientName, opt => opt.MapFrom(src => src.Client.Name))
+            .ForMember(dest => dest.ClientName, opt => opt.MapFrom(src => src.Client == null ? null : src.Client.Name))
             .ForMember(dest => dest.AddressTypeId, opt => opt.MapFrom(src => src.AddressTypeId))
             .ForMember(dest => dest.AddressTypeName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.AddressType.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.AddressType?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.Street, opt => opt.MapFrom(src => src.Street))
             .ForMember(dest => dest.StreetNumber, opt => opt.MapFrom(src => src.StreetNumber))
             .ForMember(dest => dest.Complement, opt => opt.MapFrom(src => src.Complement))

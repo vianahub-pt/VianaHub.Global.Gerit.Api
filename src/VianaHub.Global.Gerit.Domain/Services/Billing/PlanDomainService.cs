@@ -24,7 +24,7 @@ public class PlanDomainService : IPlanDomainService
         _notify = notify;
     }
 
-    public async Task<SubscriptionPlanEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<SubscriptionPlanEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
@@ -61,7 +61,7 @@ public class PlanDomainService : IPlanDomainService
             }
             return false;
         }
-        
+
         return await _repo.AddAsync(entity, ct);
     }
     public async Task<bool> UpdateAsync(SubscriptionPlanEntity entity, CancellationToken ct)
@@ -75,7 +75,7 @@ public class PlanDomainService : IPlanDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(SubscriptionPlanEntity entity, CancellationToken ct)
@@ -89,7 +89,7 @@ public class PlanDomainService : IPlanDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> DeactivateAsync(SubscriptionPlanEntity entity, CancellationToken ct)
@@ -103,7 +103,7 @@ public class PlanDomainService : IPlanDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> DeleteAsync(SubscriptionPlanEntity entity, CancellationToken ct)
@@ -117,7 +117,7 @@ public class PlanDomainService : IPlanDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
 }

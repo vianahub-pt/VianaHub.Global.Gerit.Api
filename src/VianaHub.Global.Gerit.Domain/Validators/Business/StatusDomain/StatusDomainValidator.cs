@@ -7,11 +7,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Business.StatusDomain;
 
 public class StatusDomainValidator : BaseEntityValidator<StatusDomainEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public StatusDomainValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override async Task<ValidationResult> ValidateForCreateAsync(StatusDomainEntity entity)

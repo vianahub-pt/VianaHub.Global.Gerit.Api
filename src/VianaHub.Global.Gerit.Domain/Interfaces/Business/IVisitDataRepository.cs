@@ -9,11 +9,11 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 /// </summary>
 public interface IVisitDataRepository
 {
-    Task<VisitEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<VisitEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<VisitEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<VisitEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
-    Task<bool> ExistsByTenantAndTitleAsync(int tenantId, string title, int? excludeId, CancellationToken ct);
+    Task<bool> ExistsByTenantAndTitleAsync(int tenantId, string? title, int? excludeId, CancellationToken ct);
     Task<bool> AddAsync(VisitEntity entity, CancellationToken ct);
     Task<bool> UpdateAsync(VisitEntity entity, CancellationToken ct);
 }

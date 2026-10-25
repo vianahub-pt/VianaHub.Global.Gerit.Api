@@ -1,3 +1,5 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
+using VianaHub.Global.Gerit.Domain.Constants;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
@@ -50,7 +52,7 @@ public class DocumentTypeAppService : IDocumentTypeAppService
         return _mapper.Map<IEnumerable<DocumentTypeResponse>>(entities);
     }
 
-    public async Task<DocumentTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<DocumentTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -70,22 +72,42 @@ public class DocumentTypeAppService : IDocumentTypeAppService
 
     public async Task<int> CreateAsync(CreateDocumentTypeRequest request, CancellationToken ct)
     {
+        var code = CatalogCodeGenerator.FromCanonicalTranslation(request.Translations, t => t.LanguageCode, t => t.Name);
+        if (request.Translations is null || string.IsNullOrEmpty(code) || request.Translations.Any(t => t == null))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+            return 0;
+        }
         // Verificar duplicidade: código já existe?
-        var existsByCode = await _repo.ExistsByCodeAsync(request.Code, ct);
+        if (request.Translations!.Select(t => t.LanguageCode).Distinct(StringComparer.OrdinalIgnoreCase).Count() != request.Translations.Count)
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.TranslationLanguagesUnique"), 400);
+            return 0;
+        }
+        var existsByCode = await _repo.ExistsByCodeAsync(code, ct);
         if (existsByCode)
         {
             _notify.Add(_localization.GetMessage("Application.Service.DocumentType.Create.CodeAlreadyExists"), 409);
             return 0;
         }
 
+        foreach (var translation in request.Translations!)
+        {
+            if (await _repo.ExistsByTranslationAsync(translation.LanguageCode, translation.Name, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.TranslationAlreadyExists"), 409);
+                return 0;
+            }
+        }
+
         var entity = new DocumentTypeEntity(
-            request.Code,
+            code,
             _currentUser.GetUserId());
 
         // Adicionar traduções se fornecidas
         if (request.Translations != null && request.Translations.Any())
         {
-            foreach (var translationDto in request.Translations)
+            foreach (var translationDto in request.Translations.Where(t => t != null))
             {
                 var translation = new DocumentTypeTranslationsEntity(
                     entity.Id, // 0 inicial, EF Core resolverá o FK após persistência
@@ -109,18 +131,7 @@ public class DocumentTypeAppService : IDocumentTypeAppService
             return false;
         }
 
-        // Verificar duplicidade: se mudou o código, verificar se já existe
-        if (!string.Equals(entity.Code, request.Code, StringComparison.OrdinalIgnoreCase))
-        {
-            var existsByCode = await _repo.ExistsByCodeAsync(request.Code, ct);
-            if (existsByCode)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.DocumentType.Update.CodeAlreadyExists"), 409);
-                return false;
-            }
-        }
-
-        entity.UpdateCode(request.Code, _currentUser.GetUserId());
+        entity.MarkModified(_currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
 

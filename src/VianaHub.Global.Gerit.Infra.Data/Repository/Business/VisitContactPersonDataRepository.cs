@@ -16,7 +16,7 @@ public class VisitContactPersonDataRepository : IVisitContactDataRepository
         _context = context;
     }
 
-    public async Task<VisitContactPersonsEntity> GetByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitContactPersonsEntity?> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         return await _context.Set<VisitContactPersonsEntity>()
             .AsNoTracking()
@@ -44,11 +44,11 @@ public class VisitContactPersonDataRepository : IVisitContactDataRepository
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => 
-                EF.Functions.Like(x.Name.ToLower(), $"%{search}%") || 
-                EF.Functions.Like(x.Email.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.Phone.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.Visit.Title.ToLower(), $"%{search}%"));
+            query = query.Where(x =>
+                (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%")) ||
+                (x.Email != null && EF.Functions.Like(x.Email.ToLower(), $"%{search}%")) ||
+                (x.Phone != null && EF.Functions.Like(x.Phone.ToLower(), $"%{search}%")) ||
+                (x.Visit != null && x.Visit.Title != null && EF.Functions.Like(x.Visit.Title.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -80,7 +80,7 @@ public class VisitContactPersonDataRepository : IVisitContactDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByVisitAndEmailAsync(int interventionId, string email, int? excludeId, CancellationToken ct)
+    public async Task<bool> ExistsByVisitAndEmailAsync(int interventionId, string? email, int? excludeId, CancellationToken ct)
     {
         var query = _context.Set<VisitContactPersonsEntity>()
             .AsNoTracking()

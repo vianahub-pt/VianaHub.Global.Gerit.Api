@@ -3,14 +3,13 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Infra.Job.Interfaces;
 using VianaHub.Global.Gerit.Infra.Job.Jobs;
-using VianaHub.Global.Gerit.Infra.Job.Interfaces;
 
 namespace VianaHub.Global.Gerit.Infra.Job.Jobs.Maintenance;
 
 /// <summary>
-/// Job respons·vel por disparar a sincronizaÁ„o de JobDefinitions com o Hangfire.
+/// Job respons√°vel por disparar a sincroniza√ß√£o de JobDefinitions com o Hangfire.
 /// Agendado via JobDefinition (JobType = full name desta classe). CronExpression controla periodicidade;
-/// IsActive controla ativaÁ„o/desativaÁ„o.
+/// IsActive controla ativa√ß√£o/desativa√ß√£o.
 /// </summary>
 public class SyncJobDefinitionsJob : VianaHub.Global.Gerit.Infra.Job.Interfaces.IJob
 {

@@ -1,9 +1,9 @@
-﻿namespace VianaHub.Global.Gerit.Domain.Tools.Pagination;
+namespace VianaHub.Global.Gerit.Domain.Tools.Pagination;
 
 public class Order
 {
-    private string sortBy;
-    private string sortDirection;
+    private string? sortBy;
+    private string? sortDirection;
 
     public string? SortBy
     {

@@ -43,7 +43,7 @@ public class TenantFiscalDataAppService : ITenantFiscalDataAppService
         return _mapper.Map<IEnumerable<TenantFiscalDataResponse>>(entities);
     }
 
-    public async Task<TenantFiscalDataDetailResponse> GetByIdAsync(int tenantId, int id, CancellationToken ct)
+    public async Task<TenantFiscalDataDetailResponse?> GetByIdAsync(int tenantId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(tenantId, id, ct);
         if (entity == null || entity.IsDeleted)

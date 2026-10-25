@@ -11,11 +11,6 @@ public class UpdatePartyTypeRouteValidator : AbstractValidator<UpdatePartyTypeRe
 {
     public UpdatePartyTypeRouteValidator(ILocalizationService localization)
     {
-        RuleFor(x => x.Code)
-            .NotEmpty()
-            .WithMessage(localization.GetMessage("Api.Validator.PartyType.Update.Code"))
-            .MaximumLength(50)
-            .WithMessage(localization.GetMessage("Api.Validator.PartyType.Update.Code.MaximumLength", 50));
 
         RuleFor(x => x.Name)
             .NotEmpty()

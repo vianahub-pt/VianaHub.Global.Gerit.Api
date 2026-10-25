@@ -1,4 +1,4 @@
-﻿using Serilog;
+using Serilog;
 using System.Globalization;
 using System.Text.Json;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -19,7 +19,7 @@ public class LocalizationService : ILocalizationService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public string? GetMessage(string key)
+    public string GetMessage(string key)
     {
         var culture = GetCurrentCulture();
 
@@ -38,7 +38,7 @@ public class LocalizationService : ILocalizationService
         return key;
     }
 
-    public string? GetMessage(string key, params object[] args)
+    public string GetMessage(string key, params object?[] args)
     {
         var message = GetMessage(key);
         try

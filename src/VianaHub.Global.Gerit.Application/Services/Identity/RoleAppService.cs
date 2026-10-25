@@ -71,11 +71,11 @@ public class RoleAppService : IRoleAppService
         var exists = await _repo.ExistsByNameAsync(tenantId, request.Name, ct);
         if (exists)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.Role.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Service.Role.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
-        var entity = new RoleEntity(tenantId, request.Code ?? request.Name ?? "ROLE", request.Name, request.Description, _currentUser.GetUserId());
+        var entity = new RoleEntity(tenantId, request.Name, request.Description, _currentUser.GetUserId());
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -89,7 +89,7 @@ public class RoleAppService : IRoleAppService
             return false;
         }
 
-        entity.Update(request.Code ?? entity.Code ?? request.Name ?? "ROLE", request.Name, request.Description, _currentUser.GetUserId());
+        entity.Update(request.Description, _currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
 
@@ -132,7 +132,7 @@ public class RoleAppService : IRoleAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -153,7 +153,7 @@ public class RoleAppService : IRoleAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadRoleItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadRoleItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -207,7 +207,7 @@ public class RoleAppService : IRoleAppService
                     }
                     rowCount++;
                 }
-                catch (CsvHelperException ex)
+                catch (CsvHelperException)
                 {
                     // Log linha com erro mas continua processamento
                     _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
@@ -224,7 +224,7 @@ public class RoleAppService : IRoleAppService
 
             return records;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Exception"), 400);
             return null;
@@ -249,13 +249,13 @@ public class RoleAppService : IRoleAppService
             var exists = await _repo.ExistsByNameAsync(tenantId, item.Name, ct);
             if (exists)
             {
-                _notify.Add(_localization.GetMessage("Application.Service.Role.ProcessBulkItems.ExistsByName", item.Name), 400);
+                _notify.Add(_localization.GetMessage("Application.Service.Role.ProcessBulkItems.ExistsByName", item.Name), 409);
                 hasErrors = true;
                 continue;
             }
 
             // Cria a entidade
-            var entity = new RoleEntity(tenantId, item.Code ?? item.Name ?? "ROLE", item.Name, item.Description, _currentUser.GetUserId());
+            var entity = new RoleEntity(tenantId, item.Name, item.Description, _currentUser.GetUserId());
 
             // Tenta criar no dom�nio
             var success = await _domain.CreateAsync(entity, ct);

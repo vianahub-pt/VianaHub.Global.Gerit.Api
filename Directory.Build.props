@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- A solution deve manter zero warnings de compilação e de restore. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

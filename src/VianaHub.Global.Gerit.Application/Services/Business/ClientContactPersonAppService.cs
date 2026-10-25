@@ -54,7 +54,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
         return _mapper.Map<IEnumerable<ClientContactPersonResponse>>(entities);
     }
 
-    public async Task<ClientContactPersonDetailResponse> GetByIdAsync(int clientId, int id, CancellationToken ct)
+    public async Task<ClientContactPersonDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -156,7 +156,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
         return await _repo.UpdateAsync(clientContact, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int clientId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int clientId, IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -177,7 +177,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
         return await ProcessBulkItemsAsync(clientId, items, ct);
     }
 
-    private List<BulkUploadClientContactPersonItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadClientContactPersonItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

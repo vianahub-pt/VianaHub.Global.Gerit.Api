@@ -11,12 +11,12 @@ public class FileTypeEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public ICollection<FileTypeTranslationsEntity> Translations { get; private set; }
+    public ICollection<FileTypeTranslationsEntity> Translations { get; private set; } = new List<FileTypeTranslationsEntity>();
 
     // Construtor protegido para o EF Core
     protected FileTypeEntity() { }
 
-    public FileTypeEntity(string mimeType, string extension, int createdBy)
+    public FileTypeEntity(string? mimeType, string? extension, int createdBy)
         : this(mimeType, extension, code: null, createdBy)
     {
     }
@@ -24,7 +24,7 @@ public class FileTypeEntity : Entity
     /// <summary>
     /// Construtor completo para criação de um novo FileType, incluindo o Code de identificação.
     /// </summary>
-    public FileTypeEntity(string mimeType, string extension, string code, int createdBy)
+    public FileTypeEntity(string? mimeType, string? extension, string? code, int createdBy)
     {
         MimeType = mimeType;
         Extension = extension;
@@ -36,7 +36,7 @@ public class FileTypeEntity : Entity
         Translations = new List<FileTypeTranslationsEntity>();
     }
 
-    public void Update(string mimeType, string extension, int modifiedBy)
+    public void Update(string? mimeType, string? extension, int modifiedBy)
     {
         MimeType = mimeType;
         Extension = extension;
@@ -44,9 +44,8 @@ public class FileTypeEntity : Entity
         ModifiedAt = DateTime.UtcNow;
     }
 
-    public void UpdateCode(string code, int modifiedBy)
+    public void MarkModified(int modifiedBy)
     {
-        Code = code;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }
