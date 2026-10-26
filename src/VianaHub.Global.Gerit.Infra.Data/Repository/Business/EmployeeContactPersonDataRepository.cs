@@ -16,7 +16,7 @@ public class EmployeeContactPersonDataRepository : IEmployeeContactPersonDataRep
         _context = context;
     }
 
-    public async Task<EmployeeContactPersonsEntity> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeContactPersonsEntity?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         return await _context.Set<EmployeeContactPersonsEntity>()
             .AsNoTracking()
@@ -42,10 +42,10 @@ public class EmployeeContactPersonDataRepository : IEmployeeContactPersonDataRep
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => EF.Functions.Like(x.Name.ToLower(), $"%{search}%") || 
-                                     EF.Functions.Like(x.Email.ToLower(), $"%{search}%") ||
-                                     EF.Functions.Like(x.Phone.ToLower(), $"%{search}%") ||
-                                     EF.Functions.Like(x.Employee.Name.ToLower(), $"%{search}%"));
+            query = query.Where(x => (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%")) ||
+                                     (x.Email != null && EF.Functions.Like(x.Email.ToLower(), $"%{search}%")) ||
+                                     (x.Phone != null && EF.Functions.Like(x.Phone.ToLower(), $"%{search}%")) ||
+                                     (x.Employee != null && x.Employee.Name != null && EF.Functions.Like(x.Employee.Name.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -75,13 +75,13 @@ public class EmployeeContactPersonDataRepository : IEmployeeContactPersonDataRep
         return await _context.Set<EmployeeContactPersonsEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByEmailAsync(int tenantId, int EmployeeId, string email, CancellationToken ct)
+    public async Task<bool> ExistsByEmailAsync(int tenantId, int EmployeeId, string? email, CancellationToken ct)
     {
         return await _context.Set<EmployeeContactPersonsEntity>().AsNoTracking()
             .AnyAsync(x => x.TenantId == tenantId && x.EmployeeId == EmployeeId && x.Email == email && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByEmailForUpdateAsync(int tenantId, int EmployeeId, string email, int excludeId, CancellationToken ct)
+    public async Task<bool> ExistsByEmailForUpdateAsync(int tenantId, int EmployeeId, string? email, int excludeId, CancellationToken ct)
     {
         return await _context.Set<EmployeeContactPersonsEntity>().AsNoTracking()
             .AnyAsync(x => x.TenantId == tenantId && x.EmployeeId == EmployeeId && x.Email == email && x.Id != excludeId && !x.IsDeleted, ct);

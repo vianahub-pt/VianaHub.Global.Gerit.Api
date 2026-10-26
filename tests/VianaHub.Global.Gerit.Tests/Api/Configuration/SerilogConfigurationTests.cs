@@ -8,11 +8,11 @@ namespace VianaHub.Global.Gerit.Tests.Api.Configuration
 {
     public class SerilogConfigurationTests
     {
-        [Fact(DisplayName = "Serilog - Configurar n„o lanÁa exceÁ„o")]
+        [Fact(DisplayName = "Serilog - Configurar n√£o lan√ßa exce√ß√£o")]
         [Trait("Api", "")]
         public void ConfigureSerilog_DoesNotThrow()
         {
-            var inMemory = new Dictionary<string, string>
+            var inMemory = new Dictionary<string, string?>
             {
                 { "Logging:LogLevel:Default", "Information" }
             };
@@ -32,7 +32,7 @@ namespace VianaHub.Global.Gerit.Tests.Api.Configuration
             builder.ConfigureSerilog();
         }
 
-        [Fact(DisplayName = "Serilog - Usar logging de requisiÁ„o n„o lanÁa exceÁ„o")]
+        [Fact(DisplayName = "Serilog - Usar logging de requisi√ß√£o n√£o lan√ßa exce√ß√£o")]
         [Trait("Api", "")]
         public void UseSerilogRequestLogging_AddsMiddleware()
         {

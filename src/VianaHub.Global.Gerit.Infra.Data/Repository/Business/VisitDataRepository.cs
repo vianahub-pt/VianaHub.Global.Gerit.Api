@@ -16,16 +16,13 @@ public class VisitDataRepository : IVisitDataRepository
         _context = context;
     }
 
-    public async Task<VisitEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<VisitEntity>()
             .AsNoTracking()
             .Include(x => x.Client)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VisitEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(VisitEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -34,11 +31,8 @@ public class VisitDataRepository : IVisitDataRepository
         return await _context.Set<VisitEntity>()
             .AsNoTracking()
             .Include(x => x.Client)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VisitEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(VisitEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted)
             .OrderByDescending(x => x.StartDateTime)
             .ToListAsync(ct);
@@ -49,19 +43,16 @@ public class VisitDataRepository : IVisitDataRepository
         var query = _context.Set<VisitEntity>()
             .AsNoTracking()
             .Include(x => x.Client)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VisitEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(VisitEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => 
-                EF.Functions.Like(x.Title.ToLower(), $"%{search}%") || 
-                EF.Functions.Like(x.Description.ToLower(), $"%{search}%"));
+            query = query.Where(x =>
+                (x.Title != null && EF.Functions.Like(x.Title.ToLower(), $"%{search}%")) ||
+                (x.Description != null && EF.Functions.Like(x.Description.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -93,7 +84,7 @@ public class VisitDataRepository : IVisitDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByTenantAndTitleAsync(int tenantId, string title, int? excludeId, CancellationToken ct)
+    public async Task<bool> ExistsByTenantAndTitleAsync(int tenantId, string? title, int? excludeId, CancellationToken ct)
     {
         var query = _context.Set<VisitEntity>()
             .AsNoTracking()

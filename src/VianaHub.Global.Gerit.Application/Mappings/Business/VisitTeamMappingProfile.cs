@@ -11,12 +11,12 @@ public class VisitTeamMappingProfile : Profile
     public VisitTeamMappingProfile()
     {
         CreateMap<VisitTeamEntity, VisitTeamResponse>()
-            .ForMember(dest => dest.Team, opt => opt.MapFrom(src => src.Team.Name))
-            .ForMember(dest => dest.Visit, opt => opt.MapFrom(src => src.Visit.Title));
+            .ForMember(dest => dest.Team, opt => opt.MapFrom(src => src.Team == null ? null : src.Team.Name))
+            .ForMember(dest => dest.Visit, opt => opt.MapFrom(src => src.Visit == null ? null : src.Visit.Title));
 
         CreateMap<VisitTeamEntity, VisitTeamDetailResponse>()
-            .ForMember(dest => dest.Team, opt => opt.MapFrom(src => src.Team.Name))
-            .ForMember(dest => dest.Visit, opt => opt.MapFrom(src => src.Visit.Title));
+            .ForMember(dest => dest.Team, opt => opt.MapFrom(src => src.Team == null ? null : src.Team.Name))
+            .ForMember(dest => dest.Visit, opt => opt.MapFrom(src => src.Visit == null ? null : src.Visit.Title));
 
         CreateMap<ListPage<VisitTeamEntity>, ListPageResponse<VisitTeamResponse>>();
     }

@@ -51,7 +51,7 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
         return _mapper.Map<IEnumerable<EmployeeTeamResponse>>(entities);
     }
 
-    public async Task<EmployeeTeamDetailResponse> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeTeamDetailResponse?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(employeeId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -136,7 +136,7 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int employeeId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int employeeId, IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -154,7 +154,7 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
         return await ProcessBulkItemsAsync(employeeId, items, ct);
     }
 
-    private List<BulkUploadEmployeeTeamItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadEmployeeTeamItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

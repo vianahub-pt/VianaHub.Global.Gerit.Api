@@ -20,12 +20,12 @@ public class UserPreferencesDomainService : IUserPreferencesDomainService
         _notify = notify;
     }
 
-    public async Task<UserPreferencesEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<UserPreferencesEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
 
-    public async Task<UserPreferencesEntity> GetByUserAsync(int tenantId, int userId, CancellationToken ct)
+    public async Task<UserPreferencesEntity?> GetByUserAsync(int tenantId, int userId, CancellationToken ct)
     {
         return await _repo.GetByUserAsync(tenantId, userId, ct);
     }

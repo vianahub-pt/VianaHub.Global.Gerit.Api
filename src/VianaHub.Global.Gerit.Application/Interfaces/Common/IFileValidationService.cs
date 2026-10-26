@@ -3,15 +3,15 @@ using Microsoft.AspNetCore.Http;
 namespace VianaHub.Global.Gerit.Application.Interfaces.Common;
 
 /// <summary>
-/// Interface respons·vel pela validaÁ„o de arquivos de upload.
-/// Centraliza as regras de validaÁ„o para garantir reusabilidade e manutenibilidade.
+/// Interface respons√°vel pela valida√ß√£o de arquivos de upload.
+/// Centraliza as regras de valida√ß√£o para garantir reusabilidade e manutenibilidade.
 /// </summary>
 public interface IFileValidationService
 {
     /// <summary>
-    /// Valida um arquivo de upload baseado em regras de seguranÁa e formato.
+    /// Valida um arquivo de upload baseado em regras de seguran√ßa e formato.
     /// </summary>
     /// <param name="file">Arquivo a ser validado.</param>
-    /// <returns>True se o arquivo È v·lido, False caso contr·rio.</returns>
-    bool ValidateFile(IFormFile file);
+    /// <returns>True se o arquivo √© v√°lido, False caso contr√°rio.</returns>
+    bool ValidateFile([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] IFormFile? file);
 }

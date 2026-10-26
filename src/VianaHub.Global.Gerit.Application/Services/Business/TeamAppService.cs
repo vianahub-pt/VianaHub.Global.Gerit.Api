@@ -55,7 +55,7 @@ public class TeamAppService : ITeamAppService
         return _mapper.Map<IEnumerable<TeamResponse>>(entities);
     }
 
-    public async Task<TeamDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<TeamDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -141,7 +141,7 @@ public class TeamAppService : ITeamAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -162,7 +162,7 @@ public class TeamAppService : ITeamAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadTeamItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadTeamItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -219,7 +219,7 @@ public class TeamAppService : ITeamAppService
                 catch (CsvHelperException ex)
                 {
                     // Log linha com erro mas continua processamento
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de Teams", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de Teams | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.Team.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -236,7 +236,7 @@ public class TeamAppService : ITeamAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de Teams: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de Teams: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Team.ReadCsvFile.Exception"), 400);
             return null;
         }

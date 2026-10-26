@@ -12,5 +12,5 @@ public interface IJobSchedulerService
 
     Task RemoveRecurringAsync(string jobName);
 
-    Task<string> EnqueueJobAsync(JobDefinitionsEntity jobDef);
+    Task<string?> EnqueueJobAsync(JobDefinitionsEntity jobDef);
 }

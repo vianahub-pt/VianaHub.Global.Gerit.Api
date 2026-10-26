@@ -35,7 +35,7 @@ public class StatusDomainAppServiceTests
         var (service, repoMock, _, notifyMock, localizationMock, _, _) = CreateService();
 
         repoMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((StatusDomainEntity)null);
+            .ReturnsAsync((StatusDomainEntity?)null);
         localizationMock.Setup(l => l.GetMessage("Application.Service.StatusDomain.GetById.ResourceNotFound"))
             .Returns("not found");
 
@@ -53,7 +53,7 @@ public class StatusDomainAppServiceTests
 
         currentUserMock.Setup(x => x.GetUserId()).Returns(5);
 
-        StatusDomainEntity capturedEntity = null;
+        StatusDomainEntity? capturedEntity = null;
         domainMock.Setup(d => d.CreateAsync(It.IsAny<StatusDomainEntity>(), It.IsAny<CancellationToken>()))
             .Callback<StatusDomainEntity, CancellationToken>((entity, _) =>
             {
@@ -65,19 +65,14 @@ public class StatusDomainAppServiceTests
             })
             .ReturnsAsync(true);
 
-        var request = new CreateStatusDomainRequest
-        {
-            Code = "VISIT",
-            Name = "Visit Status",
-            Description = "Status for visits"
-        };
+        var request = new CreateStatusDomainRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Visit Status", Description = "Status for visits" }, new() { LanguageCode = "en-US", Name = "Visit Status", Description = "Status for visits" }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 
         Assert.Equal(42, result);
         Assert.NotNull(capturedEntity);
-        Assert.Equal("VISIT", capturedEntity.Code);
-        Assert.Single(capturedEntity.Translations);
+        Assert.Equal("VISIT_STATUS", capturedEntity.Code);
+        Assert.Equal(2, capturedEntity.Translations.Count);
         Assert.Equal("pt-PT", capturedEntity.Translations.First().LanguageCode);
         Assert.Equal("Visit Status", capturedEntity.Translations.First().Name);
         Assert.Equal("Status for visits", capturedEntity.Translations.First().Description);
@@ -89,11 +84,11 @@ public class StatusDomainAppServiceTests
     {
         var (service, repoMock, _, notifyMock, localizationMock, _, _) = CreateService();
 
-        repoMock.Setup(r => r.ExistsByCodeAsync("VISIT", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        repoMock.Setup(r => r.ExistsByCodeAsync("VISIT_STATUS", It.IsAny<CancellationToken>())).ReturnsAsync(true);
         localizationMock.Setup(l => l.GetMessage("Application.Service.StatusDomain.Create.CodeAlreadyExists"))
             .Returns("already exists");
 
-        var request = new CreateStatusDomainRequest { Code = "VISIT", Name = "Visit Status", Description = "Desc" };
+        var request = new CreateStatusDomainRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Visit Status", Description = "Desc" }, new() { LanguageCode = "en-US", Name = "Visit Status", Description = "Desc" }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 
@@ -118,11 +113,12 @@ public class StatusDomainAppServiceTests
         repoMock.Setup(r => r.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
         domainMock.Setup(d => d.UpdateAsync(It.IsAny<StatusDomainEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var request = new UpdateStatusDomainRequest { Code = "VISIT", Name = "New Name", Description = "New Desc" };
+        var request = new UpdateStatusDomainRequest { Name = "New Name", Description = "New Desc" };
 
         var result = await service.UpdateAsync(10, request, CancellationToken.None);
 
         Assert.True(result);
+        Assert.Equal("VISIT", entity.Code);
         var translation = entity.Translations.First();
         Assert.Equal("New Name", translation.Name);
         Assert.Equal("New Desc", translation.Description);
@@ -135,11 +131,11 @@ public class StatusDomainAppServiceTests
         var (service, repoMock, _, notifyMock, localizationMock, _, _) = CreateService();
 
         repoMock.Setup(r => r.GetByIdAsync(99, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((StatusDomainEntity)null);
+            .ReturnsAsync((StatusDomainEntity?)null);
         localizationMock.Setup(l => l.GetMessage("Application.Service.StatusDomain.Update.ResourceNotFound"))
             .Returns("not found");
 
-        var request = new UpdateStatusDomainRequest { Code = "X", Name = "Name", Description = "Desc" };
+        var request = new UpdateStatusDomainRequest { Name = "Name", Description = "Desc" };
         var result = await service.UpdateAsync(99, request, CancellationToken.None);
 
         Assert.False(result);

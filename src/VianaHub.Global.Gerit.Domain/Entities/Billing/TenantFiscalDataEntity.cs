@@ -18,7 +18,7 @@ public class TenantFiscalDataEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Property
-    public TenantEntity Tenant { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
 
     // Construtor protegido para o EF Core
     protected TenantFiscalDataEntity() { }
@@ -26,7 +26,7 @@ public class TenantFiscalDataEntity : Entity
     /// <summary>
     /// Construtor para cria��o de novos dados fiscais do Tenant
     /// </summary>
-    public TenantFiscalDataEntity(int tenantId, string taxNumber, string? vatNumber, string? iban, string? fiscalEmail, string fiscalCountry, bool isVatRegistered, int createdBy)
+    public TenantFiscalDataEntity(int tenantId, string? taxNumber, string? vatNumber, string? iban, string? fiscalEmail, string? fiscalCountry, bool isVatRegistered, int createdBy)
     {
         TenantId = tenantId;
         TaxNumber = taxNumber;
@@ -41,7 +41,7 @@ public class TenantFiscalDataEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateFiscalData(string taxNumber, string? vatNumber, string? iban, string? fiscalEmail, string fiscalCountry, bool isVatRegistered, int modifiedBy)
+    public void UpdateFiscalData(string? taxNumber, string? vatNumber, string? iban, string? fiscalEmail, string? fiscalCountry, bool isVatRegistered, int modifiedBy)
     {
         TaxNumber = taxNumber;
         VatNumber = vatNumber;

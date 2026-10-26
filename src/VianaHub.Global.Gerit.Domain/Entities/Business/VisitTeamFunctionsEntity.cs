@@ -12,7 +12,7 @@ public class VisitTeamFunctionsEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Property
-    public TenantEntity Tenant { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
 
     // Construtor protegido para o EF Core
     protected VisitTeamFunctionsEntity() { }
@@ -20,7 +20,7 @@ public class VisitTeamFunctionsEntity : Entity
     /// <summary>
     /// Construtor para criação de uma nova Função de Equipe de Visita
     /// </summary>
-    public VisitTeamFunctionsEntity(int tenantId, string name, string description, int createdBy)
+    public VisitTeamFunctionsEntity(int tenantId, string? name, string? description, int createdBy)
     {
         TenantId = tenantId;
         Name = name;
@@ -31,7 +31,7 @@ public class VisitTeamFunctionsEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string name, string description, int modifiedBy)
+    public void Update(string? name, string? description, int modifiedBy)
     {
         Name = name;
         Description = description;

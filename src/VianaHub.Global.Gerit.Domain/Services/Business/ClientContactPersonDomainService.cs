@@ -26,7 +26,7 @@ public class ClientContactPersonDomainService : IClientContactPersonDomainServic
         _notify = notify;
     }
 
-    public async Task<ClientContactPersonsEntity> GetByIdAsync(int clientId, int id, CancellationToken ct)
+    public async Task<ClientContactPersonsEntity?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(clientId, id, ct);
     }

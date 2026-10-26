@@ -23,7 +23,7 @@ public class DocumentTypeDomainService : IDocumentTypeDomainService
         _notify = notify;
     }
 
-    public async Task<DocumentTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<DocumentTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
         => await _repo.GetByIdAsync(id, ct);
 
     public async Task<IEnumerable<DocumentTypeEntity>> GetAllAsync(CancellationToken ct)

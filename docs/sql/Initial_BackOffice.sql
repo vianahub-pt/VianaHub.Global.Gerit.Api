@@ -1,9 +1,9 @@
-﻿/* =========================================================
+/* =========================================================
    INITIAL BACKOFFICE SEED - IDEMPOTENT
    Atualizado para o schema multi-tenant atual.
 
    Principais características:
-   - Usa Code como chave estável dos catálogos.
+   - Usa Code como chave estável dos catálogos e Name canónico para autorização.
    - Carrega traduções pt-PT, pt-BR, en-US e es-ES.
    - Define pt-PT como idioma padrão nas preferências iniciais.
    - Cria StatusDomains e StatusDefinitions por tenant.
@@ -49,8 +49,8 @@ BEGIN TRY
 
     INSERT INTO @PartyTypeSeed (Id, Code, PtName, PtDescription, EnName, EnDescription)
     VALUES
-        (1, N'Individual', N'Pessoa singular', N'Representa uma pessoa singular.', N'Individual', N'Represents a natural person.'),
-        (2, N'Organization', N'Organização', N'Representa uma empresa, associação ou outra pessoa coletiva.', N'Organization', N'Represents a company, association, or other legal entity.');
+        (1, N'INDIVIDUAL', N'Pessoa singular', N'Representa uma pessoa singular.', N'Individual', N'Represents a natural person.'),
+        (2, N'ORGANIZATION', N'Organização', N'Representa uma empresa, associação ou outra pessoa coletiva.', N'Organization', N'Represents a company, association, or other legal entity.');
 
     UPDATE pt
        SET pt.Code = s.Code,
@@ -527,114 +527,110 @@ BEGIN TRY
        ========================================================= */
 
     DECLARE @ActionSeed TABLE (
-        Code NVARCHAR(50) PRIMARY KEY,
-        Name NVARCHAR(50) NOT NULL,
+        Name NVARCHAR(50) PRIMARY KEY,
         Description NVARCHAR(500) NOT NULL
     );
 
-    INSERT INTO @ActionSeed (Code, Name, Description)
+    INSERT INTO @ActionSeed (Name, Description)
     VALUES
-        (N'GET_ALL', N'GetAll', N'Obter todos os registos.'),
-        (N'GET_BY', N'GetBy', N'Obter um registo por identificador ou critério.'),
-        (N'GET_PAGED', N'GetPaged', N'Obter uma lista paginada com filtros.'),
-        (N'CREATE', N'Create', N'Criar um novo registo.'),
-        (N'UPDATE', N'Update', N'Atualizar um registo existente.'),
-        (N'ACTIVATE', N'Activate', N'Ativar um registo.'),
-        (N'DEACTIVATE', N'Deactivate', N'Desativar um registo.'),
-        (N'DELETE', N'Delete', N'Eliminar logicamente um registo.'),
-        (N'BULK_UPLOAD', N'BulkUpload', N'Efetuar cadastro em massa de registos.'),
-        (N'EXECUTE', N'Execute', N'Executar uma ação específica.'),
-        (N'GET_ACTIVE', N'GetActive', N'Obter registos ativos.'),
-        (N'GET_EXPIRING', N'GetExpiring', N'Obter registos próximos da expiração.'),
-        (N'CANCEL', N'Cancel', N'Cancelar uma operação ou entidade.'),
-        (N'RENEW', N'Renew', N'Renovar um contrato, assinatura ou entidade.');
+        (N'GetAll', N'Obter todos os registos.'),
+        (N'GetBy', N'Obter um registo por identificador ou critério.'),
+        (N'GetPaged', N'Obter uma lista paginada com filtros.'),
+        (N'Create', N'Criar um novo registo.'),
+        (N'Update', N'Atualizar um registo existente.'),
+        (N'Activate', N'Ativar um registo.'),
+        (N'Deactivate', N'Desativar um registo.'),
+        (N'Delete', N'Eliminar logicamente um registo.'),
+        (N'BulkUpload', N'Efetuar cadastro em massa de registos.'),
+        (N'Execute', N'Executar uma ação específica.'),
+        (N'GetActive', N'Obter registos ativos.'),
+        (N'GetExpiring', N'Obter registos próximos da expiração.'),
+        (N'Cancel', N'Cancelar uma operação ou entidade.'),
+        (N'Renew', N'Renovar um contrato, assinatura ou entidade.');
 
     UPDATE a
-       SET a.Name = s.Name,
-           a.Description = s.Description,
+       SET a.Description = s.Description,
            a.IsActive = 1,
            a.ModifiedBy = @SeedActorId,
            a.ModifiedAt = @UtcNow
     FROM dbo.Actions a
-    INNER JOIN @ActionSeed s ON s.Code = a.Code
+    INNER JOIN @ActionSeed s ON s.Name = a.Name
     WHERE a.IsDeleted = 0;
 
-    INSERT INTO dbo.Actions (Code, Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
-    SELECT s.Code, s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow
+    INSERT INTO dbo.Actions (Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
+    SELECT s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow
     FROM @ActionSeed s
-    WHERE NOT EXISTS (SELECT 1 FROM dbo.Actions a WHERE a.Code = s.Code AND a.IsDeleted = 0);
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.Actions a WHERE a.Name = s.Name AND a.IsDeleted = 0);
 
     DECLARE @ResourceSeed TABLE (
-        Code NVARCHAR(50) PRIMARY KEY,
-        Name NVARCHAR(100) NOT NULL,
+        Name NVARCHAR(100) PRIMARY KEY,
         Description NVARCHAR(500) NOT NULL
     );
 
-    INSERT INTO @ResourceSeed (Code, Name, Description)
+    INSERT INTO @ResourceSeed (Name, Description)
     VALUES
-        (N'PARTY_TYPES', N'PartyTypes', N'Tipos de partes: pessoa singular ou organização.'),
-        (N'ACQUISITION_SOURCE_TYPES', N'AcquisitionSourceTypes', N'Tipos de origem de aquisição comercial.'),
-        (N'ADDRESS_TYPES', N'AddressTypes', N'Tipos de morada disponíveis.'),
-        (N'DOCUMENT_TYPES', N'DocumentTypes', N'Tipos de documentos.'),
-        (N'FILE_TYPES', N'FileTypes', N'Tipos de ficheiros.'),
-        (N'STATUS_DOMAINS', N'StatusDomains', N'Domínios funcionais de status.'),
-        (N'SUBSCRIPTION_PLANS', N'SubscriptionPlans', N'Planos de assinatura.'),
-        (N'SUBSCRIPTION_PLAN_FILE_RULES', N'SubscriptionPlanFileRules', N'Regras de ficheiros por plano.'),
-        (N'TENANTS', N'Tenants', N'Tenants do sistema.'),
-        (N'TENANT_CONTACT_PERSONS', N'TenantContactPersons', N'Pessoas de contacto dos tenants.'),
-        (N'TENANT_ADDRESSES', N'TenantAddresses', N'Moradas dos tenants.'),
-        (N'TENANT_FISCAL_DATA', N'TenantFiscalData', N'Dados fiscais dos tenants.'),
-        (N'TENANT_DOCUMENTS', N'TenantDocuments', N'Documentos dos tenants.'),
-        (N'STATUS_DEFINITIONS', N'StatusDefinitions', N'Definições de status por tenant e domínio.'),
-        (N'SUBSCRIPTIONS', N'Subscriptions', N'Assinaturas dos tenants.'),
-        (N'USERS', N'Users', N'Utilizadores do sistema.'),
-        (N'USER_PREFERENCES', N'UserPreferences', N'Preferências dos utilizadores.'),
-        (N'ROLES', N'Roles', N'Papéis ou perfis de acesso.'),
-        (N'RESOURCES', N'Resources', N'Recursos protegidos pelo sistema de autorização.'),
-        (N'ACTIONS', N'Actions', N'Ações disponíveis no sistema de autorização.'),
-        (N'ROLE_PERMISSIONS', N'RolePermissions', N'Permissões associadas aos papéis.'),
-        (N'USER_ROLES', N'UserRoles', N'Papéis associados aos utilizadores.'),
-        (N'REFRESH_TOKENS', N'RefreshTokens', N'Tokens de atualização.'),
-        (N'JWT_KEYS', N'JwtKeys', N'Chaves de assinatura JWT.'),
-        (N'JOB_DEFINITIONS', N'JobDefinitions', N'Definições de jobs e processos.'),
-        (N'CLIENTS', N'Clients', N'Clientes do sistema.'),
-        (N'CLIENT_ADDRESSES', N'ClientAddresses', N'Moradas dos clientes.'),
-        (N'CLIENT_CONTACT_PERSONS', N'ClientContactPersons', N'Pessoas de contacto dos clientes.'),
-        (N'CLIENT_DOCUMENTS', N'ClientDocuments', N'Documentos dos clientes.'),
-        (N'CLIENT_FISCAL_DATA', N'ClientFiscalData', N'Dados fiscais dos clientes.'),
-        (N'TEAMS', N'Teams', N'Equipas.'),
-        (N'EMPLOYEES', N'Employees', N'Colaboradores.'),
-        (N'EMPLOYEE_CONTACT_PERSONS', N'EmployeeContactPersons', N'Pessoas de contacto dos colaboradores.'),
-        (N'EMPLOYEE_ADDRESSES', N'EmployeeAddresses', N'Moradas dos colaboradores.'),
-        (N'EMPLOYEE_FISCAL_DATA', N'EmployeeFiscalData', N'Dados fiscais dos colaboradores.'),
-        (N'EMPLOYEE_TEAM', N'EmployeeTeam', N'Relação histórica entre colaboradores e equipas.'),
-        (N'EQUIPMENT_TYPES', N'EquipmentTypes', N'Tipos de equipamentos.'),
-        (N'EQUIPMENTS', N'Equipments', N'Equipamentos.'),
-        (N'VEHICLES', N'Vehicles', N'Veículos.'),
-        (N'VISITS', N'Visits', N'Visitas ou intervenções.'),
-        (N'VISIT_CONTACT_PERSONS', N'VisitContactPersons', N'Pessoas de contacto das visitas.'),
-        (N'VISIT_ADDRESSES', N'VisitAddresses', N'Moradas das visitas.'),
-        (N'VISIT_TEAM', N'VisitTeams', N'Equipas associadas às visitas.'),
-        (N'VISIT_TEAM_FUNCTIONS', N'VisitTeamFunctions', N'Funções operacionais nas equipas de visita.'),
-        (N'VISIT_TEAM_EMPLOYEE', N'VisitTeamEmployee', N'Colaboradores associados às equipas de visita.'),
-        (N'VISIT_TEAM_VEHICLE', N'VisitTeamVehicles', N'Veículos associados às equipas de visita.'),
-        (N'VISIT_TEAM_EQUIPMENT', N'VisitTeamEquipments', N'Equipamentos associados às equipas de visita.'),
-        (N'VISIT_ATTACHMENTS', N'VisitAttachments', N'Anexos das visitas.');
+        (N'PartyTypes', N'Tipos de partes: pessoa singular ou organização.'),
+        (N'AcquisitionSourceTypes', N'Tipos de origem de aquisição comercial.'),
+        (N'AddressTypes', N'Tipos de morada disponíveis.'),
+        (N'DocumentTypes', N'Tipos de documentos.'),
+        (N'FileTypes', N'Tipos de ficheiros.'),
+        (N'StatusDomains', N'Domínios funcionais de status.'),
+        (N'SubscriptionPlans', N'Planos de assinatura.'),
+        (N'SubscriptionPlanFileRules', N'Regras de ficheiros por plano.'),
+        (N'Tenants', N'Tenants do sistema.'),
+        (N'TenantContactPersons', N'Pessoas de contacto dos tenants.'),
+        (N'TenantAddresses', N'Moradas dos tenants.'),
+        (N'TenantFiscalData', N'Dados fiscais dos tenants.'),
+        (N'TenantDocuments', N'Documentos dos tenants.'),
+        (N'StatusDefinitions', N'Definições de status por tenant e domínio.'),
+        (N'Subscriptions', N'Assinaturas dos tenants.'),
+        (N'Users', N'Utilizadores do sistema.'),
+        (N'UserPreferences', N'Preferências dos utilizadores.'),
+        (N'Roles', N'Papéis ou perfis de acesso.'),
+        (N'Resources', N'Recursos protegidos pelo sistema de autorização.'),
+        (N'Actions', N'Ações disponíveis no sistema de autorização.'),
+        (N'RolePermissions', N'Permissões associadas aos papéis.'),
+        (N'UserRoles', N'Papéis associados aos utilizadores.'),
+        (N'RefreshTokens', N'Tokens de atualização.'),
+        (N'JwtKeys', N'Chaves de assinatura JWT.'),
+        (N'JobDefinitions', N'Definições de jobs e processos.'),
+        (N'Clients', N'Clientes do sistema.'),
+        (N'ClientAddresses', N'Moradas dos clientes.'),
+        (N'ClientContactPersons', N'Pessoas de contacto dos clientes.'),
+        (N'ClientDocuments', N'Documentos dos clientes.'),
+        (N'ClientFiscalData', N'Dados fiscais dos clientes.'),
+        (N'Teams', N'Equipas.'),
+        (N'Employees', N'Colaboradores.'),
+        (N'EmployeeContactPersons', N'Pessoas de contacto dos colaboradores.'),
+        (N'EmployeeAddresses', N'Moradas dos colaboradores.'),
+        (N'EmployeeFiscalData', N'Dados fiscais dos colaboradores.'),
+        (N'EmployeeTeam', N'Relação histórica entre colaboradores e equipas.'),
+        (N'EquipmentTypes', N'Tipos de equipamentos.'),
+        (N'Equipments', N'Equipamentos.'),
+        (N'Vehicles', N'Veículos.'),
+        (N'Visits', N'Visitas ou intervenções.'),
+        (N'VisitContactPersons', N'Pessoas de contacto das visitas.'),
+        (N'VisitAddresses', N'Moradas das visitas.'),
+        (N'VisitTeams', N'Equipas associadas às visitas.'),
+        (N'VisitTeamFunctions', N'Funções operacionais nas equipas de visita.'),
+        (N'VisitTeamEmployee', N'Colaboradores associados às equipas de visita.'),
+        (N'VisitTeamVehicles', N'Veículos associados às equipas de visita.'),
+        (N'VisitTeamEquipments', N'Equipamentos associados às equipas de visita.'),
+        (N'VisitAttachments', N'Anexos das visitas.');
 
     UPDATE r
-       SET r.Name = s.Name,
-           r.Description = s.Description,
+       SET r.Description = s.Description,
            r.IsActive = 1,
            r.ModifiedBy = @SeedActorId,
            r.ModifiedAt = @UtcNow
     FROM dbo.Resources r
-    INNER JOIN @ResourceSeed s ON s.Code = r.Code
+    INNER JOIN @ResourceSeed s ON s.Name = r.Name
     WHERE r.IsDeleted = 0;
 
-    INSERT INTO dbo.Resources (Code, Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
-    SELECT s.Code, s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow
+    INSERT INTO dbo.Resources (Name, Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
+    SELECT s.Name, s.Description, 1, 0, @SeedActorId, @UtcNow
     FROM @ResourceSeed s
-    WHERE NOT EXISTS (SELECT 1 FROM dbo.Resources r WHERE r.Code = s.Code AND r.IsDeleted = 0);
+    WHERE NOT EXISTS (SELECT 1 FROM dbo.Resources r WHERE r.Name = s.Name AND r.IsDeleted = 0);
 
     /* =========================================================
        9. TENANTS, CONTACTOS E MORADAS
@@ -676,7 +672,7 @@ BEGIN TRY
            s.Name, s.Email, s.WebsiteUrl, s.ImageUrl, s.Note,
            1, 0, @SeedActorId, @UtcNow
     FROM @TenantSeed s
-    INNER JOIN dbo.PartyTypes pt ON pt.Code = N'Organization' AND pt.IsDeleted = 0
+    INNER JOIN dbo.PartyTypes pt ON pt.Code = N'ORGANIZATION' AND pt.IsDeleted = 0
     INNER JOIN dbo.AcquisitionSourceTypes ast ON ast.Code = N'OTHER' AND ast.IsDeleted = 0
     WHERE NOT EXISTS (
         SELECT 1 FROM dbo.Tenants t WHERE t.Email = s.Email AND t.IsDeleted = 0
@@ -772,23 +768,21 @@ BEGIN TRY
        ========================================================= */
 
     DECLARE @RoleSeed TABLE (
-        Code NVARCHAR(50) PRIMARY KEY,
-        Name NVARCHAR(100) NOT NULL,
+        Name NVARCHAR(100) PRIMARY KEY,
         Description NVARCHAR(500) NOT NULL
     );
 
-    INSERT INTO @RoleSeed (Code, Name, Description)
+    INSERT INTO @RoleSeed (Name, Description)
     VALUES
-        (N'ADMIN', N'Admin', N'Acesso administrativo completo ao tenant.'),
-        (N'BACKOFFICE', N'BackOffice', N'Acesso a operações internas e administrativas.'),
-        (N'MANAGER', N'Manager', N'Gestão de equipas, clientes e operações.'),
-        (N'OPERATOR', N'Operator', N'Execução de tarefas operacionais.'),
-        (N'USER', N'User', N'Acesso básico ao sistema.'),
-        (N'SUPER_ADMIN', N'SuperAdmin', N'Acesso total ao sistema e configurações avançadas.');
+        (N'Admin', N'Acesso administrativo completo ao tenant.'),
+        (N'BackOffice', N'Acesso a operações internas e administrativas.'),
+        (N'Manager', N'Gestão de equipas, clientes e operações.'),
+        (N'Operator', N'Execução de tarefas operacionais.'),
+        (N'User', N'Acesso básico ao sistema.'),
+        (N'SuperAdmin', N'Acesso total ao sistema e configurações avançadas.');
 
     UPDATE r
-       SET r.Code = s.Code,
-           r.Description = s.Description,
+       SET r.Description = s.Description,
            r.IsActive = 1,
            r.ModifiedBy = @SeedActorId,
            r.ModifiedAt = @UtcNow
@@ -798,10 +792,10 @@ BEGIN TRY
     WHERE r.IsDeleted = 0;
 
     INSERT INTO dbo.Roles (
-        TenantId, Code, Name, Description,
+        TenantId, Name, Description,
         IsActive, IsDeleted, CreatedBy, CreatedAt
     )
-    SELECT t.Id, s.Code, s.Name, s.Description,
+    SELECT t.Id, s.Name, s.Description,
            1, 0, @SeedActorId, @UtcNow
     FROM dbo.Tenants t
     CROSS JOIN @RoleSeed s
@@ -1076,7 +1070,7 @@ BEGIN TRY
         FROM dbo.Tenants t
         INNER JOIN dbo.Roles r
             ON r.TenantId = t.Id
-           AND r.Code = N'BACKOFFICE'
+           AND r.Name = N'BackOffice'
            AND r.IsDeleted = 0
         WHERE t.Email IN (N'contact@vianahub.pt', N'demo@gerit.pt')
           AND t.IsDeleted = 0
@@ -1107,7 +1101,7 @@ BEGIN TRY
            AND u.IsDeleted = 0
         INNER JOIN dbo.Roles r
             ON r.TenantId = t.Id
-           AND r.Code = N'BACKOFFICE'
+           AND r.Name = N'BackOffice'
            AND r.IsDeleted = 0
     )
     DELETE ur
@@ -1127,7 +1121,7 @@ BEGIN TRY
            AND u.IsDeleted = 0
         INNER JOIN dbo.Roles r
             ON r.TenantId = t.Id
-           AND r.Code = N'BACKOFFICE'
+           AND r.Name = N'BackOffice'
            AND r.IsDeleted = 0
     )
     INSERT INTO dbo.UserRoles (TenantId, UserId, RoleId)

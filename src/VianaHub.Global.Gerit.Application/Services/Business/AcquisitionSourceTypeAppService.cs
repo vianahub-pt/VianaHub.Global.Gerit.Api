@@ -52,7 +52,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
         return _mapper.Map<IEnumerable<AcquisitionSourceTypeResponse>>(entities);
     }
 
-    public async Task<AcquisitionSourceTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<AcquisitionSourceTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -72,18 +72,31 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
 
     public async Task<int> CreateAsync(CreateAcquisitionSourceTypeRequest request, CancellationToken ct)
     {
-        var nameExists = await _repo.ExistsByNameAsync(request.Name, ct);
-        if (nameExists)
+        var code = CatalogCodeGenerator.FromCanonicalTranslation(request.Translations, t => t.LanguageCode, t => t.Name);
+        if (string.IsNullOrEmpty(code))
         {
-            _notify.Add(_localization.GetMessage("Application.Service.AcquisitionSourceType.Create.NameAlreadyExists"), 409);
+            _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+            return 0;
+        }
+        if (await _repo.ExistsByCodeAsync(code, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CodeAlreadyExists"), 409);
             return 0;
         }
 
-        var entity = new AcquisitionSourceTypeEntity(request.Code, _currentUser.GetUserId());
-        // Persistir Name e Description na tabela de traduções (idioma padrão: pt-PT)
-        var translation = new AcquisitionSourceTypeTranslationsEntity(0, "pt-PT", request.Name, request.Description);
-        entity.AddTranslation(translation);
-
+        foreach (var translation in request.Translations!)
+        {
+            if (await _repo.ExistsByTranslationAsync(translation.LanguageCode, translation.Name, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.TranslationAlreadyExists"), 409);
+                return 0;
+            }
+        }
+        var entity = new AcquisitionSourceTypeEntity(code, _currentUser.GetUserId());
+        foreach (var translation in request.Translations!)
+        {
+            entity.Translations.Add(new AcquisitionSourceTypeTranslationsEntity(entity.Id, translation.LanguageCode, translation.Name, translation.Description));
+        }
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -109,6 +122,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
             entity.AddTranslation(new AcquisitionSourceTypeTranslationsEntity(entity.Id, "pt-PT", request.Name, request.Description));
         }
 
+        entity.MarkModified(_currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
 
@@ -151,7 +165,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         _notify.Add(_localization.GetMessage("Application.Service.AcquisitionSourceType.BulkUpload.NotImplemented"), 501);
         return false;

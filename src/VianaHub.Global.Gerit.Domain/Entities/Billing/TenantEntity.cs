@@ -16,9 +16,9 @@ public class TenantEntity : Entity, IAggregateRoot
     private readonly List<UserEntity> _users = [];
 
     public byte PartyTypeId { get; private set; }
-    public PartyTypeEntity PartyType { get; private set; }
+    public PartyTypeEntity? PartyType { get; private set; }
     public int AcquisitionSourceTypeId { get; private set; }
-    public AcquisitionSourceTypeEntity AcquisitionSourceType { get; private set; }
+    public AcquisitionSourceTypeEntity? AcquisitionSourceType { get; private set; }
     public string? Name { get; private set; }
     public string? Email { get; private set; }
     public string? WebsiteUrl { get; private set; }
@@ -39,7 +39,7 @@ public class TenantEntity : Entity, IAggregateRoot
     /// <summary>
     /// Construtor para criação de um novo Tenant
     /// </summary>
-    public TenantEntity(byte partyTypeId, int acquisitionSourceTypeId, string name, string email, string? websiteUrl, string? imageUrl, string? note, int createdBy)
+    public TenantEntity(byte partyTypeId, int acquisitionSourceTypeId, string? name, string? email, string? websiteUrl, string? imageUrl, string? note, int createdBy)
     {
         PartyTypeId = partyTypeId;
         AcquisitionSourceTypeId = acquisitionSourceTypeId;
@@ -54,7 +54,7 @@ public class TenantEntity : Entity, IAggregateRoot
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(byte partyTypeId, int acquisitionSourceTypeId, string name, string email, string? websiteUrl, string? imageUrl, string? note, int modifiedBy)
+    public void Update(byte partyTypeId, int acquisitionSourceTypeId, string? name, string? email, string? websiteUrl, string? imageUrl, string? note, int modifiedBy)
     {
         PartyTypeId = partyTypeId;
         AcquisitionSourceTypeId = acquisitionSourceTypeId;

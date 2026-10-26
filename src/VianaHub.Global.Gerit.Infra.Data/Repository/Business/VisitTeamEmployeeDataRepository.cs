@@ -16,7 +16,7 @@ public class VisitTeamEmployeeDataRepository : IVisitTeamEmployeeDataRepository
         _context = context;
     }
 
-    public async Task<VisitTeamEmployeeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitTeamEmployeeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<VisitTeamEmployeeEntity>()
             .AsNoTracking()
@@ -53,8 +53,7 @@ public class VisitTeamEmployeeDataRepository : IVisitTeamEmployeeDataRepository
     {
         return await _context.Set<VisitTeamEmployeeEntity>()
             .AsNoTracking()
-            .Include(x => x.VisitTeam)
-                .ThenInclude(vt => vt.Visit)
+            .Include($"{nameof(VisitTeamEmployeeEntity.VisitTeam)}.{nameof(VisitTeamEntity.Visit)}")
             .Include(x => x.Function)
             .Where(x => x.EmployeeId == employeeId && !x.IsDeleted)
             .OrderByDescending(x => x.StartDateTime)
@@ -85,8 +84,8 @@ public class VisitTeamEmployeeDataRepository : IVisitTeamEmployeeDataRepository
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => EF.Functions.Like(x.Employee.Name.ToLower(), $"%{search}%") ||
-                                     EF.Functions.Like(x.Function.Name.ToLower(), $"%{search}%"));
+            query = query.Where(x => (x.Employee != null && x.Employee.Name != null && EF.Functions.Like(x.Employee.Name.ToLower(), $"%{search}%")) ||
+                                     (x.Function != null && x.Function.Name != null && EF.Functions.Like(x.Function.Name.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -122,9 +121,9 @@ public class VisitTeamEmployeeDataRepository : IVisitTeamEmployeeDataRepository
     {
         return await _context.Set<VisitTeamEmployeeEntity>()
             .AsNoTracking()
-            .AnyAsync(x => x.VisitTeamId == visitTeamId && 
-                          x.EmployeeId == employeeId && 
-                          x.EndDateTime == null && 
+            .AnyAsync(x => x.VisitTeamId == visitTeamId &&
+                          x.EmployeeId == employeeId &&
+                          x.EndDateTime == null &&
                           !x.IsDeleted, ct);
     }
 

@@ -28,12 +28,12 @@ public class UserPreferencesEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation
-    public TenantEntity Tenant { get; private set; }
-    public UserEntity User { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public UserEntity? User { get; private set; }
 
     protected UserPreferencesEntity() { }
 
-    public UserPreferencesEntity(int tenantId, int userId, string appearance, string currencyCode, string locale, string timezone, string dateFormat, string timeFormat, TimeSpan dayStart, TimeSpan dayEnd, int createdBy)
+    public UserPreferencesEntity(int tenantId, int userId, string? appearance, string? currencyCode, string? locale, string? timezone, string? dateFormat, string? timeFormat, TimeSpan dayStart, TimeSpan dayEnd, int createdBy)
     {
         TenantId = tenantId;
         UserId = userId;
@@ -59,7 +59,7 @@ public class UserPreferencesEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string appearance, string locale, string currencyCode, string timezone, string dateFormat, string timeFormat, TimeSpan dayStart, TimeSpan dayEnd,
+    public void Update(string? appearance, string? locale, string? currencyCode, string? timezone, string? dateFormat, string? timeFormat, TimeSpan dayStart, TimeSpan dayEnd,
         bool emailNewsletter, bool emailWeeklyReport, bool emailApproval, bool emailAlerts, bool emailReminders, bool emailPlanner, int modifiedBy)
     {
         Appearance = appearance;

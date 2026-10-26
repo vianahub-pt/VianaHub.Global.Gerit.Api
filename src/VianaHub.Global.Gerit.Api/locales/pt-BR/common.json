@@ -1,4 +1,12 @@
 {
+  "Application.Catalog.TranslationLanguagesUnique": "Cada idioma pode ter apenas uma tradução por catálogo.",
+  "Application.Catalog.TranslationDescriptionInvalid": "A descrição da tradução pode ter até {0} caracteres.",
+  "Application.Catalog.TranslationNameInvalid": "É necessário um nome de tradução com até {0} caracteres.",
+  "Application.Catalog.TranslationLanguageInvalid": "É necessário um código de idioma válido com até 10 caracteres.",
+  "Application.Catalog.TranslationAlreadyExists": "Já existe uma tradução com este nome no mesmo idioma e escopo do catálogo.",
+  "Application.Catalog.CanonicalEnglishNameRequired": "É necessária exatamente uma tradução en-US com um nome canônico válido em inglês para gerar o código do catálogo.",
+  "Application.Catalog.CodeSourceRequired": "É necessário um nome válido no idioma padrão (pt-PT), ou uma extensão de ficheiro válida, para gerar o código do catálogo.",
+  "Application.Catalog.CodeAlreadyExists": "Já existe uma entrada de catálogo com o código gerado.",
   "Api.Authorization.AccessDenied": "Acesso negado",
   "Api.Authorization.Forbidden.Permission.Detail": "Não tem permissão para executar esta ação",
   "Api.Authorization.Forbidden.Roles.Detail": "Não possui as funções necessárias para acessar a este recurso",

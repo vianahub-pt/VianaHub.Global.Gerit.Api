@@ -66,7 +66,7 @@ public class JobDefinitionUpdateValidator : AbstractValidator<JobDefinitionsEnti
             });
     }
 
-    private bool IsValidJsonOrNull(string json)
+    private bool IsValidJsonOrNull(string? json)
     {
         if (string.IsNullOrWhiteSpace(json)) return true;
         try
@@ -80,7 +80,7 @@ public class JobDefinitionUpdateValidator : AbstractValidator<JobDefinitionsEnti
         }
     }
 
-    private bool IsValidCron(string cron)
+    private bool IsValidCron(string? cron)
     {
         if (string.IsNullOrWhiteSpace(cron)) return true;
         try
@@ -94,7 +94,7 @@ public class JobDefinitionUpdateValidator : AbstractValidator<JobDefinitionsEnti
         }
     }
 
-    private bool IsValidTimeZone(string tz)
+    private bool IsValidTimeZone(string? tz)
     {
         if (string.IsNullOrWhiteSpace(tz)) return true;
         try
@@ -108,7 +108,7 @@ public class JobDefinitionUpdateValidator : AbstractValidator<JobDefinitionsEnti
         }
     }
 
-    private bool IsValidJobTypeAndMethod(string jobType, string jobMethod)
+    private bool IsValidJobTypeAndMethod(string? jobType, string? jobMethod)
     {
         if (string.IsNullOrWhiteSpace(jobType)) return false;
 

@@ -15,15 +15,15 @@ public class EquipmentTypeEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Property
-    public TenantEntity Tenant { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
 
     // Construtor protegido para o EF Core
     protected EquipmentTypeEntity() { }
 
     /// <summary>
-    /// Construtor para criação de um novo Tipo de Equipamento
+    /// Construtor para criaÃ§Ã£o de um novo Tipo de Equipamento
     /// </summary>
-    public EquipmentTypeEntity(int tenantId, string name, string description, int createdBy)
+    public EquipmentTypeEntity(int tenantId, string? name, string? description, int createdBy)
     {
         TenantId = tenantId;
         Name = name;
@@ -34,7 +34,7 @@ public class EquipmentTypeEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string name, string description, int modifiedBy)
+    public void Update(string? name, string? description, int modifiedBy)
     {
         Name = name;
         Description = description;

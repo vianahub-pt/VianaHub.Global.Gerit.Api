@@ -104,10 +104,10 @@ public class VisitTeamEmployeeMapping : IEntityTypeConfiguration<VisitTeamEmploy
             .HasDatabaseName("IX_VisitTeamEmployee_EmployeeId");
 
         // Constraints
-        builder.HasCheckConstraint("CK_VisitTeamEmployee_Active_Deleted", 
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+        builder.ToTable(table => table.HasCheckConstraint("CK_VisitTeamEmployee_Active_Deleted",
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
 
-        builder.HasCheckConstraint("CK_VisitTeamEmployee_EndDateTime", 
-            "[EndDateTime] IS NULL OR [EndDateTime] >= [StartDateTime]");
+        builder.ToTable(table => table.HasCheckConstraint("CK_VisitTeamEmployee_EndDateTime",
+            "[EndDateTime] IS NULL OR [EndDateTime] >= [StartDateTime]"));
     }
 }

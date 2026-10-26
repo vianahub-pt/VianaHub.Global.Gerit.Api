@@ -85,12 +85,18 @@ public class AuthAppService : IAuthAppService
         _requestTenantContext = requestTenantContext;
     }
 
-    public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct)
+    public async Task<AuthResponse?> RegisterAsync(RegisterRequest request, CancellationToken ct)
     {
         // Validar tenantId
         if (request.TenantId <= 0)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Register.InvalidTenantId"), 400);
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Auth.Register.EmailRequired"), 400);
             return null;
         }
 
@@ -120,7 +126,7 @@ public class AuthAppService : IAuthAppService
         }
 
         // Enviar email de confirma��o (NoOp por enquanto)
-        await _emailSender.SendAsync(user.Email, "Application.Service.Auth.Email.Confirm.Subject", "Application.Service.Auth.Email.Confirm.Body", user.Name);
+        await _emailSender.SendAsync(request.Email, "Application.Service.Auth.Email.Confirm.Subject", "Application.Service.Auth.Email.Confirm.Body", user.Name);
 
         _requestTenantContext.Clear();
 
@@ -130,14 +136,14 @@ public class AuthAppService : IAuthAppService
             RoleId = user.UserRoles.FirstOrDefault()?.RoleId ?? 0,
             RoleName = user.UserRoles.FirstOrDefault()?.Role?.Name,
             TenantId = user.TenantId,
-            TenantName = user.Tenant.Name,
+            TenantName = user.Tenant?.Name,
             UserId = user.Id,
             UserName = user.Name,
             Email = user.Email
         };
     }
 
-    public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct)
+    public async Task<AuthResponse?> LoginAsync(LoginRequest request, CancellationToken ct)
     {
         var tenant = await _tenantRepo.GetByUserEmailAsync(request.Email, ct);
         if (tenant == null)
@@ -208,7 +214,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Falha ao atualizar LastAccessAt para o usu�rio {UserId}", user.Id);
+            _logger.LogWarning("Falha ao atualizar LastAccessAt para o usu�rio {UserId} | Exception: {ExceptionDetails}", user.Id, LogValueSanitizer.ExceptionDetails(ex));
         }
 
         var refreshTokenValue = GenerateRefreshTokenValue();
@@ -227,14 +233,14 @@ public class AuthAppService : IAuthAppService
             RoleId = user.UserRoles.FirstOrDefault()?.RoleId ?? 0,
             RoleName = user.UserRoles.FirstOrDefault()?.Role?.Name,
             TenantId = user.TenantId,
-            TenantName = user.Tenant.Name, 
+            TenantName = user.Tenant?.Name,
             UserId = user.Id,
             UserName = user.Name,
             Email = user.Email
         };
     }
 
-    public async Task<AuthResponse> RefreshAsync(RefreshRequest request, CancellationToken ct)
+    public async Task<AuthResponse?> RefreshAsync(RefreshRequest request, CancellationToken ct)
     {
         if (request.TenantId <= 0)
         {
@@ -311,21 +317,21 @@ public class AuthAppService : IAuthAppService
             RoleId = user.UserRoles.FirstOrDefault()?.RoleId ?? 0,
             RoleName = user.UserRoles.FirstOrDefault()?.Role?.Name,
             TenantId = user.TenantId,
-            TenantName = user.Tenant.Name,
+            TenantName = user.Tenant?.Name,
             UserId = user.Id,
             UserName = user.Name,
             Email = user.Email
         };
     }
 
-    
+
     public async Task<IEnumerable<TenantLoginResponse>> GetLoginAsync(CancellationToken ct)
     {
         var entities = await _tenantRepo.GetLoginAsync(ct);
         return _mapper.Map<IEnumerable<TenantLoginResponse>>(entities);
     }
 
-    private async Task<(string Token, DateTime ExpiresAt)> GenerateAccessTokenAsync(UserEntity user, bool isTrial, CancellationToken ct)
+    private async Task<(string? Token, DateTime ExpiresAt)> GenerateAccessTokenAsync(UserEntity user, bool isTrial, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
         var expires = now.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes);
@@ -344,7 +350,7 @@ public class AuthAppService : IAuthAppService
             claims.Add(new Claim("tenant_subscription_type", "trial"));
         }
 
-        string permissionsJson = null;
+        string? permissionsJson = null;
 
         // Adicionar roles e permiss�es ao token para autoriza��o stateless
         try
@@ -354,7 +360,8 @@ public class AuthAppService : IAuthAppService
 
             var roleNames = userRoles?
                 .Where(r => r?.Role != null)
-                .Select(r => r.Role.Name?.Trim())
+                .Select(r => r.Role?.Name?.Trim())
+                .OfType<string>()
                 .Where(n => !string.IsNullOrWhiteSpace(n))
                 .Select(n => n.ToLower())
                 .Distinct()
@@ -370,7 +377,7 @@ public class AuthAppService : IAuthAppService
             // Coletar permiss�es de cada role agrupadas por recurso
             var permissionsByResource = new Dictionary<string, HashSet<string>>();
 
-            foreach (var role in userRoles ?? Enumerable.Empty<dynamic>())
+            foreach (var role in userRoles ?? Enumerable.Empty<UserRolesEntity>())
             {
                 if (role?.Role == null) continue;
                 var roleId = role.Role.Id;
@@ -386,7 +393,7 @@ public class AuthAppService : IAuthAppService
                     var resourceKey = resource.ToLower();
                     var actionKey = action.ToLower();
 
-                    if (!permissionsByResource.TryGetValue(resourceKey, out HashSet<string> actions))
+                    if (!permissionsByResource.TryGetValue(resourceKey, out var actions))
                     {
                         actions = new HashSet<string>();
                         permissionsByResource[resourceKey] = actions;
@@ -407,7 +414,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Falha ao incluir roles/permissions no token para user {UserId}", user.Id);
+            _logger.LogWarning("Falha ao incluir roles/permissions no token para user {UserId} | Exception: {ExceptionDetails}", user.Id, LogValueSanitizer.ExceptionDetails(ex));
             // N�o falhar a gera��o do token por causa das claims de permiss�o; conceder token b�sico
         }
 
@@ -436,7 +443,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao descriptografar chave privada para tenant {TenantId}", user.TenantId);
+            _logger.LogError("Erro ao descriptografar chave privada para tenant {TenantId} | Exception: {ExceptionDetails}", user.TenantId, LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.InvalidPrivateKey"), 500);
             return (null, DateTime.MinValue);
         }
@@ -483,7 +490,7 @@ public class AuthAppService : IAuthAppService
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Falha ao parsear permissionsJson antes de inserir no payload");
+                        _logger.LogWarning("Falha ao parsear permissionsJson antes de inserir no payload | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
                     }
                 }
 
@@ -499,7 +506,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao criar token JWT para tenant {TenantId}", user.TenantId);
+            _logger.LogError("Erro ao criar token JWT para tenant {TenantId} | Exception: {ExceptionDetails}", user.TenantId, LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.CreateFailed"), 500);
             return (null, DateTime.MinValue);
         }

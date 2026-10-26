@@ -49,7 +49,7 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
         return _mapper.Map<IEnumerable<TenantContactPersonResponse>>(entities);
     }
 
-    public async Task<TenantContactPersonDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<TenantContactPersonDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -66,7 +66,7 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
         return _mapper.Map<IEnumerable<TenantContactPersonResponse>>(entities);
     }
 
-    public async Task<TenantContactPersonResponse> GetPrimaryByTenantIdAsync(int tenantId, CancellationToken ct)
+    public async Task<TenantContactPersonResponse?> GetPrimaryByTenantIdAsync(int tenantId, CancellationToken ct)
     {
         var entity = await _repo.GetPrimaryByTenantIdAsync(tenantId, ct);
         if (entity == null)

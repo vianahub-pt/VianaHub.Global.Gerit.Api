@@ -25,7 +25,9 @@ public static class UserRoleEndpoint
         .CustomAuthorize("Admin,Manager", "UserRoles", "GetAll")
         .WithName("GetAllUserRoles")
         .WithSummary("Swagger.Endpoint.UserRole.GetAll.Summary")
-        .Produces<IEnumerable<UserRoleResponse>>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IList<UserRoleResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/users/{userId}/roles/{roleId}", async ([FromRoute] int userId, [FromRoute] int roleId, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -36,8 +38,10 @@ public static class UserRoleEndpoint
         .CustomAuthorize("Admin,Manager", "UserRoles", "GetBy")
         .WithName("GetUserRoleById")
         .WithSummary("Swagger.Endpoint.UserRole.GetById.Summary")
-        .Produces<UserRoleResponse>(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<UserRoleDetailResponse>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/user/{userId}", async ([FromRoute] int userId, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -48,7 +52,9 @@ public static class UserRoleEndpoint
         .CustomAuthorize("Admin,Manager,User", "UserRoles", "GetBy")
         .WithName("GetUserRolesByUser")
         .WithSummary("Swagger.Endpoint.UserRole.GetByUser.Summary")
-        .Produces<IEnumerable<UserRoleResponse>>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IList<UserRoleResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/role/{roleId}", async ([FromRoute] int roleId, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -59,17 +65,22 @@ public static class UserRoleEndpoint
         .CustomAuthorize("Admin,Manager,User", "UserRoles", "GetBy")
         .WithName("GetUserRolesByRole")
         .WithSummary("Swagger.Endpoint.UserRole.GetByRole.Summary")
-        .Produces<IEnumerable<UserRoleResponse>>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IList<UserRoleResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async ([FromBody] CreateUserRoleRequest request, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var result = await appService.CreateAsync(request, ct);
-            return notify.CustomResponse(new GenericResponse { Id = result.Id }, 201);
+            return notify.CustomResponse(result == null ? null : new GenericResponse { Id = result.Id }, 201);
         })
         .CustomAuthorize("Admin,Manager", "UserRoles", "Create")
         .WithName("CreateUserRole")
         .WithSummary("Swagger.Endpoint.UserRole.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status404NotFound)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -83,8 +94,11 @@ public static class UserRoleEndpoint
         .CustomAuthorize("Admin,Manager", "UserRoles", "Delete")
         .WithName("DeleteUserRole")
         .WithSummary("Swagger.Endpoint.UserRole.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/bulk-upload", async (HttpRequest request, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -111,7 +125,9 @@ public static class UserRoleEndpoint
         .WithSummary("Swagger.Endpoint.UserRole.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

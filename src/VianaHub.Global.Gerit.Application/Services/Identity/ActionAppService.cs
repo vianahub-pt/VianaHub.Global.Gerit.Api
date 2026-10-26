@@ -77,11 +77,11 @@ public class ActionAppService : IActionAppService
         var exists = await _repo.ExistsByNameAsync(request.Name, ct);
         if (exists)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.Action.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Service.Action.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
-        var entity = new ActionEntity(request.Code ?? request.Name ?? "ACT", request.Name, request.Description, _currentUser.GetUserId());
+        var entity = new ActionEntity(request.Name, request.Description, _currentUser.GetUserId());
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -94,7 +94,7 @@ public class ActionAppService : IActionAppService
             return false;
         }
 
-        entity.Update(request.Code ?? entity.Code ?? request.Name ?? "ACT", request.Name, request.Description, _currentUser.GetUserId());
+        entity.Update(request.Description, _currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(int id, CancellationToken ct)
@@ -133,7 +133,7 @@ public class ActionAppService : IActionAppService
         entity.Delete(_currentUser.GetUserId());
         return await _domain.DeleteAsync(entity, ct);
     }
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando serviço centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -155,7 +155,7 @@ public class ActionAppService : IActionAppService
     }
 
 
-    private List<BulkUploadActionItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadActionItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -212,7 +212,7 @@ public class ActionAppService : IActionAppService
                 catch (CsvHelperException ex)
                 {
                     // Log linha com erro mas continua processamento
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de Actions", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de Actions | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -229,7 +229,7 @@ public class ActionAppService : IActionAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de Actions: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de Actions: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Exception"), 400);
             return null;
         }
@@ -251,13 +251,13 @@ public class ActionAppService : IActionAppService
             var exists = await _repo.ExistsByNameAsync(item.Name, ct);
             if (exists)
             {
-                _notify.Add(_localization.GetMessage("Application.Service.Action.ProcessBulkItems.ExistsByName", item.Name), 400);
+                _notify.Add(_localization.GetMessage("Application.Service.Action.ProcessBulkItems.ExistsByName", item.Name), 409);
                 hasErrors = true;
                 continue;
             }
 
             // Cria a entidade
-            var entity = new ActionEntity(item.Code ?? item.Name ?? "ACT", item.Name, item.Description, _currentUser.GetUserId());
+            var entity = new ActionEntity(item.Name, item.Description, _currentUser.GetUserId());
 
             // Tenta criar no domínio
             var success = await _domain.CreateAsync(entity, ct);

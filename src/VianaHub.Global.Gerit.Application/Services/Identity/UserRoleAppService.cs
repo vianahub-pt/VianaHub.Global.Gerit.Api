@@ -78,7 +78,7 @@ public class UserRoleAppService : IUserRoleAppService
     {
         return await _repository.ExistsAsync(tenantId, userId, roleId, ct);
     }
-    public async Task<UserRoleResponse> CreateAsync(CreateUserRoleRequest request, CancellationToken ct)
+    public async Task<UserRoleResponse?> CreateAsync(CreateUserRoleRequest request, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
 
@@ -119,7 +119,7 @@ public class UserRoleAppService : IUserRoleAppService
     }
 
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -140,7 +140,7 @@ public class UserRoleAppService : IUserRoleAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadUserRoleItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadUserRoleItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -190,7 +190,7 @@ public class UserRoleAppService : IUserRoleAppService
                     }
                     rowCount++;
                 }
-                catch (CsvHelperException ex)
+                catch (CsvHelperException)
                 {
                     // Log linha com erro mas continua processamento
                     _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
@@ -207,7 +207,7 @@ public class UserRoleAppService : IUserRoleAppService
 
             return records;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.Exception"), 400);
             return null;

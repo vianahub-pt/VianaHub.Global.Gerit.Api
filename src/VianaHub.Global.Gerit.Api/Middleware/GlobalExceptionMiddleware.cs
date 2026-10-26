@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+using VianaHub.Global.Gerit.Domain.Helpers;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Net;
@@ -51,7 +52,7 @@ public class GlobalExceptionMiddleware
                 var statusCode = (int)notify.GetStatusCode();
 
                 // Logar resumo da notificação para rastreabilidade
-                Log.Information("🔔 [NOTIFY] Notifications found after pipeline execution at {Path}. Status: {StatusCode}", context.Request.Path, statusCode);
+                Log.Information("🔔 [NOTIFY] Notifications found after pipeline execution at {Path}. Status: {StatusCode}", LogValueSanitizer.Sanitize(context.Request.Path.Value), statusCode);
 
                 context.Response.StatusCode = statusCode;
                 context.Response.ContentType = "application/json; charset=utf-8";
@@ -87,21 +88,21 @@ public class GlobalExceptionMiddleware
         {
             // Tratamento específico para JSON malformatado
             var errorId = Guid.NewGuid().ToString("N")[..12];
-            Log.Warning(ex, "⚠️ [ERROR-{ErrorId}] Malformed JSON received at {Path}", errorId, context.Request.Path);
+            Log.Warning("⚠️ [ERROR-{ErrorId}] Malformed JSON received at {Path} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(context.Request.Path.Value), LogValueSanitizer.ExceptionDetails(ex));
             await HandleJsonException(context, jsonEx, errorId, notify, localization);
         }
         catch (JsonException jsonEx)
         {
             // Tratamento específico para erros de deserialização JSON
             var errorId = Guid.NewGuid().ToString("N")[..12];
-            Log.Warning(jsonEx, "⚠️ [ERROR-{ErrorId}] Error processing JSON at {Path}", errorId, context.Request.Path);
+            Log.Warning("⚠️ [ERROR-{ErrorId}] Error processing JSON at {Path} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(context.Request.Path.Value), LogValueSanitizer.ExceptionDetails(jsonEx));
             await HandleJsonException(context, jsonEx, errorId, notify, localization);
         }
         catch (AutoMapperMappingException autoMapperEx)
         {
             // Tratamento específico para erros de mapeamento do AutoMapper
             var errorId = Guid.NewGuid().ToString("N")[..12];
-            Log.Error(autoMapperEx, "❌ [ERROR-{ErrorId}] AutoMapper mapping exception at {Path}", errorId, context.Request.Path);
+            Log.Error("❌ [ERROR-{ErrorId}] AutoMapper mapping exception at {Path} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(context.Request.Path.Value), LogValueSanitizer.ExceptionDetails(autoMapperEx));
             await HandleAutoMapperException(context, autoMapperEx, errorId, notify, localization);
         }
         catch (Exception ex)
@@ -110,21 +111,13 @@ public class GlobalExceptionMiddleware
             var errorId = Guid.NewGuid().ToString("N")[..12];
 
             // Log completo e estruturado do erro
-            Log.Error(ex,
-                "❌ [ERROR-{ErrorId}] Unhandled exception in API\n" +
+            Log.Error("❌ [ERROR-{ErrorId}] Unhandled exception in API\n" +
                 "   📍 Path: {Path}\n" +
                 "   🔧 Method: {Method}\n" +
                 "   🌐 IP: {RemoteIP}\n" +
                 "   🔥 Exception: {ExceptionType}\n" +
                 "   💬 Message: {ExceptionMessage}\n" +
-                "   👤 User: {UserId}",
-                errorId,
-                context.Request.Path,
-                context.Request.Method,
-                context.Connection.RemoteIpAddress?.ToString(),
-                ex.GetType().Name,
-                ex.Message,
-                context.User?.Identity?.Name ?? "Anonymous");
+                "   👤 User: {UserId} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(context.Request.Path.Value), context.Request.Method, context.Connection.RemoteIpAddress?.ToString(), ex.GetType().Name, LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.Sanitize(context.User?.Identity?.Name ?? "Anonymous"), LogValueSanitizer.ExceptionDetails(ex));
 
             await HandleExceptionAsync(context, ex, errorId, notify, localization);
         }
@@ -143,15 +136,10 @@ public class GlobalExceptionMiddleware
         }
 
         // Log detalhado para diagnóstico técnico
-        Log.Error(autoMapperEx,
-            "[ERROR-{ErrorId}] Detailed AutoMapper exception:\n" +
+        Log.Error("[ERROR-{ErrorId}] Detailed AutoMapper exception:\n" +
             "   📝 Message: {Message}\n" +
             "   🗺️ Mapping Types: {MappingTypes}\n" +
-            "   🔥 Inner Exception: {InnerException}",
-            errorId,
-            autoMapperEx.Message,
-            $"{autoMapperEx.Types?.SourceType?.Name} -> {autoMapperEx.Types?.DestinationType?.Name}",
-            autoMapperEx.InnerException?.Message ?? "N/A");
+            "   🔥 Inner Exception: {InnerException} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(autoMapperEx.Message), $"{autoMapperEx.Types?.SourceType?.Name} -> {autoMapperEx.Types?.DestinationType?.Name}", LogValueSanitizer.Sanitize(autoMapperEx.InnerException?.Message ?? "N/A"), LogValueSanitizer.ExceptionDetails(autoMapperEx));
 
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
         context.Response.ContentType = "application/json; charset=utf-8";
@@ -161,10 +149,10 @@ public class GlobalExceptionMiddleware
 
         var errorResponse = new ErrorResponse(localization.GetMessage("Api.Middleware.GlobalException.StatusCode.Error.InternalServerError"));
         errorResponse.AddError(
-            localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.FieldLabel.System"), 
+            localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.FieldLabel.System"),
             localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.DataMappingError"));
         errorResponse.AddError(
-            localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.FieldLabel.ErrorId"), 
+            localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.FieldLabel.ErrorId"),
             localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.ContactSupport", errorId));
 
         var json = JsonSerializer.Serialize(errorResponse, GetJsonSerializerOptions());
@@ -225,17 +213,11 @@ public class GlobalExceptionMiddleware
         if (exception is SqlException sqlEx)
         {
             // Logar detalhes completos internos para diagnóstico
-            Log.Error(sqlEx,
-                "[ERROR-{ErrorId}] Detailed SqlException:\n" +
+            Log.Error("[ERROR-{ErrorId}] Detailed SqlException:\n" +
                 "   🔢 Error Number: {ErrorNumber}\n" +
                 "   📝 Message: {Message}\n" +
                 "   🔧 Procedure: {Procedure}\n" +
-                "   📍 LineNumber: {LineNumber}",
-                errorId,
-                sqlEx.Number,
-                sqlEx.Message,
-                sqlEx.Procedure ?? "N/A",
-                sqlEx.LineNumber);
+                "   📍 LineNumber: {LineNumber} | Exception: {ExceptionDetails}", errorId, sqlEx.Number, LogValueSanitizer.Sanitize(sqlEx.Message), sqlEx.Procedure ?? "N/A", sqlEx.LineNumber, LogValueSanitizer.ExceptionDetails(sqlEx));
 
             // Adiciona a chave de mensagem ao notify
             notify.Add("Api.Middleware.GlobalException.SqlException.Error.DatabaseError", 500);
@@ -262,15 +244,10 @@ public class GlobalExceptionMiddleware
             // Verificar se é SqlException com erro 2628 (string/binary truncation)
             if (innerEx is SqlException innerSqlEx && innerSqlEx.Number == 2628)
             {
-                Log.Error(innerSqlEx,
-                    "[ERROR-{ErrorId}] Detailed SqlException 2628 (String/Binary Truncation):\n" +
+                Log.Error("[ERROR-{ErrorId}] Detailed SqlException 2628 (String/Binary Truncation):\n" +
                     "   🔢 Error Number: {ErrorNumber}\n" +
                     "   📝 Message: {Message}\n" +
-                    "   🔧 Procedure: {Procedure}",
-                    errorId,
-                    innerSqlEx.Number,
-                    innerSqlEx.Message,
-                    innerSqlEx.Procedure ?? "N/A");
+                    "   🔧 Procedure: {Procedure} | Exception: {ExceptionDetails}", errorId, innerSqlEx.Number, LogValueSanitizer.Sanitize(innerSqlEx.Message), innerSqlEx.Procedure ?? "N/A", LogValueSanitizer.ExceptionDetails(innerSqlEx));
 
                 // Extrair o nome da tabela e coluna da mensagem de erro
                 // Formato típico: "String or binary data would be truncated in table 'dbo.ClientIndividuals', column 'Nationality'."
@@ -296,15 +273,10 @@ public class GlobalExceptionMiddleware
             }
 
             // Logar detalhes completos internos para diagnóstico
-            Log.Error(dbEx,
-                "[ERROR-{ErrorId}] Detailed DbUpdateException:\n" +
+            Log.Error("[ERROR-{ErrorId}] Detailed DbUpdateException:\n" +
                 "   📝 Message: {Message}\n" +
                 "   🔥 Inner Exception: {InnerException}\n" +
-                "   📋 Entries: {EntriesCount}",
-                errorId,
-                dbEx.Message,
-                dbEx.InnerException?.Message ?? "N/A",
-                dbEx.Entries?.Count() ?? 0);
+                "   📋 Entries: {EntriesCount} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(dbEx.Message), LogValueSanitizer.Sanitize(dbEx.InnerException?.Message ?? "N/A"), dbEx.Entries?.Count() ?? 0, LogValueSanitizer.ExceptionDetails(dbEx));
 
             if (innerMessage.IndexOf("FK_", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 innerMessage.IndexOf("FOREIGN KEY", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -350,17 +322,11 @@ public class GlobalExceptionMiddleware
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
         // Log detalhado para diagnóstico
-        Log.Error(exception,
-            "[ERROR-{ErrorId}] Detailed generic exception:\n" +
+        Log.Error("[ERROR-{ErrorId}] Detailed generic exception:\n" +
             "   🔥 Exception Type: {ExceptionType}\n" +
             "   📝 Message: {Message}\n" +
             "   🔗 Inner Exception: {InnerException}\n" +
-            "   📚 Stack Trace: {StackTrace}",
-            errorId,
-            exception.GetType().FullName,
-            exception.Message,
-            exception.InnerException?.Message ?? "N/A",
-            exception.StackTrace ?? "N/A");
+            "   📚 Stack Trace: {StackTrace} | Exception: {ExceptionDetails}", errorId, exception.GetType().FullName, LogValueSanitizer.Sanitize(exception.Message), LogValueSanitizer.Sanitize(exception.InnerException?.Message ?? "N/A"), exception.StackTrace ?? "N/A", LogValueSanitizer.ExceptionDetails(exception));
 
         // Adicionar notificação amigável (uma chave)
         notify.Add("Api.Middleware.GlobalException.DbUpdateException.Error.UnexpectedError", 500);

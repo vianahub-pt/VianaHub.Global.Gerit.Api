@@ -10,7 +10,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Business;
 public interface IDocumentTypeAppService
 {
     Task<IEnumerable<DocumentTypeResponse>> GetAllAsync(CancellationToken ct);
-    Task<DocumentTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct);
+    Task<DocumentTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct);
     Task<ListPageResponse<DocumentTypeResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct);
     Task<int> CreateAsync(CreateDocumentTypeRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int id, UpdateDocumentTypeRequest request, CancellationToken ct);

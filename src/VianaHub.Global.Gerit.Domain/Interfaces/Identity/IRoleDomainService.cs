@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 
 public interface IRoleDomainService
 {
-    Task<RoleEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<RoleEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<RoleEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<RoleEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

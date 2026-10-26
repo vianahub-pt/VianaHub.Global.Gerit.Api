@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
@@ -98,7 +98,7 @@ public static class DomainExtensions
     /// </summary>
     /// <param name="value">Valor a ser validado</param>
     /// <returns>True se o valor é seguro, False caso contrário</returns>
-    public static bool IsSafeCsvValue(this string value)
+    public static bool IsSafeCsvValue(this string? value)
     {
         if (string.IsNullOrEmpty(value))
             return true;
@@ -256,7 +256,7 @@ public static class DomainExtensions
 
             // Tenta ler todo o stream como UTF-8 com validação rigorosa
             var encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-            
+
             using (var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: true, bufferSize: 4096, leaveOpen: true))
             {
                 // Lê todo o conteúdo para forçar a validação de encoding
@@ -346,7 +346,7 @@ public static class DomainExtensions
     /// </summary>
     /// <param name="fields">Dicionário com campos a serem sanitizados</param>
     /// <returns>Dicionário com campos sanitizados</returns>
-    public static Dictionary<string, string> SanitizeCsvFields(this Dictionary<string, string> fields)
+    public static Dictionary<string, string>? SanitizeCsvFields(this Dictionary<string, string>? fields)
     {
         if (fields == null || fields.Count == 0)
             return fields;
@@ -449,12 +449,12 @@ public static class DomainExtensions
             if (attribute != null)
             {
                 if (attribute.Description.Equals(description, StringComparison.InvariantCultureIgnoreCase))
-                    return (TEnum)field.GetValue(null);
+                    return (TEnum)(field.GetValue(null) ?? throw new InvalidOperationException("Enum field has no value."));
             }
             else
             {
                 if (field.Name.Equals(description, StringComparison.InvariantCultureIgnoreCase))
-                    return (TEnum)field.GetValue(null);
+                    return (TEnum)(field.GetValue(null) ?? throw new InvalidOperationException("Enum field has no value."));
             }
         }
 
@@ -494,7 +494,7 @@ public static class DomainExtensions
         return await Task.Run(() => shortId);
     }
 
-    public static string FirstCharToUpper(this string input)
+    public static string? FirstCharToUpper(this string? input)
     {
         if (string.IsNullOrWhiteSpace(input)) return null;
 
@@ -738,14 +738,14 @@ public static class DomainExtensions
     /// </summary>
     /// <param name="secret">O client secret em texto claro</param>
     /// <returns>Hash no formato do ASP.NET Core Identity (V3: inclui versão, iterações e salt)</returns>
-    public static string HashClientSecret(string secret)
+    public static string HashClientSecret(string? secret)
     {
         if (string.IsNullOrEmpty(secret))
             throw new ArgumentException("Secret cannot be null or empty.", nameof(secret));
 
         // ASP.NET Core Identity PasswordHasher usa PBKDF2-HMAC-SHA256 com 10.000 iterações
         // Formato do hash: AQAAAAEAACcQAAAAE...
-        return _passwordHasher.HashPassword(null, secret);
+        return _passwordHasher.HashPassword(new object(), secret);
     }
 
     /// <summary>
@@ -755,14 +755,14 @@ public static class DomainExtensions
     /// <param name="storedHash">O hash armazenado no banco de dados</param>
     /// <param name="providedSecret">O secret fornecido pelo cliente</param>
     /// <returns>True se o secret é válido, false caso contrário</returns>
-    public static bool VerifyClientSecret(string storedHash, string providedSecret)
+    public static bool VerifyClientSecret(string? storedHash, string? providedSecret)
     {
         if (string.IsNullOrEmpty(storedHash) || string.IsNullOrEmpty(providedSecret))
             return false;
 
         try
         {
-            var result = _passwordHasher.VerifyHashedPassword(null, storedHash, providedSecret);
+            var result = _passwordHasher.VerifyHashedPassword(new object(), storedHash, providedSecret);
             return result == PasswordVerificationResult.Success ||
                    result == PasswordVerificationResult.SuccessRehashNeeded;
         }
@@ -798,34 +798,22 @@ public static class DomainExtensions
         return $"{GetCallingMethodName()}";
     }
 
-    public static string GetCallingLayerName()
+    public static string? GetCallingLayerName()
     {
-        // Obtendo o assembly do método chamador
-        Assembly callingAssembly = Assembly.GetCallingAssembly();
-
-        // Obtendo o tipo do método chamador
-        _ = callingAssembly.ManifestModule.ResolveMethod(MethodBase.GetCurrentMethod().MetadataToken).DeclaringType;
-
         // Obtendo o método chamador
-        MethodBase callingMethod = new StackTrace().GetFrame(4).GetMethod();
+        MethodBase? callingMethod = new StackTrace().GetFrame(4)?.GetMethod();
 
         // Retornando o nome do método chamador
-        return callingMethod.DeclaringType.Assembly.GetName().Name;
+        return callingMethod?.DeclaringType?.Assembly.GetName().Name;
 
     }
-    public static string GetCallingMethodName()
+    public static string? GetCallingMethodName()
     {
-        // Obtendo o assembly do método chamador
-        Assembly callingAssembly = Assembly.GetCallingAssembly();
-
-        // Obtendo o tipo do método chamador
-        _ = callingAssembly.ManifestModule.ResolveMethod(MethodBase.GetCurrentMethod().MetadataToken).DeclaringType;
-
         // Obtendo o método chamador
-        MethodBase callingMethod = new StackTrace().GetFrame(4).GetMethod();
+        MethodBase? callingMethod = new StackTrace().GetFrame(4)?.GetMethod();
 
         // Retornando o nome do método chamador
-        return callingMethod.Name.Trim();
+        return callingMethod?.Name.Trim();
     }
 
     #endregion

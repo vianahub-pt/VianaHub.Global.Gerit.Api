@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Jwt;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -24,7 +25,9 @@ public static class JwtKeyEndpoint
         .CustomAuthorize("Admin,BackOffice", "JwtKeys", "GetBy")
         .WithName("GetJwtKeysByTenant")
         .WithSummary("Swagger.Endpoint.JwtKey.GetJwtKeysByTenant.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<JwtKeyResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{tenantId}/active", async ([FromRoute] int tenantId, [FromServices] IJwtKeyAppService service, [FromServices] INotify notify, CancellationToken ct) =>
@@ -39,7 +42,9 @@ public static class JwtKeyEndpoint
         .CustomAuthorize("Admin,BackOffice", "JwtKeys", "GetActive")
         .WithName("GetActiveJwtKey")
         .WithSummary("Swagger.Endpoint.JwtKey.GetActiveJwtKey.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<JwtKeyResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -52,7 +57,10 @@ public static class JwtKeyEndpoint
         .CustomAuthorize("Admin,BackOffice", "JwtKeys", "Create")
         .WithName("CreateInitialJwtKey")
         .WithSummary("Swagger.Endpoint.JwtKey.CreateInitialJwtKey.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPatch("/{id}/revoke", async ([FromRoute] int id, [FromBody] RevokeRequest req, [FromServices] IJwtKeyAppService service, [FromServices] INotify notify, CancellationToken ct) =>
@@ -64,6 +72,10 @@ public static class JwtKeyEndpoint
         .CustomAuthorize("Admin,BackOffice", "JwtKeys", "Revoke")
         .WithName("RevokeJwtKey")
         .WithSummary("Swagger.Endpoint.JwtKey.RevokeJwtKey.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

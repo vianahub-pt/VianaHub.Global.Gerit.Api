@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
@@ -19,19 +20,19 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
         _logger = logger;
     }
 
-    public async Task<JwtKeysEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<JwtKeysEntity>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<JwtKeysEntity> GetByKeyIdAsync(Guid keyId, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetByKeyIdAsync(Guid keyId, CancellationToken ct)
     {
         return await _context.Set<JwtKeysEntity>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.KeyId == keyId && !x.IsDeleted, ct);
     }
 
-    public async Task<JwtKeysEntity> GetActiveKeyAsync(int tenantId, CancellationToken ct)
+    public async Task<JwtKeysEntity?> GetActiveKeyAsync(int tenantId, CancellationToken ct)
     {
         return await _context.Set<JwtKeysEntity>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.IsActive && !x.IsDeleted && x.RevokedAt == null, ct);
@@ -79,8 +80,8 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
             var search = request.Search.Trim().ToLower();
 
             query = query.Where(x =>
-                EF.Functions.Like(x.PlainPrivateKey.ToLower(), $"%{search}%")
-                || EF.Functions.Like(x.PublicKey.ToLower(), $"%{search}%")
+                (x.PlainPrivateKey != null && EF.Functions.Like(x.PlainPrivateKey.ToLower(), $"%{search}%"))
+                || (x.PublicKey != null && EF.Functions.Like(x.PublicKey.ToLower(), $"%{search}%"))
             );
         }
 
@@ -122,7 +123,7 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "?? [CreateAsync] Add JwtKeysEntity | falha ao criar chave JwtKey");
+            _logger.LogError("?? [CreateAsync] Add JwtKeysEntity | falha ao criar chave JwtKey | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             throw new Exception("Falha ao criar chave JwtKey", ex);
         }
     }

@@ -14,7 +14,7 @@ public class PartyTypeTranslationDataRepository : IPartyTypeTranslationDataRepos
         _context = context;
     }
 
-    public async Task<PartyTypeTranslationsEntity> GetByIdAsync(byte partyTypeId, string languageCode, CancellationToken ct)
+    public async Task<PartyTypeTranslationsEntity?> GetByIdAsync(byte partyTypeId, string languageCode, CancellationToken ct)
     {
         return await _context.Set<PartyTypeTranslationsEntity>()
             .AsNoTracking()
@@ -30,14 +30,14 @@ public class PartyTypeTranslationDataRepository : IPartyTypeTranslationDataRepos
             .ToListAsync(ct);
     }
 
-    public async Task<bool> ExistsByPartyTypeAndLanguageAsync(byte partyTypeId, string languageCode, CancellationToken ct)
+    public async Task<bool> ExistsByPartyTypeAndLanguageAsync(byte partyTypeId, string? languageCode, CancellationToken ct)
     {
         return await _context.Set<PartyTypeTranslationsEntity>()
             .AsNoTracking()
             .AnyAsync(x => x.PartyTypeId == partyTypeId && x.LanguageCode == languageCode, ct);
     }
 
-    public async Task<bool> ExistsByLanguageAndNameAsync(string languageCode, string name, CancellationToken ct)
+    public async Task<bool> ExistsByLanguageAndNameAsync(string? languageCode, string? name, CancellationToken ct)
     {
         return await _context.Set<PartyTypeTranslationsEntity>()
             .AsNoTracking()

@@ -1,3 +1,5 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
+using VianaHub.Global.Gerit.Domain.Constants;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
@@ -50,7 +52,7 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
         return _mapper.Map<IEnumerable<StatusDefinitionResponse>>(entities);
     }
 
-    public async Task<StatusDefinitionDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<StatusDefinitionDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -70,18 +72,38 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
 
     public async Task<int> CreateAsync(CreateStatusDefinitionRequest request, CancellationToken ct)
     {
+        var code = CatalogCodeGenerator.FromCanonicalTranslation(request.Translations, t => t.LanguageCode, t => t.Name);
+        if (request.Translations is null || string.IsNullOrEmpty(code) || request.Translations.Any(t => t == null))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+            return 0;
+        }
+        if (request.Translations!.Select(t => t.LanguageCode).Distinct(StringComparer.OrdinalIgnoreCase).Count() != request.Translations.Count)
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.TranslationLanguagesUnique"), 400);
+            return 0;
+        }
         // Verificar duplicidade: código já existe para o mesmo domínio?
-        var existsByCode = await _repo.ExistsByCodeAndDomainAsync(request.StatusDomainId, request.Code, ct);
+        var existsByCode = await _repo.ExistsByCodeAndDomainAsync(request.StatusDomainId, code, ct);
         if (existsByCode)
         {
             _notify.Add(_localization.GetMessage("Application.Service.StatusDefinition.Create.CodeAlreadyExists"), 409);
             return 0;
         }
 
+        foreach (var translation in request.Translations!)
+        {
+            if (await _repo.ExistsByTranslationAndDomainAsync(request.StatusDomainId, translation.LanguageCode, translation.Name, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.TranslationAlreadyExists"), 409);
+                return 0;
+            }
+        }
+
         var entity = new StatusDefinitionEntity(
             _currentUser.GetTenantId(),
             request.StatusDomainId,
-            request.Code,
+            code,
             request.DisplayOrder,
             request.IsSystem,
             _currentUser.GetUserId());
@@ -89,7 +111,7 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
         // Adicionar traduções se fornecidas
         if (request.Translations != null && request.Translations.Any())
         {
-            foreach (var translationDto in request.Translations)
+            foreach (var translationDto in request.Translations.Where(t => t != null))
             {
                 var translation = new StatusDefinitionTranslationsEntity(
                     entity.TenantId,
@@ -115,18 +137,7 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
             return false;
         }
 
-        // Verificar duplicidade: se mudou o código, verificar se já existe
-        if (!string.Equals(entity.Code, request.Code, StringComparison.OrdinalIgnoreCase))
-        {
-            var existsByCode = await _repo.ExistsByCodeAndDomainAsync(entity.StatusDomainId, request.Code, ct);
-            if (existsByCode)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.StatusDefinition.Update.CodeAlreadyExists"), 409);
-                return false;
-            }
-        }
-
-        entity.Update(request.Code, request.DisplayOrder, request.IsSystem, _currentUser.GetUserId());
+        entity.Update(request.DisplayOrder, request.IsSystem, _currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
 

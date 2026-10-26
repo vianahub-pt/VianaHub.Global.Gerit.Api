@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 
 public interface IEquipmentDomainService
 {
-    Task<EquipmentEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<EquipmentEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<EquipmentEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<EquipmentEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

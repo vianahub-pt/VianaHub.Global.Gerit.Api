@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.StatusDomain;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -34,7 +35,9 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "GetAll")
         .WithName("GetStatusDomains")
         .WithSummary("Swagger.Endpoint.StatusDomain.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<StatusDomainResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async (
@@ -49,7 +52,10 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "GetBy")
         .WithName("GetStatusDomainById")
         .WithSummary("Swagger.Endpoint.StatusDomain.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<StatusDomainDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -65,7 +71,9 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "GetPaged")
         .WithName("GetStatusDomainsPaged")
         .WithSummary("Swagger.Endpoint.StatusDomain.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<StatusDomainResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async (
@@ -80,6 +88,8 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "Create")
         .WithName("CreateStatusDomain")
         .WithSummary("Swagger.Endpoint.StatusDomain.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -99,7 +109,10 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "Update")
         .WithName("UpdateStatusDomain")
         .WithSummary("Swagger.Endpoint.StatusDomain.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -117,7 +130,10 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "Activate")
         .WithName("ActivateStatusDomain")
         .WithSummary("Swagger.Endpoint.StatusDomain.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -133,7 +149,10 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "Deactivate")
         .WithName("DeactivateStatusDomain")
         .WithSummary("Swagger.Endpoint.StatusDomain.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -149,7 +168,10 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "Delete")
         .WithName("DeleteStatusDomain")
         .WithSummary("Swagger.Endpoint.StatusDomain.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -166,6 +188,9 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "CreateTranslation")
         .WithName("CreateStatusDomainTranslation")
         .WithSummary("Swagger.Endpoint.StatusDomain.CreateTranslation.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
@@ -185,7 +210,10 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "UpdateTranslation")
         .WithName("UpdateStatusDomainTranslation")
         .WithSummary("Swagger.Endpoint.StatusDomain.UpdateTranslation.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -203,7 +231,10 @@ public static class StatusDomainEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "StatusDomains", "DeleteTranslation")
         .WithName("DeleteStatusDomainTranslation")
         .WithSummary("Swagger.Endpoint.StatusDomain.DeleteTranslation.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

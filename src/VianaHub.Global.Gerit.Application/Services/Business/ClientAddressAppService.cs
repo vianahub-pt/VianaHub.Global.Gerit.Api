@@ -59,7 +59,7 @@ public class ClientAddressAppService : IClientAddressAppService
         return _mapper.Map<IEnumerable<ClientAddressResponse>>(entities);
     }
 
-    public async Task<ClientAddressDetailResponse> GetByIdAsync(int clientId, int id, CancellationToken ct)
+    public async Task<ClientAddressDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -161,7 +161,7 @@ public class ClientAddressAppService : IClientAddressAppService
         return await _domain.UpdateAsync(clientAddress, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int clientId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int clientId, IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -179,7 +179,7 @@ public class ClientAddressAppService : IClientAddressAppService
         return await ProcessBulkItemsAsync(clientId, items, ct);
     }
 
-    private List<BulkUploadClientAddressItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadClientAddressItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

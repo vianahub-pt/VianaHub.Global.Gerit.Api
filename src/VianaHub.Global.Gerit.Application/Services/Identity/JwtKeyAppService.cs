@@ -42,7 +42,7 @@ public class JwtKeyAppService : IJwtKeyAppService
         return _mapper.Map<IEnumerable<JwtKeyResponse>>(entities);
     }
 
-    public async Task<JwtKeyResponse> GetActiveKeyAsync(int tenantId, CancellationToken ct)
+    public async Task<JwtKeyResponse?> GetActiveKeyAsync(int tenantId, CancellationToken ct)
     {
         var entity = await _repo.GetActiveKeyAsync(tenantId, ct);
         return entity == null ? null : _mapper.Map<JwtKeyResponse>(entity);
@@ -61,7 +61,7 @@ public class JwtKeyAppService : IJwtKeyAppService
         return created != null;
     }
 
-    public async Task<bool> RevokeAsync(int id, string reason, CancellationToken ct)
+    public async Task<bool> RevokeAsync(int id, string? reason, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null)
