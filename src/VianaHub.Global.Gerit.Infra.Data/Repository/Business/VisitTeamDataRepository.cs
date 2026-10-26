@@ -17,7 +17,7 @@ public class VisitTeamDataRepository : IVisitTeamDataRepository
         _context = context;
     }
 
-    public async Task<VisitTeamEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitTeamEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<VisitTeamEntity>()
             .AsNoTracking()
@@ -48,9 +48,9 @@ public class VisitTeamDataRepository : IVisitTeamDataRepository
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => 
-                EF.Functions.Like(x.Team.Name.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.Visit.Title.ToLower(), $"%{search}%"));
+            query = query.Where(x =>
+                (x.Team != null && x.Team.Name != null && EF.Functions.Like(x.Team.Name.ToLower(), $"%{search}%")) ||
+                (x.Visit != null && x.Visit.Title != null && EF.Functions.Like(x.Visit.Title.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -79,7 +79,7 @@ public class VisitTeamDataRepository : IVisitTeamDataRepository
     {
         return await _context.Set<VisitTeamEntity>()
             .AsNoTracking()
-            .AnyAsync(x => x.TenantId == tenantId && x.VisitId == interventionId && x.TeamId == teamId &&  !x.IsDeleted, ct);
+            .AnyAsync(x => x.TenantId == tenantId && x.VisitId == interventionId && x.TeamId == teamId && !x.IsDeleted, ct);
     }
 
     public async Task<bool> AddAsync(VisitTeamEntity entity, CancellationToken ct)

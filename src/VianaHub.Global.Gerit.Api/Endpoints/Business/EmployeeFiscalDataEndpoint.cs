@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.EmployeeFiscalData;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -23,7 +24,9 @@ public static class EmployeeFiscalDataEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "EmployeeFiscalData", "GetAll")
         .WithName("GetEmployeeFiscalData")
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<EmployeeFiscalDataResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{employeeId}/fiscal-data/{id}", async ([FromRoute] int employeeId, [FromRoute] int id, [FromServices] IEmployeeFiscalDataAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -34,7 +37,9 @@ public static class EmployeeFiscalDataEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "EmployeeFiscalData", "GetBy")
         .WithName("GetEmployeeFiscalDataById")
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<EmployeeFiscalDataDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -46,7 +51,9 @@ public static class EmployeeFiscalDataEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "EmployeeFiscalData", "GetPaged")
         .WithName("GetEmployeeFiscalDataPaged")
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<EmployeeFiscalDataResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/{employeeId}/fiscal-data/", async ([FromRoute] int employeeId, [FromBody] CreateEmployeeFiscalDataRequest request, [FromServices] IEmployeeFiscalDataAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -57,6 +64,9 @@ public static class EmployeeFiscalDataEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "EmployeeFiscalData", "Create")
         .WithName("CreateEmployeeFiscalData")
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -70,7 +80,10 @@ public static class EmployeeFiscalDataEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "EmployeeFiscalData", "Update")
         .WithName("UpdateEmployeeFiscalData")
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -84,7 +97,9 @@ public static class EmployeeFiscalDataEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "EmployeeFiscalData", "Activate")
         .WithName("ActivateEmployeeFiscalData")
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -96,7 +111,9 @@ public static class EmployeeFiscalDataEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "EmployeeFiscalData", "Deactivate")
         .WithName("DeactivateEmployeeFiscalData")
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -108,7 +125,9 @@ public static class EmployeeFiscalDataEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "EmployeeFiscalData", "Delete")
         .WithName("DeleteEmployeeFiscalData")
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -130,7 +149,10 @@ public static class EmployeeFiscalDataEndpoint
         .WithSummary("Swagger.Endpoint.EmployeeFiscalData.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status501NotImplemented)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

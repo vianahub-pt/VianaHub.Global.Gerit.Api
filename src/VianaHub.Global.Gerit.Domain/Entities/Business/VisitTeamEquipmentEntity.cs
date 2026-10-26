@@ -12,9 +12,9 @@ public class VisitTeamEquipmentEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation
-    public TenantEntity Tenant { get; private set; }
-    public VisitTeamEntity VisitTeam { get; private set; }
-    public EquipmentEntity Equipment { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public VisitTeamEntity? VisitTeam { get; private set; }
+    public EquipmentEntity? Equipment { get; private set; }
 
     protected VisitTeamEquipmentEntity() { }
 

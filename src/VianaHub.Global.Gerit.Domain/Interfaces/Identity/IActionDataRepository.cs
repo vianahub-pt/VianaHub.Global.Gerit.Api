@@ -10,7 +10,7 @@ public interface IActionDataRepository
     Task<IEnumerable<ActionEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<ActionEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
-    Task<bool> ExistsByNameAsync(string name, CancellationToken ct);
+    Task<bool> ExistsByNameAsync(string? name, CancellationToken ct);
     Task<bool> AddAsync(ActionEntity entity, CancellationToken ct);
     Task<bool> UpdateAsync(ActionEntity entity, CancellationToken ct);
 }

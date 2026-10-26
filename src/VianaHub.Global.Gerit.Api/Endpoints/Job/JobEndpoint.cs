@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Job;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -24,7 +25,10 @@ public static class JobEndpoint
         .CustomAuthorize("Admin", "JobDefinitions", "GetBy")
         .WithName("GetJobById")
         .WithSummary("Swagger.Endpoint.Job.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<JobDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -36,7 +40,9 @@ public static class JobEndpoint
         .CustomAuthorize("Admin", "JobDefinitions", "GetPaged")
         .WithName("GetPagedJobs")
         .WithSummary("Swagger.Endpoint.Job.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<JobResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async ([FromBody] CreateJobRequest request, [FromServices] IJobAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -47,6 +53,9 @@ public static class JobEndpoint
         .CustomAuthorize("Admin", "JobDefinitions", "Create")
         .WithName("CreateJob")
         .WithSummary("Swagger.Endpoint.Job.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -60,7 +69,11 @@ public static class JobEndpoint
         .CustomAuthorize("Admin", "JobDefinitions", "Update")
         .WithName("UpdateJob")
         .WithSummary("Swagger.Endpoint.Job.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateJobRequest>();
@@ -73,7 +86,11 @@ public static class JobEndpoint
         .CustomAuthorize("Admin", "JobDefinitions", "Activate")
         .WithName("ActivateJob")
         .WithSummary("Swagger.Endpoint.Job.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -85,7 +102,11 @@ public static class JobEndpoint
         .CustomAuthorize("Admin", "JobDefinitions", "Deactivate")
         .WithName("DeactivateJob")
         .WithSummary("Swagger.Endpoint.Job.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -97,7 +118,10 @@ public static class JobEndpoint
         .CustomAuthorize("Admin", "JobDefinitions", "Execute")
         .WithName("ExecuteJob")
         .WithSummary("Swagger.Endpoint.Job.Execute.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -110,7 +134,11 @@ public static class JobEndpoint
         .CustomAuthorize("Admin", "JobDefinitions", "Delete")
         .WithName("DeleteJob")
         .WithSummary("Swagger.Endpoint.Job.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

@@ -6,9 +6,9 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 
 public interface IJwtKeyDataRepository
 {
-    Task<JwtKeysEntity> GetByIdAsync(int id, CancellationToken ct);
-    Task<JwtKeysEntity> GetByKeyIdAsync(Guid keyId, CancellationToken ct);
-    Task<JwtKeysEntity> GetActiveKeyAsync(int tenantId, CancellationToken ct);
+    Task<JwtKeysEntity?> GetByIdAsync(int id, CancellationToken ct);
+    Task<JwtKeysEntity?> GetByKeyIdAsync(Guid keyId, CancellationToken ct);
+    Task<JwtKeysEntity?> GetActiveKeyAsync(int tenantId, CancellationToken ct);
     Task<IEnumerable<JwtKeysEntity>> GetAllAsync(CancellationToken ct);
     Task<IEnumerable<JwtKeysEntity>> GetByTenantAsync(int tenantId, CancellationToken ct);
     Task<IEnumerable<JwtKeysEntity>> GetByApplicationAsync(int tenantId, CancellationToken ct);

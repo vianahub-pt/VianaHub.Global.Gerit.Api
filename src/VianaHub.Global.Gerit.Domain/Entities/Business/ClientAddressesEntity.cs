@@ -31,7 +31,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         // Construtor protegido para EF Core
         protected ClientAddressesEntity() { }
 
-        public ClientAddressesEntity(int tenantId, int clientId, int addressTypeId, string countryCode, string street, string? streetNumber, string? complement, string neighborhood, string city, string district, string postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int createdBy)
+        public ClientAddressesEntity(int tenantId, int clientId, int addressTypeId, string? countryCode, string? street, string? streetNumber, string? complement, string? neighborhood, string? city, string? district, string? postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int createdBy)
         {
             TenantId = tenantId;
             ClientId = clientId;
@@ -56,7 +56,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             CreatedAt = DateTime.UtcNow;
         }
 
-        public void Update(int addressTypeId, string countryCode, string street, string? streetNumber, string? complement, string neighborhood, string city, string district, string postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int modifiedBy)
+        public void Update(int addressTypeId, string? countryCode, string? street, string? streetNumber, string? complement, string? neighborhood, string? city, string? district, string? postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int modifiedBy)
         {
             AddressTypeId = addressTypeId;
             CountryCode = countryCode;

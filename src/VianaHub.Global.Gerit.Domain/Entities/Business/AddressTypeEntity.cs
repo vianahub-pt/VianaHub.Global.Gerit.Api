@@ -13,7 +13,7 @@ public class AddressTypeEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public ICollection<AddressTypeTranslationsEntity> Translations { get; private set; }
+    public ICollection<AddressTypeTranslationsEntity> Translations { get; private set; } = new List<AddressTypeTranslationsEntity>();
 
     // Construtor protegido para o EF Core
     protected AddressTypeEntity() { }
@@ -51,11 +51,10 @@ public class AddressTypeEntity : Entity
     }
 
     /// <summary>
-    /// Atualiza o código do Tipo de Endereço.
+    /// Regista a modificação sem alterar a chave natural.
     /// </summary>
-    public void UpdateCode(string code, int modifiedBy)
+    public void MarkModified(int modifiedBy)
     {
-        Code = code;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

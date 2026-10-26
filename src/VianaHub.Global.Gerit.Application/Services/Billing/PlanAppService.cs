@@ -57,7 +57,7 @@ public class PlanAppService : IPlanAppService
         return _mapper.Map<IEnumerable<PlanResponse>>(entities);
     }
 
-    public async Task<PlanDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<PlanDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null) return null;
@@ -83,15 +83,28 @@ public class PlanAppService : IPlanAppService
 
     public async Task<int> CreateAsync(CreatePlanRequest request, CancellationToken ct)
     {
-        var exists = await _repo.ExistsByNameAsync(request.Name, ct);
-        if (exists)
+        var code = CatalogCodeGenerator.FromCanonicalTranslation(request.Translations, t => t.LanguageCode, t => t.Name);
+        if (string.IsNullOrEmpty(code))
         {
-            _notify.Add(_localization.GetMessage("Application.Service.Plan.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+            return 0;
+        }
+        if (await _repo.ExistsByCodeAsync(code, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CodeAlreadyExists"), 409);
             return 0;
         }
 
+        foreach (var translation in request.Translations!)
+        {
+            if (await _repo.ExistsByTranslationAsync(translation.LanguageCode, translation.Name, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.TranslationAlreadyExists"), 409);
+                return 0;
+            }
+        }
         var entity = new SubscriptionPlanEntity(
-            request.Code ?? request.Name,
+            code,
             request.PricePerHour,
             request.PricePerDay,
             request.PricePerMonth,
@@ -101,17 +114,10 @@ public class PlanAppService : IPlanAppService
             request.MaxPhotosPerVisit,
             _currentUser.GetUserId());
 
-        // Adiciona tradução padrão (pt-PT)
-        if (!string.IsNullOrWhiteSpace(request.Name))
+        foreach (var translation in request.Translations!)
         {
-            var translation = new SubscriptionPlanTranslationsEntity(
-                entity.Id, // Será atualizado pelo EF após o save
-                DefaultLanguage,
-                request.Name,
-                request.Description);
-            entity.AddTranslation(translation);
+            entity.AddTranslation(new SubscriptionPlanTranslationsEntity(entity.Id, translation.LanguageCode, translation.Name, translation.Description));
         }
-
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -126,7 +132,6 @@ public class PlanAppService : IPlanAppService
         }
 
         entity.Update(
-            request.Code ?? request.Name,
             request.PricePerHour,
             request.PricePerDay,
             request.PricePerMonth,
@@ -198,7 +203,7 @@ public class PlanAppService : IPlanAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando serviço centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -219,7 +224,7 @@ public class PlanAppService : IPlanAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadPlanItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadPlanItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -254,6 +259,8 @@ public class PlanAppService : IPlanAppService
                     {
                         // Sanitiza e normaliza campos
                         record.Name = record.Name?.SanitizeCsvInput().NormalizeUtf8();
+                        record.EnglishName = record.EnglishName?.SanitizeCsvInput().NormalizeUtf8();
+                        record.EnglishDescription = record.EnglishDescription?.SanitizeCsvInput().NormalizeUtf8();
                         record.Description = record.Description?.SanitizeCsvInput().NormalizeUtf8();
                         record.PricePerHour = record.PricePerHour;
                         record.PricePerDay = record.PricePerDay;
@@ -283,7 +290,7 @@ public class PlanAppService : IPlanAppService
                 catch (CsvHelperException ex)
                 {
                     // Log linha com erro mas continua processamento
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de Plans", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de Plans | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.Plan.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
@@ -300,7 +307,7 @@ public class PlanAppService : IPlanAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de Plans: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de Plans: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Plan.ReadCsvFile.Exception"), 400);
             return null;
         }
@@ -320,16 +327,29 @@ public class PlanAppService : IPlanAppService
             }
 
             // Verifica duplicidade
-            var exists = await _repo.ExistsByNameAsync(item.Name, ct);
+            var exists = await _repo.ExistsByTranslationAsync(Domain.Constants.SupportedLanguages.Default, item.Name, ct) || await _repo.ExistsByTranslationAsync(CatalogCodeGenerator.CanonicalLanguageCode, item.EnglishName, ct);
             if (exists)
             {
-                _notify.Add(_localization.GetMessage("Application.Service.Plan.ProcessBulkItems.ExistsByName", item.Name), 400);
+                _notify.Add(_localization.GetMessage("Application.Catalog.TranslationAlreadyExists"), 409);
                 hasErrors = true;
                 continue;
             }
 
             // Cria a entidade
-            var entity = new SubscriptionPlanEntity(item.Code ?? item.Name, item.PricePerHour, item.PricePerDay, item.PricePerMonth, item.PricePerYear, item.Currency ?? "EUR", item.MaxUsers, item.MaxPhotosPerVisit, _currentUser.GetUserId());
+            var code = CatalogCodeGenerator.FromCanonicalTranslation(new[] { item }, _ => CatalogCodeGenerator.CanonicalLanguageCode, t => t.EnglishName);
+            if (string.IsNullOrEmpty(code))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+                hasErrors = true;
+                continue;
+            }
+            if (await _repo.ExistsByCodeAsync(code, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.CodeAlreadyExists"), 409);
+                hasErrors = true;
+                continue;
+            }
+            var entity = new SubscriptionPlanEntity(code, item.PricePerHour, item.PricePerDay, item.PricePerMonth, item.PricePerYear, item.Currency ?? "EUR", item.MaxUsers, item.MaxPhotosPerVisit, _currentUser.GetUserId());
 
             // Adiciona tradução padrão (pt-PT) do CSV
             if (!string.IsNullOrWhiteSpace(item.Name))
@@ -337,6 +357,8 @@ public class PlanAppService : IPlanAppService
                 var translation = new SubscriptionPlanTranslationsEntity(entity.Id, DefaultLanguage, item.Name, item.Description);
                 entity.AddTranslation(translation);
             }
+
+            entity.AddTranslation(new SubscriptionPlanTranslationsEntity(entity.Id, CatalogCodeGenerator.CanonicalLanguageCode, item.EnglishName, item.EnglishDescription));
 
             // Tenta criar no domínio
             var success = await _domain.CreateAsync(entity, ct);
@@ -353,6 +375,22 @@ public class PlanAppService : IPlanAppService
 
     private bool ValidateBulkItem(BulkUploadPlanItem item)
     {
+        if (string.IsNullOrEmpty(CatalogCodeGenerator.FromCanonicalTranslation(new[] { item }, _ => CatalogCodeGenerator.CanonicalLanguageCode, t => t.EnglishName)))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+            return false;
+        }
+
+        if (item.EnglishName?.Length > 100 || !item.EnglishName.IsSafeCsvValue())
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.TranslationNameInvalid", 100), 400);
+            return false;
+        }
+        if (item.EnglishDescription?.Length > 500 || (!string.IsNullOrEmpty(item.EnglishDescription) && !item.EnglishDescription.IsSafeCsvValue()))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.TranslationDescriptionInvalid", 500), 400);
+            return false;
+        }
         if (string.IsNullOrWhiteSpace(item.Name))
         {
             _notify.Add(_localization.GetMessage("Application.Service.Plan.ValidateBulkItem.Name", item.Name), 400);

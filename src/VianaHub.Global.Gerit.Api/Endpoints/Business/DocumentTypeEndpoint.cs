@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.DocumentType;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -34,7 +35,9 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "GetAll")
         .WithName("GetDocumentTypes")
         .WithSummary("Swagger.Endpoint.DocumentType.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<DocumentTypeResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async (
@@ -49,7 +52,10 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "GetBy")
         .WithName("GetDocumentTypeById")
         .WithSummary("Swagger.Endpoint.DocumentType.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<DocumentTypeDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -65,7 +71,9 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "GetPaged")
         .WithName("GetDocumentTypesPaged")
         .WithSummary("Swagger.Endpoint.DocumentType.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<DocumentTypeResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async (
@@ -80,6 +88,8 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "Create")
         .WithName("CreateDocumentType")
         .WithSummary("Swagger.Endpoint.DocumentType.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -99,7 +109,10 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "Update")
         .WithName("UpdateDocumentType")
         .WithSummary("Swagger.Endpoint.DocumentType.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -117,7 +130,10 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "Activate")
         .WithName("ActivateDocumentType")
         .WithSummary("Swagger.Endpoint.DocumentType.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -133,7 +149,10 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "Deactivate")
         .WithName("DeactivateDocumentType")
         .WithSummary("Swagger.Endpoint.DocumentType.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -149,7 +168,10 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "Delete")
         .WithName("DeleteDocumentType")
         .WithSummary("Swagger.Endpoint.DocumentType.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -166,6 +188,9 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "CreateTranslation")
         .WithName("CreateDocumentTypeTranslation")
         .WithSummary("Swagger.Endpoint.DocumentType.CreateTranslation.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
@@ -185,7 +210,10 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "UpdateTranslation")
         .WithName("UpdateDocumentTypeTranslation")
         .WithSummary("Swagger.Endpoint.DocumentType.UpdateTranslation.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -203,7 +231,10 @@ public static class DocumentTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "DocumentTypes", "DeleteTranslation")
         .WithName("DeleteDocumentTypeTranslation")
         .WithSummary("Swagger.Endpoint.DocumentType.DeleteTranslation.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

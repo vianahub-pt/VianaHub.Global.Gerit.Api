@@ -19,7 +19,7 @@ public class RolePermissionDomainService : IRolePermissionDomainService
     {
         return await _repository.GetAllAsync(tenantId, ct);
     }
-    public async Task<RolePermissionsEntity> GetByIdAsync(int tenantId, int roleId, int resourceId, int actionId, CancellationToken ct)
+    public async Task<RolePermissionsEntity?> GetByIdAsync(int tenantId, int roleId, int resourceId, int actionId, CancellationToken ct)
     {
         return await _repository.GetByIdAsync(tenantId, roleId, resourceId, actionId, ct);
     }

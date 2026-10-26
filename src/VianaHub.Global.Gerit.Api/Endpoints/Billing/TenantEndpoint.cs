@@ -25,6 +25,7 @@ public static class TenantEndpoint
         .CustomAuthorize("Admin,BackOffice", "Tenants", "GetAll")
         .WithName("GetAllTenants")
         .WithSummary("Swagger.Endpoint.Tenant.GetAll.Summary")
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<IEnumerable<TenantResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -37,7 +38,9 @@ public static class TenantEndpoint
         .CustomAuthorize("Admin,BackOffice", "Tenants", "GetBy")
         .WithName("GetTenantById")
         .WithSummary("Swagger.Endpoint.Tenant.GetById.Summary")
-        .Produces<TenantResponse>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<TenantDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -49,6 +52,7 @@ public static class TenantEndpoint
         .CustomAuthorize("Admin,BackOffice", "Tenants", "GetPaged")
         .WithName("GetPagedTenants")
         .WithSummary("Swagger.Endpoint.Tenant.GetPaged.Summary")
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ListPageResponse<TenantResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -61,6 +65,8 @@ public static class TenantEndpoint
         .CustomAuthorize("Admin,BackOffice", "Tenants", "Create")
         .WithName("CreateTenant")
         .WithSummary("Swagger.Endpoint.Tenant.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -74,7 +80,10 @@ public static class TenantEndpoint
         .CustomAuthorize("Admin,BackOffice", "Tenants", "Update")
         .WithName("UpdateTenant")
         .WithSummary("Swagger.Endpoint.Tenant.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateTenantRequest>();
@@ -87,7 +96,10 @@ public static class TenantEndpoint
         .CustomAuthorize("Admin,BackOffice", "Tenants", "Activate")
         .WithName("ActivateTenant")
         .WithSummary("Swagger.Endpoint.Tenant.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -99,7 +111,10 @@ public static class TenantEndpoint
         .CustomAuthorize("Admin,BackOffice", "Tenants", "Deactivate")
         .WithName("DeactivateTenant")
         .WithSummary("Swagger.Endpoint.Tenant.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -111,7 +126,10 @@ public static class TenantEndpoint
         .CustomAuthorize("Admin,BackOffice", "Tenants", "Delete")
         .WithName("DeleteTenant")
         .WithSummary("Swagger.Endpoint.Tenant.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -140,7 +158,9 @@ public static class TenantEndpoint
         .WithSummary("Swagger.Endpoint.Tenant.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

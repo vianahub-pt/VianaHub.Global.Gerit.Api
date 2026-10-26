@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+using VianaHub.Global.Gerit.Domain.Helpers;
+using FluentValidation;
 using System.Net;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
@@ -26,7 +27,7 @@ public class FileValidationFilter : IEndpointFilter
     /// <summary>
     /// Executa a validação do arquivo antes de processar o request.
     /// </summary>
-    public async ValueTask<object> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         _logger.LogDebug("FileValidationFilter executando");
 
@@ -56,7 +57,7 @@ public class FileValidationFilter : IEndpointFilter
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao ler arquivo do form");
+                _logger.LogError("Erro ao ler arquivo do form | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
                 if (notify != null)
                 {
                     notify.Add($"Erro ao processar arquivo: {ex.Message}", 400);
@@ -81,7 +82,7 @@ public class FileValidationFilter : IEndpointFilter
                 foreach (var error in validationResult.Errors)
                 {
                     notify.Add(error.ErrorMessage, 400);
-                    _logger.LogDebug("Erro de validação: {ErrorMessage}", error.ErrorMessage);
+                    _logger.LogDebug("Erro de validação: {ErrorMessage}", LogValueSanitizer.Sanitize(error.ErrorMessage));
                 }
             }
 

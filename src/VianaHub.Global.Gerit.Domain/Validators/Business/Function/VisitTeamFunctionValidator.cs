@@ -8,11 +8,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Business.Function;
 
 public class VisitTeamFunctionValidator : BaseEntityValidator<VisitTeamFunctionsEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public VisitTeamFunctionValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override async Task<ValidationResult> ValidateForCreateAsync(VisitTeamFunctionsEntity entity)

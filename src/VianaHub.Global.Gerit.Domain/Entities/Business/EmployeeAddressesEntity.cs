@@ -27,9 +27,9 @@ public class EmployeeAddressesEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public EmployeeEntity Employee { get; private set; }
-    public AddressTypeEntity AddressType { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public EmployeeEntity? Employee { get; private set; }
+    public AddressTypeEntity? AddressType { get; private set; }
 
     // Construtor protegido para o EF Core
     protected EmployeeAddressesEntity() { }
@@ -38,21 +38,21 @@ public class EmployeeAddressesEntity : Entity
     /// Construtor para criação de um novo endereço do Funcionário
     /// </summary>
     public EmployeeAddressesEntity(
-        int tenantId, 
-        int employeeId, 
+        int tenantId,
+        int employeeId,
         int addressTypeId,
-        string countryCode,
-        string street,
+        string? countryCode,
+        string? street,
         string? streetNumber,
         string? complement,
-        string neighborhood,
-        string city, 
-        string district,
-        string postalCode,
+        string? neighborhood,
+        string? city,
+        string? district,
+        string? postalCode,
         decimal? latitude,
         decimal? longitude,
         string? note,
-        bool isPrimary, 
+        bool isPrimary,
         int createdBy)
     {
         TenantId = tenantId;
@@ -78,14 +78,14 @@ public class EmployeeAddressesEntity : Entity
 
     public void UpdateAddressInfo(
         int addressTypeId,
-        string countryCode,
-        string street,
+        string? countryCode,
+        string? street,
         string? streetNumber,
         string? complement,
-        string neighborhood,
-        string city,
-        string district,
-        string postalCode,
+        string? neighborhood,
+        string? city,
+        string? district,
+        string? postalCode,
         decimal? latitude,
         decimal? longitude,
         string? note,

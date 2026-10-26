@@ -6,12 +6,12 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Billing;
 
 public interface ISubscriptionDataRepository
 {
-    Task<SubscriptionEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<SubscriptionEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<SubscriptionEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<SubscriptionEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
     Task<bool> ExistsByTenantIdAsync(int tenantId, CancellationToken ct);
-    Task<SubscriptionEntity> GetByTenantIdAsync(int tenantId, CancellationToken ct);
+    Task<SubscriptionEntity?> GetByTenantIdAsync(int tenantId, CancellationToken ct);
     Task<IEnumerable<SubscriptionEntity>> GetBySubscriptionPlanIdAsync(int subscriptionPlanId, CancellationToken ct);
     Task<IEnumerable<SubscriptionEntity>> GetActiveSubscriptionsAsync(CancellationToken ct);
     Task<IEnumerable<SubscriptionEntity>> GetExpiringSubscriptionsAsync(int daysBeforeExpiration, CancellationToken ct);

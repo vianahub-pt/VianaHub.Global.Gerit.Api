@@ -50,7 +50,7 @@ public class ResourceAppService : IResourceAppService
         var entities = await _repo.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<ResourceResponse>>(entities);
     }
-    public async Task<ResourceDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ResourceDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -73,11 +73,11 @@ public class ResourceAppService : IResourceAppService
         var exists = await _repo.ExistsByNameAsync(request.Name, ct);
         if (exists)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.Resource.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Service.Resource.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
-        var entity = new ResourceEntity(request.Code ?? request.Name ?? "RES", request.Name, request.Description, _currentUser.GetUserId());
+        var entity = new ResourceEntity(request.Name, request.Description, _currentUser.GetUserId());
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -90,7 +90,7 @@ public class ResourceAppService : IResourceAppService
             return false;
         }
 
-        entity.Update(request.Code ?? entity.Code ?? request.Name ?? "RES", request.Name, request.Description, _currentUser.GetUserId());
+        entity.Update(request.Description, _currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(int id, CancellationToken ct)
@@ -129,7 +129,7 @@ public class ResourceAppService : IResourceAppService
         entity.Delete(_currentUser.GetUserId());
         return await _domain.DeleteAsync(entity, ct);
     }
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -151,7 +151,7 @@ public class ResourceAppService : IResourceAppService
     }
 
 
-    private List<BulkUploadResourceItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadResourceItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -205,7 +205,7 @@ public class ResourceAppService : IResourceAppService
                     }
                     rowCount++;
                 }
-                catch (CsvHelperException ex)
+                catch (CsvHelperException)
                 {
                     // Log linha com erro mas continua processamento
                     _notify.Add(_localization.GetMessage("Application.Service.Resource.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
@@ -222,7 +222,7 @@ public class ResourceAppService : IResourceAppService
 
             return records;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Resource.ReadCsvFile.Exception"), 400);
             return null;
@@ -245,13 +245,13 @@ public class ResourceAppService : IResourceAppService
             var exists = await _repo.ExistsByNameAsync(item.Name, ct);
             if (exists)
             {
-                _notify.Add(_localization.GetMessage("Application.Service.Resource.ProcessBulkItems.ExistsByName", item.Name), 400);
+                _notify.Add(_localization.GetMessage("Application.Service.Resource.ProcessBulkItems.ExistsByName", item.Name), 409);
                 hasErrors = true;
                 continue;
             }
 
             // Cria a entidade
-            var entity = new ResourceEntity(item.Code ?? item.Name ?? "RES", item.Name, item.Description, _currentUser.GetUserId());
+            var entity = new ResourceEntity(item.Name, item.Description, _currentUser.GetUserId());
 
             // Tenta criar no dom�nio
             var success = await _domain.CreateAsync(entity, ct);

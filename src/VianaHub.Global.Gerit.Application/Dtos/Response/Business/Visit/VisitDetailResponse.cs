@@ -15,7 +15,7 @@ public class VisitDetailResponse
     public int StatusDomainId { get; set; }
     public string? StatusDomainName { get; set; }
     public string? StatusDefinition { get; set; }
-    public string CurrencyCode { get; set; }
+    public string? CurrencyCode { get; set; }
     public string? Title { get; set; }
     public string? Description { get; set; }
     public DateTime StartDateTime { get; set; }

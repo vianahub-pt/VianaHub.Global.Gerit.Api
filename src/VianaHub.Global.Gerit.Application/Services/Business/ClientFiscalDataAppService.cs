@@ -44,7 +44,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
         return _mapper.Map<IEnumerable<ClientFiscalDataResponse>>(entities);
     }
 
-    public async Task<ClientFiscalDataDetailResponse> GetByIdAsync(int clientId, int id, CancellationToken ct)
+    public async Task<ClientFiscalDataDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -160,7 +160,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int clientId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int clientId, IFormFile? file, CancellationToken ct)
     {
         _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.BulkUpload.NotImplemented"), 501);
         return false;

@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
@@ -14,13 +15,13 @@ public class NoOpEmailSender : IEmailSender
         _localization = localization;
     }
 
-    public Task SendAsync(string to, string subjectKey, string bodyKey, params object[] args)
+    public Task SendAsync(string to, string subjectKey, string bodyKey, params object?[] args)
     {
         var subject = _localization?.GetMessage(subjectKey) ?? subjectKey;
         var body = _localization?.GetMessage(bodyKey, args) ?? bodyKey;
 
-        _logger.LogInformation("[NoOpEmailSender] Simulating email to {To} | Subject: {Subject}", to, subject);
-        _logger.LogDebug("[NoOpEmailSender] Email body: {Body}", body);
+        _logger.LogInformation("[NoOpEmailSender] Simulating email to {To} | Subject: {Subject}", LogValueSanitizer.Sanitize(to), LogValueSanitizer.Sanitize(subject));
+        _logger.LogDebug("[NoOpEmailSender] Email body: {Body}", LogValueSanitizer.Sanitize(body));
         return Task.CompletedTask;
     }
 }

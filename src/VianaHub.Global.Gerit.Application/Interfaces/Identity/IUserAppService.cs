@@ -16,5 +16,5 @@ public interface IUserAppService
     Task<bool> ActivateAsync(int id, CancellationToken ct);
     Task<bool> DeactivateAsync(int id, CancellationToken ct);
     Task<bool> DeleteAsync(int id, CancellationToken ct);
-    Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct);
+    Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct);
 }

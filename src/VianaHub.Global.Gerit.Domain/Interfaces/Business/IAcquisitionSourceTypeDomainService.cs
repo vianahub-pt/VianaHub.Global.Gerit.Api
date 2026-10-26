@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 
 public interface IAcquisitionSourceTypeDomainService
 {
-    Task<AcquisitionSourceTypeEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<AcquisitionSourceTypeEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<AcquisitionSourceTypeEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<AcquisitionSourceTypeEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

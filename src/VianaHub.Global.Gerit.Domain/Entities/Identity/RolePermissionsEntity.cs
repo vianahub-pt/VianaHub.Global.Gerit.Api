@@ -15,10 +15,10 @@ public class RolePermissionsEntity
     public int ActionId { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public RoleEntity Role { get; private set; }
-    public ResourceEntity Resource { get; private set; }
-    public ActionEntity Action { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public RoleEntity? Role { get; private set; }
+    public ResourceEntity? Resource { get; private set; }
+    public ActionEntity? Action { get; private set; }
 
     // Construtor protegido para o EF Core
     protected RolePermissionsEntity() { }

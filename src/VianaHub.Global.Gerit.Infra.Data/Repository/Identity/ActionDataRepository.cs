@@ -39,8 +39,8 @@ public class ActionDataRepository : IActionDataRepository
             var search = request.Search.Trim().ToLower();
 
             query = query.Where(x =>
-                EF.Functions.Like(x.Name.ToLower(), $"%{search}%")
-                || EF.Functions.Like(x.Description.ToLower(), $"%{search}%")
+                (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%"))
+                || (x.Description != null && EF.Functions.Like(x.Description.ToLower(), $"%{search}%"))
             );
         }
 
@@ -76,7 +76,7 @@ public class ActionDataRepository : IActionDataRepository
         return await _context.Set<ActionEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(string? name, CancellationToken ct)
     {
         return await _context.Set<ActionEntity>().AsNoTracking().AnyAsync(x => x.Name == name && !x.IsDeleted, ct);
     }

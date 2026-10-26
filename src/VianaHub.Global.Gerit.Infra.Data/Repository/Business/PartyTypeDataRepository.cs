@@ -9,6 +9,8 @@ namespace VianaHub.Global.Gerit.Infra.Data.Repository.Business;
 
 public class PartyTypeDataRepository : IPartyTypeDataRepository
 {
+    public Task<bool> ExistsByTranslationAsync(string? languageCode, string? name, CancellationToken ct) => _context.Set<PartyTypeTranslationsEntity>().AnyAsync(x => x.LanguageCode == languageCode && x.Name == name, ct);
+
     private readonly GeritDbContext _context;
 
     public PartyTypeDataRepository(GeritDbContext context)
@@ -26,7 +28,7 @@ public class PartyTypeDataRepository : IPartyTypeDataRepository
             .ToListAsync(ct);
     }
 
-    public async Task<PartyTypeEntity> GetByIdAsync(byte id, CancellationToken ct)
+    public async Task<PartyTypeEntity?> GetByIdAsync(byte id, CancellationToken ct)
     {
         return await _context.Set<PartyTypeEntity>()
             .AsNoTracking()
@@ -45,7 +47,7 @@ public class PartyTypeDataRepository : IPartyTypeDataRepository
         {
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
-                EF.Functions.Like(x.Code.ToLower(), $"%{search}%")
+                (x.Code != null && EF.Functions.Like(x.Code.ToLower(), $"%{search}%"))
             );
         }
 
@@ -89,11 +91,12 @@ public class PartyTypeDataRepository : IPartyTypeDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByCodeAsync(string code, CancellationToken ct)
+    public async Task<bool> ExistsByCodeAsync(string? code, CancellationToken ct)
     {
         return await _context.Set<PartyTypeEntity>()
+            .IgnoreQueryFilters()
             .AsNoTracking()
-            .AnyAsync(x => x.Code == code && !x.IsDeleted, ct);
+            .AnyAsync(x => x.Code == code, ct);
     }
 
     public async Task<bool> AddAsync(PartyTypeEntity entity, CancellationToken ct)

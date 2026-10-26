@@ -20,18 +20,16 @@ public partial class ClientDataRepository : IClientDataRepository
     {
         return await _context.Set<ClientEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(ClientEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
             .Where(x => !x.IsDeleted)
             .ToListAsync(ct);
     }
 
-    public async Task<ClientEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ClientEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<ClientEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(ClientEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -39,8 +37,7 @@ public partial class ClientDataRepository : IClientDataRepository
     {
         return await _context.Set<ClientEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(ClientEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
             .Where(x => x.TenantId == tenantId && !x.IsDeleted)
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(ct);
@@ -52,8 +49,7 @@ public partial class ClientDataRepository : IClientDataRepository
             .AsNoTracking()
             .AsSplitQuery()
             .Include(x => x.Contacts)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(ClientEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
             .Where(x => !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -61,8 +57,8 @@ public partial class ClientDataRepository : IClientDataRepository
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
                 x.Contacts.Any(c =>
-                    EF.Functions.Like(c.Name.ToLower(), $"%{search}%") ||
-                    EF.Functions.Like(c.Email.ToLower(), $"%{search}%")));
+                    (c.Name != null && EF.Functions.Like(c.Name.ToLower(), $"%{search}%")) ||
+                    (c.Email != null && EF.Functions.Like(c.Email.ToLower(), $"%{search}%"))));
         }
 
         if (request.IsActive.HasValue)
@@ -93,8 +89,7 @@ public partial class ClientDataRepository : IClientDataRepository
             .AsNoTracking()
             .AsSplitQuery()
             .Include(x => x.Contacts)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(ClientEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
             .Where(x => x.TenantId == tenantId && !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -102,8 +97,8 @@ public partial class ClientDataRepository : IClientDataRepository
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
                 x.Contacts.Any(c =>
-                    EF.Functions.Like(c.Name.ToLower(), $"%{search}%") ||
-                    EF.Functions.Like(c.Email.ToLower(), $"%{search}%")));
+                    (c.Name != null && EF.Functions.Like(c.Name.ToLower(), $"%{search}%")) ||
+                    (c.Email != null && EF.Functions.Like(c.Email.ToLower(), $"%{search}%"))));
         }
 
         if (request.IsActive.HasValue)
@@ -142,7 +137,7 @@ public partial class ClientDataRepository : IClientDataRepository
             .AnyAsync(x => x.TenantId == tenantId && x.Id == clientId && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByCompanyRegistrationAsync(int tenantId, string companyRegistrationNumber, int? excludeClientId, CancellationToken ct)
+    public async Task<bool> ExistsByCompanyRegistrationAsync(int tenantId, string? companyRegistrationNumber, int? excludeClientId, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(companyRegistrationNumber))
         {

@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.VisitTeamEquipments;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -23,7 +24,9 @@ public static class VisitTeamEquipmentsEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitTeamEquipments", "GetAll")
         .WithName("GetVisitTeamEquipments")
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<VisitTeamEquipmentResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{visitTeamId}/equipments/{id}", async ([FromRoute] int visitTeamId, [FromRoute] int id, [FromServices] IVisitTeamEquipmentsAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -34,7 +37,9 @@ public static class VisitTeamEquipmentsEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitTeamEquipments", "GetBy")
         .WithName("GetVisitTeamEquipmentById")
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<VisitTeamEquipmentDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -46,7 +51,9 @@ public static class VisitTeamEquipmentsEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitTeamEquipments", "GetPaged")
         .WithName("GetVisitTeamEquipmentsPaged")
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<VisitTeamEquipmentResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/{visitTeamId}/equipments", async ([FromRoute] int visitTeamId, [FromBody] CreateVisitTeamEquipmentRequest request, [FromServices] IVisitTeamEquipmentsAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -57,6 +64,8 @@ public static class VisitTeamEquipmentsEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitTeamEquipments", "Create")
         .WithName("CreateVisitTeamEquipment")
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -71,7 +80,9 @@ public static class VisitTeamEquipmentsEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitTeamEquipments", "Update")
         .WithName("UpdateVisitTeamEquipment")
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -85,7 +96,9 @@ public static class VisitTeamEquipmentsEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitTeamEquipments", "Activate")
         .WithName("ActivateVisitTeamEquipment")
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -97,7 +110,9 @@ public static class VisitTeamEquipmentsEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitTeamEquipments", "Deactivate")
         .WithName("DeactivateVisitTeamEquipment")
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -109,7 +124,9 @@ public static class VisitTeamEquipmentsEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitTeamEquipments", "Delete")
         .WithName("DeleteVisitTeamEquipment")
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -130,7 +147,9 @@ public static class VisitTeamEquipmentsEndpoint
         .WithSummary("Swagger.Endpoint.VisitTeamEquipment.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

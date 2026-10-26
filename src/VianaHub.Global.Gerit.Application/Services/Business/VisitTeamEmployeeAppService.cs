@@ -51,7 +51,7 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
         return _mapper.Map<IEnumerable<VisitTeamEmployeeResponse>>(entities);
     }
 
-    public async Task<VisitTeamEmployeeDetailResponse> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
+    public async Task<VisitTeamEmployeeDetailResponse?> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted || entity.VisitTeamId != visitTeamId)
@@ -170,7 +170,7 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int visitTeamId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int visitTeamId, IFormFile? file, CancellationToken ct)
     {
         _notify.Add(_localization.GetMessage("Application.Service.VisitTeamEmployee.BulkUpload.NotImplemented"), 501);
         return false;

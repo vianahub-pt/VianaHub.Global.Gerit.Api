@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.ReadModels;
@@ -16,15 +16,12 @@ public class EmployeeDataRepository : IEmployeeDataRepository
         _context = context;
     }
 
-    public async Task<EmployeeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<EmployeeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<EmployeeEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EmployeeEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(EmployeeEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -32,11 +29,8 @@ public class EmployeeDataRepository : IEmployeeDataRepository
     {
         return await _context.Set<EmployeeEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EmployeeEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(EmployeeEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted).OrderBy(x => x.Name).ToListAsync(ct);
     }
 
@@ -44,18 +38,15 @@ public class EmployeeDataRepository : IEmployeeDataRepository
     {
         var query = _context.Set<EmployeeEntity>()
             .AsNoTracking()
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.Translations)
-            .Include(x => x.StatusDefinition)
-                .ThenInclude(x => x.StatusDomain)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EmployeeEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.Translations)}")
+            .Include($"{nameof(EmployeeEntity.StatusDefinition)}.{nameof(StatusDefinitionEntity.StatusDomain)}.{nameof(StatusDomainEntity.Translations)}")
             .Where(x => !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => EF.Functions.Like(x.Name.ToLower(), $"%{search}%") || 
-                                     (x.Email != null && EF.Functions.Like(x.Email.ToLower(), $"%{search}%")));
+            query = query.Where(x => (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%")) ||
+                                     (x.Email != null && (x.Email != null && EF.Functions.Like(x.Email.ToLower(), $"%{search}%"))));
         }
 
         if (request.IsActive.HasValue)
@@ -85,7 +76,7 @@ public class EmployeeDataRepository : IEmployeeDataRepository
         return await _context.Set<EmployeeEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByEmailAsync(int tenantId, string email, CancellationToken ct)
+    public async Task<bool> ExistsByEmailAsync(int tenantId, string? email, CancellationToken ct)
     {
         return await _context.Set<EmployeeEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Email == email && !x.IsDeleted, ct);
     }

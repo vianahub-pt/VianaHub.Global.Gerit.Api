@@ -7,9 +7,9 @@ using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 namespace VianaHub.Global.Gerit.Application.Services.Common;
 
 /// <summary>
-/// ServiÁo respons·vel pela validaÁ„o de arquivos de upload.
-/// Centraliza todas as regras de validaÁ„o para garantir consistÍncia e reusabilidade em toda a aplicaÁ„o.
-/// Implementa os princÌpios de Single Responsibility e DRY (Don't Repeat Yourself).
+/// Servi√ßo respons√°vel pela valida√ß√£o de arquivos de upload.
+/// Centraliza todas as regras de valida√ß√£o para garantir consist√™ncia e reusabilidade em toda a aplica√ß√£o.
+/// Implementa os princ√≠pios de Single Responsibility e DRY (Don't Repeat Yourself).
 /// </summary>
 public class FileValidationService : IFileValidationService
 {
@@ -23,13 +23,13 @@ public class FileValidationService : IFileValidationService
     }
 
     /// <summary>
-    /// Valida um arquivo de upload baseado em regras de seguranÁa e formato.
+    /// Valida um arquivo de upload baseado em regras de seguran√ßa e formato.
     /// </summary>
     /// <param name="file">Arquivo a ser validado.</param>
-    /// <returns>True se o arquivo È v·lido, False caso contr·rio.</returns>
-    public bool ValidateFile(IFormFile file)
+    /// <returns>True se o arquivo √© v√°lido, False caso contr√°rio.</returns>
+    public bool ValidateFile([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] IFormFile? file)
     {
-        // Valida se o arquivo existe e n„o est· vazio
+        // Valida se o arquivo existe e n√£o est√° vazio
         if (file == null || file.Length == 0)
         {
             _notify.Add(_localization.GetMessage("Application.Service.File.ValidateFile.InvalidFile"), 400);
@@ -50,7 +50,7 @@ public class FileValidationService : IFileValidationService
             return false;
         }
 
-        // Valida extens„o
+        // Valida extens√£o
         if (!file.FileName.HasValidCsvExtension())
         {
             _notify.Add(_localization.GetMessage("Application.Service.File.ValidateFile.OnlyCsvAllowed"), 400);

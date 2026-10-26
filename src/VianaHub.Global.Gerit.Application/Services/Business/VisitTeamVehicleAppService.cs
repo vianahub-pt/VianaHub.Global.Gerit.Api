@@ -52,7 +52,7 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
         return _mapper.Map<IEnumerable<VisitTeamVehicleResponse>>(entities);
     }
 
-    public async Task<VisitTeamVehicleDetailResponse> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
+    public async Task<VisitTeamVehicleDetailResponse?> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted || entity.VisitTeamId != visitTeamId)
@@ -138,7 +138,7 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int visitTeamId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int visitTeamId, IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -156,7 +156,7 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
         return await ProcessBulkItemsAsync(visitTeamId, items, ct);
     }
 
-    private List<BulkUploadVisitTeamVehicleItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadVisitTeamVehicleItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

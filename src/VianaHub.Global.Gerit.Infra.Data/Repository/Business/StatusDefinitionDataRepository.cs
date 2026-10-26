@@ -11,6 +11,10 @@ public class StatusDefinitionDataRepository : IStatusDefinitionDataRepository
 {
     private readonly GeritDbContext _context;
 
+    // Consulta a tradução diretamente: o índice único também reserva nomes de pais removidos.
+    public Task<bool> ExistsByTranslationAndDomainAsync(int statusDomainId, string? languageCode, string? name, CancellationToken ct) =>
+        _context.Set<StatusDefinitionTranslationsEntity>().AnyAsync(x => x.StatusDomainId == statusDomainId && x.LanguageCode == languageCode && x.Name == name, ct);
+
     public StatusDefinitionDataRepository(GeritDbContext context)
     {
         _context = context;
@@ -29,7 +33,7 @@ public class StatusDefinitionDataRepository : IStatusDefinitionDataRepository
             .ToListAsync(ct);
     }
 
-    public async Task<StatusDefinitionEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<StatusDefinitionEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<StatusDefinitionEntity>()
             .AsNoTracking()
@@ -54,7 +58,7 @@ public class StatusDefinitionDataRepository : IStatusDefinitionDataRepository
         {
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
-                EF.Functions.Like(x.Code.ToLower(), $"%{search}%"));
+                (x.Code != null && EF.Functions.Like(x.Code.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -89,7 +93,7 @@ public class StatusDefinitionDataRepository : IStatusDefinitionDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByCodeAndDomainAsync(int statusDomainId, string code, CancellationToken ct)
+    public async Task<bool> ExistsByCodeAndDomainAsync(int statusDomainId, string? code, CancellationToken ct)
     {
         return await _context.Set<StatusDefinitionEntity>()
             .AsNoTracking()

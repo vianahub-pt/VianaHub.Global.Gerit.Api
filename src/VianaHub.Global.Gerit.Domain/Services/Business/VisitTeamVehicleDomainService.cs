@@ -21,7 +21,7 @@ public class VisitTeamVehicleDomainService : IVisitTeamVehicleDomainService
         _notify = notify;
     }
 
-    public async Task<VisitTeamVehicleEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitTeamVehicleEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }

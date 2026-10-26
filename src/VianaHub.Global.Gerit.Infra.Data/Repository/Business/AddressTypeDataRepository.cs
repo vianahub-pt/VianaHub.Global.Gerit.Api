@@ -9,6 +9,10 @@ namespace VianaHub.Global.Gerit.Infra.Data.Repository.Business;
 
 public class AddressTypeDataRepository : IAddressTypeDataRepository
 {
+    public Task<bool> ExistsByTranslationAsync(string? languageCode, string? name, CancellationToken ct) => _context.Set<AddressTypeTranslationsEntity>().AnyAsync(x => x.LanguageCode == languageCode && x.Name == name, ct);
+
+    public Task<bool> ExistsByCodeAsync(string? code, CancellationToken ct) => _context.Set<AddressTypeEntity>().AnyAsync(x => x.Code == code, ct);
+
     private readonly GeritDbContext _context;
 
     public AddressTypeDataRepository(GeritDbContext context)
@@ -25,7 +29,7 @@ public class AddressTypeDataRepository : IAddressTypeDataRepository
             .OrderBy(x => x.Code)
             .ToListAsync(ct);
     }
-    public async Task<AddressTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<AddressTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<AddressTypeEntity>()
             .AsNoTracking()
@@ -42,10 +46,10 @@ public class AddressTypeDataRepository : IAddressTypeDataRepository
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => 
+            query = query.Where(x =>
                 x.Translations.Any(t =>
-                    EF.Functions.Like(t.Name.ToLower(), $"%{search}%") ||
-                    (t.Description != null && EF.Functions.Like(t.Description.ToLower(), $"%{search}%"))
+                    (t.Name != null && EF.Functions.Like(t.Name.ToLower(), $"%{search}%")) ||
+                    (t.Description != null && (t.Description != null && EF.Functions.Like(t.Description.ToLower(), $"%{search}%")))
                 )
             );
         }
@@ -80,7 +84,7 @@ public class AddressTypeDataRepository : IAddressTypeDataRepository
             .AsNoTracking()
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
-    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(string? name, CancellationToken ct)
     {
         return await _context.Set<AddressTypeEntity>()
             .AsNoTracking()

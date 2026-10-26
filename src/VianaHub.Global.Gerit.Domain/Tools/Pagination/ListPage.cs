@@ -1,8 +1,8 @@
-﻿namespace VianaHub.Global.Gerit.Domain.Tools.Pagination;
+namespace VianaHub.Global.Gerit.Domain.Tools.Pagination;
 
 public class ListPage<T>
 {
-    public IEnumerable<T> Items { get; set; }
+    public IEnumerable<T> Items { get; set; } = Array.Empty<T>();
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
     public int TotalItems { get; set; }

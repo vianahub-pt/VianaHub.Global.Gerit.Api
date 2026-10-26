@@ -26,7 +26,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         // Construtor protegido para EF Core
         protected ClientContactPersonsEntity() { }
 
-        public ClientContactPersonsEntity(int tenantId, int clientId, string name, string phoneNumber, string cellPhoneNumber, bool isWhatsapp, string email, bool isPrimary, int createdBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
+        public ClientContactPersonsEntity(int tenantId, int clientId, string? name, string? phoneNumber, string? cellPhoneNumber, bool isWhatsapp, string? email, bool isPrimary, int createdBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
         {
             TenantId = tenantId;
             ClientId = clientId;
@@ -45,7 +45,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             CreatedAt = DateTime.UtcNow;
         }
 
-        public void Update(string name, string phoneNumber, string cellPhoneNumber, bool isWhatsapp, string email, bool isPrimary, int modifiedBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
+        public void Update(string? name, string? phoneNumber, string? cellPhoneNumber, bool isWhatsapp, string? email, bool isPrimary, int modifiedBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
         {
             Name = name;
             PhoneNumber = phoneNumber;
@@ -97,7 +97,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             IsActive = false;
             IsDeleted = true;
             ModifiedBy = modifiedBy;
-                ModifiedAt = DateTime.UtcNow;
+            ModifiedAt = DateTime.UtcNow;
         }
     }
 }

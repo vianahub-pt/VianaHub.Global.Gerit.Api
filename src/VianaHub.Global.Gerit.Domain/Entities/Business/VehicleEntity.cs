@@ -21,8 +21,8 @@ public class VehicleEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public StatusDefinitionEntity StatusDefinition { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public StatusDefinitionEntity? StatusDefinition { get; private set; }
 
     // Construtor protegido para o EF Core
     protected VehicleEntity() { }
@@ -30,7 +30,7 @@ public class VehicleEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Veículo
     /// </summary>
-    public VehicleEntity(int tenantId, int statusDefinitionId, int statusDomainId, string plate, string brand, string model, int year, string? color, string? fuelType, int createdBy)
+    public VehicleEntity(int tenantId, int statusDefinitionId, int statusDomainId, string? plate, string? brand, string? model, int year, string? color, string? fuelType, int createdBy)
     {
         TenantId = tenantId;
         StatusDefinitionId = statusDefinitionId;
@@ -47,7 +47,7 @@ public class VehicleEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int statusDefinitionId, int statusDomainId, string plate, string brand, string model, int year, string? color, string? fuelType, int modifiedBy)
+    public void Update(int statusDefinitionId, int statusDomainId, string? plate, string? brand, string? model, int year, string? color, string? fuelType, int modifiedBy)
     {
         StatusDefinitionId = statusDefinitionId;
         StatusDomainId = statusDomainId;

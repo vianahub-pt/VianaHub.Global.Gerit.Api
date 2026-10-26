@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.PartyType;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -34,7 +35,9 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "GetAll")
         .WithName("GetPartyTypes")
         .WithSummary("Swagger.Endpoint.PartyType.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<PartyTypeResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async (
@@ -49,7 +52,10 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "GetBy")
         .WithName("GetPartyTypeById")
         .WithSummary("Swagger.Endpoint.PartyType.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<PartyTypeDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -65,7 +71,9 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "GetPaged")
         .WithName("GetPartyTypesPaged")
         .WithSummary("Swagger.Endpoint.PartyType.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<PartyTypeResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async (
@@ -80,6 +88,8 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "Create")
         .WithName("CreatePartyType")
         .WithSummary("Swagger.Endpoint.PartyType.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -99,7 +109,10 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "Update")
         .WithName("UpdatePartyType")
         .WithSummary("Swagger.Endpoint.PartyType.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -117,7 +130,10 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "Activate")
         .WithName("ActivatePartyType")
         .WithSummary("Swagger.Endpoint.PartyType.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -133,7 +149,10 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "Deactivate")
         .WithName("DeactivatePartyType")
         .WithSummary("Swagger.Endpoint.PartyType.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -149,7 +168,10 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "Delete")
         .WithName("DeletePartyType")
         .WithSummary("Swagger.Endpoint.PartyType.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -166,6 +188,9 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "CreateTranslation")
         .WithName("CreatePartyTypeTranslation")
         .WithSummary("Swagger.Endpoint.PartyType.CreateTranslation.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
@@ -185,7 +210,10 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "UpdateTranslation")
         .WithName("UpdatePartyTypeTranslation")
         .WithSummary("Swagger.Endpoint.PartyType.UpdateTranslation.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -203,7 +231,10 @@ public static class PartyTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "PartyTypes", "DeleteTranslation")
         .WithName("DeletePartyTypeTranslation")
         .WithSummary("Swagger.Endpoint.PartyType.DeleteTranslation.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

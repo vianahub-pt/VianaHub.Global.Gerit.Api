@@ -7,7 +7,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Business;
 
 public interface IVisitTeamEmployeeAppService
 {
-    Task<VisitTeamEmployeeDetailResponse> GetByIdAsync(int visitTeamId, int id, CancellationToken ct);
+    Task<VisitTeamEmployeeDetailResponse?> GetByIdAsync(int visitTeamId, int id, CancellationToken ct);
     Task<IEnumerable<VisitTeamEmployeeResponse>> GetAllAsync(int visitTeamId, CancellationToken ct);
     Task<IEnumerable<VisitTeamEmployeeResponse>> GetActiveAsync(int visitTeamId, CancellationToken ct);
     Task<ListPageResponse<VisitTeamEmployeeResponse>> GetPagedAsync(int visitTeamId, PagedFilterRequest request, CancellationToken ct);
@@ -16,5 +16,5 @@ public interface IVisitTeamEmployeeAppService
     Task<bool> ActivateAsync(int visitTeamId, int id, CancellationToken ct);
     Task<bool> DeactivateAsync(int visitTeamId, int id, CancellationToken ct);
     Task<bool> DeleteAsync(int visitTeamId, int id, CancellationToken ct);
-    Task<bool> BulkUploadAsync(int visitTeamId, IFormFile file, CancellationToken ct);
+    Task<bool> BulkUploadAsync(int visitTeamId, IFormFile? file, CancellationToken ct);
 }

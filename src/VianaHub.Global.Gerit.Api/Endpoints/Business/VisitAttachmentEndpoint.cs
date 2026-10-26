@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.VisitAttachment;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -25,7 +26,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "GetAll")
         .WithName("GetVisitAttachments")
         .WithSummary("Swagger.Endpoint.VisitAttachment.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<VisitAttachmentResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{visitId}/attachments/{id}", async ([FromRoute] int visitId, [FromRoute] int id, [FromServices] IVisitAttachmentAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -36,7 +39,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "GetBy")
         .WithName("GetVisitAttachmentById")
         .WithSummary("Swagger.Endpoint.VisitAttachment.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<VisitAttachmentDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -48,7 +53,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "GetPaged")
         .WithName("GetVisitAttachmentsPaged")
         .WithSummary("Swagger.Endpoint.VisitAttachment.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<VisitAttachmentResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{visitId}/attachments/primary", async ([FromRoute] int visitId, [FromServices] IVisitAttachmentAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -59,7 +66,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "GetBy")
         .WithName("GetPrimaryVisitAttachment")
         .WithSummary("Swagger.Endpoint.VisitAttachment.GetPrimaryByVisitId.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<VisitAttachmentResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -71,6 +80,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "Create")
         .WithName("CreateVisitAttachment")
         .WithSummary("Swagger.Endpoint.VisitAttachment.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -84,7 +96,10 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "Update")
         .WithName("UpdateVisitAttachment")
         .WithSummary("Swagger.Endpoint.VisitAttachment.Update.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateVisitAttachmentRequest>();
@@ -97,7 +112,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "SetPrimary")
         .WithName("SetVisitAttachmentAsPrimary")
         .WithSummary("Swagger.Endpoint.VisitAttachment.SetAsPrimary.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -109,7 +126,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "Activate")
         .WithName("ActivateVisitAttachment")
         .WithSummary("Swagger.Endpoint.VisitAttachment.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -121,7 +140,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "Deactivate")
         .WithName("DeactivateVisitAttachment")
         .WithSummary("Swagger.Endpoint.VisitAttachment.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -133,7 +154,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "Delete")
         .WithName("DeleteVisitAttachment")
         .WithSummary("Swagger.Endpoint.VisitAttachment.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -146,7 +169,9 @@ public static class VisitAttachmentEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "VisitAttachments", "GetBy")
         .WithName("GetVisitAttachmentByPublicId")
         .WithSummary("Swagger.Endpoint.VisitAttachment.GetByPublicId.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<VisitAttachmentResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

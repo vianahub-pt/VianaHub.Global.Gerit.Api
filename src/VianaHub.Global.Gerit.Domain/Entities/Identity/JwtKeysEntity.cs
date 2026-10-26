@@ -45,12 +45,12 @@ public class JwtKeysEntity : Entity
 
     public JwtKeysEntity(
         int tenantId,
-        string publicKey,
-        string privateKeyEncrypted,
+        string? publicKey,
+        string? privateKeyEncrypted,
         int createdBy,
-        string algorithm = "RS256",
+        string? algorithm = "RS256",
         int keySize = 2048,
-        string keyType = "RSA",
+        string? keyType = "RSA",
         int rotationPolicyDays = 90,
         int overlapPeriodDays = 7,
         int maxTokenLifetimeMinutes = 60) : base()
@@ -104,7 +104,7 @@ public class JwtKeysEntity : Entity
         ModifiedAt = DateTime.UtcNow;
     }
 
-    public void Revoke(string reason, int modifiedBy)
+    public void Revoke(string? reason, int modifiedBy)
     {
         RevokedAt = DateTime.UtcNow;
         RevokedReason = reason;
@@ -144,7 +144,7 @@ public class JwtKeysEntity : Entity
         ModifiedAt = DateTime.UtcNow;
     }
 
-    public void SetPlainPrivateKey(string plainPrivateKey)
+    public void SetPlainPrivateKey(string? plainPrivateKey)
     {
         PlainPrivateKey = plainPrivateKey;
     }

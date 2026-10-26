@@ -22,7 +22,7 @@ public class UserEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
 
     private readonly List<UserRolesEntity> _userRoles = new();
     public IReadOnlyCollection<UserRolesEntity> UserRoles => _userRoles.AsReadOnly();
@@ -33,7 +33,7 @@ public class UserEntity : Entity
     /// <summary>
     /// Construtor para cria��o de um novo usu�rio
     /// </summary>
-    public UserEntity(int tenantId, string name, string email, string passwordHash, string? phoneNumber, int createdBy)
+    public UserEntity(int tenantId, string? name, string? email, string? passwordHash, string? phoneNumber, int createdBy)
     {
         TenantId = tenantId;
         Name = name;
@@ -48,7 +48,7 @@ public class UserEntity : Entity
         CreatedBy = createdBy;
     }
 
-    public void Update(string name, string? phoneNumber, int modifiedBy)
+    public void Update(string? name, string? phoneNumber, int modifiedBy)
     {
         Name = name;
         PhoneNumber = phoneNumber;
@@ -56,7 +56,7 @@ public class UserEntity : Entity
         ModifiedAt = DateTime.UtcNow;
     }
 
-    public void UpdatePassword(string passwordHash, int modifiedBy)
+    public void UpdatePassword(string? passwordHash, int modifiedBy)
     {
         PasswordHash = passwordHash;
         ModifiedBy = modifiedBy;

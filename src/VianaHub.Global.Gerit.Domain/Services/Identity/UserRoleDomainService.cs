@@ -19,7 +19,7 @@ public class UserRoleDomainService : IUserRoleDomainService
     {
         return await _repository.GetAllAsync(tenantId, ct);
     }
-    public async Task<UserRolesEntity> GetByIdAsync(int tenantId, int userId, int roleId, CancellationToken ct)
+    public async Task<UserRolesEntity?> GetByIdAsync(int tenantId, int userId, int roleId, CancellationToken ct)
     {
         return await _repository.GetByIdAsync(tenantId, userId, roleId, ct);
     }

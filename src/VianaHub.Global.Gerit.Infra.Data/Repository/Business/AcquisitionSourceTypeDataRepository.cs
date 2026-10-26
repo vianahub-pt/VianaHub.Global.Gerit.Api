@@ -9,6 +9,10 @@ namespace VianaHub.Global.Gerit.Infra.Data.Repository.Business;
 
 public class AcquisitionSourceTypeDataRepository : IAcquisitionSourceTypeDataRepository
 {
+    public Task<bool> ExistsByTranslationAsync(string? languageCode, string? name, CancellationToken ct) => _context.Set<AcquisitionSourceTypeTranslationsEntity>().AnyAsync(x => x.LanguageCode == languageCode && x.Name == name, ct);
+
+    public Task<bool> ExistsByCodeAsync(string? code, CancellationToken ct) => _context.Set<AcquisitionSourceTypeEntity>().IgnoreQueryFilters().AnyAsync(x => x.Code == code, ct);
+
     private readonly GeritDbContext _context;
 
     public AcquisitionSourceTypeDataRepository(GeritDbContext context)
@@ -26,7 +30,7 @@ public class AcquisitionSourceTypeDataRepository : IAcquisitionSourceTypeDataRep
             .ToListAsync(ct);
     }
 
-    public async Task<AcquisitionSourceTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<AcquisitionSourceTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<AcquisitionSourceTypeEntity>()
             .AsNoTracking()
@@ -46,8 +50,8 @@ public class AcquisitionSourceTypeDataRepository : IAcquisitionSourceTypeDataRep
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
                 x.Translations.Any(t =>
-                    EF.Functions.Like(t.Name.ToLower(), $"%{search}%") ||
-                    (t.Description != null && EF.Functions.Like(t.Description.ToLower(), $"%{search}%"))
+                    (t.Name != null && EF.Functions.Like(t.Name.ToLower(), $"%{search}%")) ||
+                    (t.Description != null && (t.Description != null && EF.Functions.Like(t.Description.ToLower(), $"%{search}%")))
                 )
             );
         }
@@ -82,7 +86,7 @@ public class AcquisitionSourceTypeDataRepository : IAcquisitionSourceTypeDataRep
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(string? name, CancellationToken ct)
     {
         return await _context.Set<AcquisitionSourceTypeEntity>()
             .AsNoTracking()
