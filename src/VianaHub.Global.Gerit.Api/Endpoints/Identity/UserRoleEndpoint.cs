@@ -22,7 +22,7 @@ public static class UserRoleEndpoint
             var result = await appService.GetAllAsync(ct);
             return notify.CustomResponse(result, 200);
         })
-        .CustomAuthorize("Admin,Manager", "UserRoles", "GetAll")
+        .CustomAuthorize("Admin,BackOffice,Manager", "UserRoles", "GetAll")
         .WithName("GetAllUserRoles")
         .WithSummary("Swagger.Endpoint.UserRole.GetAll.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
@@ -35,7 +35,7 @@ public static class UserRoleEndpoint
             var result = await appService.GetByIdAsync(userId, roleId, ct);
             return notify.CustomResponse(result, result != null ? 200 : 404);
         })
-        .CustomAuthorize("Admin,Manager", "UserRoles", "GetBy")
+        .CustomAuthorize("Admin,BackOffice,Manager", "UserRoles", "GetBy")
         .WithName("GetUserRoleById")
         .WithSummary("Swagger.Endpoint.UserRole.GetById.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
@@ -49,7 +49,7 @@ public static class UserRoleEndpoint
             var result = await appService.GetByUserAsync(userId, ct);
             return notify.CustomResponse(result, 200);
         })
-        .CustomAuthorize("Admin,Manager,User", "UserRoles", "GetBy")
+        .CustomAuthorize("Admin,BackOffice,Manager,User", "UserRoles", "GetBy")
         .WithName("GetUserRolesByUser")
         .WithSummary("Swagger.Endpoint.UserRole.GetByUser.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
@@ -62,7 +62,7 @@ public static class UserRoleEndpoint
             var result = await appService.GetByRoleAsync(roleId, ct);
             return notify.CustomResponse(result, 200);
         })
-        .CustomAuthorize("Admin,Manager,User", "UserRoles", "GetBy")
+        .CustomAuthorize("Admin,BackOffice,Manager,User", "UserRoles", "GetBy")
         .WithName("GetUserRolesByRole")
         .WithSummary("Swagger.Endpoint.UserRole.GetByRole.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
@@ -75,7 +75,7 @@ public static class UserRoleEndpoint
             var result = await appService.CreateAsync(request, ct);
             return notify.CustomResponse(result == null ? null : new GenericResponse { Id = result.Id }, 201);
         })
-        .CustomAuthorize("Admin,Manager", "UserRoles", "Create")
+        .CustomAuthorize("Admin,BackOffice,Manager", "UserRoles", "Create")
         .WithName("CreateUserRole")
         .WithSummary("Swagger.Endpoint.UserRole.Create.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
@@ -91,7 +91,7 @@ public static class UserRoleEndpoint
             await appService.DeleteAsync(userId, roleId, ct);
             return notify.CustomResponse();
         })
-        .CustomAuthorize("Admin,Manager", "UserRoles", "Delete")
+        .CustomAuthorize("Admin,BackOffice,Manager", "UserRoles", "Delete")
         .WithName("DeleteUserRole")
         .WithSummary("Swagger.Endpoint.UserRole.Delete.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
