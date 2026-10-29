@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
@@ -15,9 +15,5 @@ public class ActivateActionValidator : AbstractValidator<ActionEntity>
         RuleFor(x => x.IsDeleted)
             .Must(x => !x)
             .WithMessage(localization.GetMessage("Domain.ActionEntity.CannotActivateDeleted"));
-
-        RuleFor(x => x.IsActive)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.ActionEntity.AlreadyActive"));
     }
 }
