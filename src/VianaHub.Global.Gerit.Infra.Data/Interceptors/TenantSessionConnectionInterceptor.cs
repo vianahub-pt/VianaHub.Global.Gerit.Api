@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System.Data.Common;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
+using VianaHub.Global.Gerit.Domain.Helpers;
 
 namespace VianaHub.Global.Gerit.Infra.Data.Interceptors;
 
@@ -37,12 +38,16 @@ public class TenantSessionConnectionInterceptor : DbConnectionInterceptor
         ConnectionEndEventData eventData,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RlsConnectionOpened", LogValueSanitizer.Sanitize(_httpContextAccessor.HttpContext?.TraceIdentifier));
         await base.ConnectionOpenedAsync(connection, eventData, cancellationToken);
 
         if (connection is not SqlConnection)
             return;
 
         var tenantId = ResolvetenantId();
+        _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RlsConnectionTenantResolved TenantId={TenantId} Source={Source}",
+            LogValueSanitizer.Sanitize(_httpContextAccessor.HttpContext?.TraceIdentifier), tenantId,
+            tenantId is null ? "unresolved" : _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated == true ? "authenticated JWT claim" : "IRequestTenantContext");
 
         if (tenantId is null)
         {
@@ -113,7 +118,11 @@ public class TenantSessionConnectionInterceptor : DbConnectionInterceptor
             param.Value = tenantId;
             cmd.Parameters.Add(param);
 
+            _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RlsConnectionSessionSetting TenantId={TenantId}",
+                LogValueSanitizer.Sanitize(_httpContextAccessor.HttpContext?.TraceIdentifier), tenantId);
             await cmd.ExecuteNonQueryAsync(cancellationToken);
+            _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RlsConnectionSessionSet TenantId={TenantId}",
+                LogValueSanitizer.Sanitize(_httpContextAccessor.HttpContext?.TraceIdentifier), tenantId);
 
             _logger.LogDebug("[RLS] SESSION_CONTEXT TenantId={TenantId} definido com sucesso.", tenantId);
         }

@@ -57,11 +57,17 @@ public class AuthorizationFilter : IEndpointFilter
         var httpContext = context.HttpContext;
         var user = httpContext.User;
 
+        _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=CustomAuthorizeEntered Path={Path} IsAuthenticated={IsAuthenticated} Roles={Roles} Resource={Resource} Action={Action}",
+            LogValueSanitizer.Sanitize(httpContext.TraceIdentifier), LogValueSanitizer.Sanitize(httpContext.Request.Path.Value), user.Identity?.IsAuthenticated,
+            LogValueSanitizer.Sanitize(string.Join(",", user.Claims.Where(c => c.Type == ClaimTypes.Role || c.Type == "role").Select(c => c.Value))),
+            LogValueSanitizer.Sanitize(_resource), LogValueSanitizer.Sanitize(_action));
+
         _logger.LogDebug("AuthorizationFilter executando para Resource: {Resource}, ActionEntity: {ActionEntity}", _resource, _action);
 
         // Verificar se o usuário está autenticado
         if (!user.Identity?.IsAuthenticated ?? true)
         {
+            _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=CustomAuthorizeRejected Reason=Unauthenticated Status=401", LogValueSanitizer.Sanitize(httpContext.TraceIdentifier));
             _logger.LogWarning("Acesso negado: Usuário não autenticado");
             return Results.Unauthorized();
         }
@@ -91,6 +97,7 @@ public class AuthorizationFilter : IEndpointFilter
         // Verificar se o usuário possui alguma das roles permitidas (se configurado)
         if (_allowedRoles.Any() && !_allowedRoles.Any(allowedRole => userRoles.Contains(allowedRole)))
         {
+            _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=CustomAuthorizeRejected Reason=Roles Status=403", LogValueSanitizer.Sanitize(httpContext.TraceIdentifier));
             _logger.LogWarning("Acesso negado: Usuário {UserId} não possui nenhuma das roles permitidas. " +
                 "Roles do usuário: [{UserRoles}], Roles permitidas: [{AllowedRoles}]", LogValueSanitizer.Sanitize(userId), LogValueSanitizer.Sanitize(string.Join(", ", userRoles)), LogValueSanitizer.Sanitize(string.Join(", ", _allowedRoles)));
 
@@ -120,6 +127,7 @@ public class AuthorizationFilter : IEndpointFilter
 
             if (!hasPermission)
             {
+                _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=CustomAuthorizeRejected Reason=Permission Status=403", LogValueSanitizer.Sanitize(httpContext.TraceIdentifier));
                 _logger.LogWarning("Acesso negado: Usuário {UserId} não tem permissão para {ActionEntity} em {Resource}", LogValueSanitizer.Sanitize(userId), _action, _resource);
 
                 var notify = httpContext.RequestServices.GetService<INotify>();
@@ -140,6 +148,7 @@ public class AuthorizationFilter : IEndpointFilter
         }
 
         _logger.LogInformation("Autorização concedida para usuário {UserId}", LogValueSanitizer.Sanitize(userId));
+        _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=CustomAuthorizePassed", LogValueSanitizer.Sanitize(httpContext.TraceIdentifier));
         return await next(context);
     }
 

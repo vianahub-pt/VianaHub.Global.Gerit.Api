@@ -1,6 +1,7 @@
 using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.ReadModels;
@@ -13,11 +14,13 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
 {
     private readonly GeritDbContext _context;
     private readonly ILogger<JwtKeyDataRepository> _logger;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
 
-    public JwtKeyDataRepository(GeritDbContext context, ILogger<JwtKeyDataRepository> logger)
+    public JwtKeyDataRepository(GeritDbContext context, ILogger<JwtKeyDataRepository> logger, IHttpContextAccessor? httpContextAccessor = null)
     {
         _context = context;
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<JwtKeysEntity?> GetByIdAsync(int id, CancellationToken ct)
@@ -40,8 +43,17 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
 
     public async Task<IEnumerable<JwtKeysEntity>> GetAllAsync(CancellationToken ct)
     {
-        return await _context.Set<JwtKeysEntity>().AsNoTracking()
+        var requestId = LogValueSanitizer.Sanitize(_httpContextAccessor?.HttpContext?.TraceIdentifier);
+        _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=JwtKeysQueryStarted", requestId);
+        var results = await _context.Set<JwtKeysEntity>().AsNoTracking()
             .Where(x => !x.IsDeleted).OrderByDescending(x => x.CreatedAt).ToListAsync(ct);
+        _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=JwtKeysQueryCompleted Count={Count}", requestId, results.Count);
+        foreach (var key in results)
+        {
+            _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=JwtKeysQueryResult TenantId={TenantId} KeyId={KeyId} IsActive={IsActive} IsDeleted={IsDeleted} RevokedAtPresent={RevokedAtPresent} ExpiresAt={ExpiresAt} ValidForValidation={ValidForValidation}",
+                requestId, key.TenantId, key.KeyId, key.IsActive, key.IsDeleted, key.RevokedAt.HasValue, key.ExpiresAt, key.IsValidForValidation());
+        }
+        return results;
     }
 
     public async Task<IEnumerable<JwtKeysEntity>> GetByTenantAsync(int tenantId, CancellationToken ct)

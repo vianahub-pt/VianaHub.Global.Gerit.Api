@@ -62,6 +62,11 @@ public static class JwtSetup
                 // Resolver chaves de assinatura dinamicamente do banco de dados
                 IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
                 {
+                    var httpContext = new HttpContextAccessor().HttpContext;
+                    httpContext?.RequestServices.GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("VianaHub.Global.Gerit.AuthTrace")
+                        .LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=IssuerSigningKeyResolver Kid={Kid} KeysReturned={KeysReturned}",
+                            LogValueSanitizer.Sanitize(httpContext.TraceIdentifier), LogValueSanitizer.Sanitize(kid), 0);
                     // NOTA: Chaves serão resolvidas no evento OnMessageReceived
                     // que tem acesso ao HttpContext e IServiceProvider
                     return Array.Empty<SecurityKey>();
@@ -74,6 +79,13 @@ public static class JwtSetup
                 OnMessageReceived = async context =>
                 {
                     var path = context.HttpContext.Request.Path;
+                    var trace = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("VianaHub.Global.Gerit.AuthTrace");
+                    var requestId = LogValueSanitizer.Sanitize(context.HttpContext.TraceIdentifier);
+                    trace.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=MessageReceived Path={Path} Method={Method} AuthorizationPresent={AuthorizationPresent} BearerPresent={BearerPresent}",
+                        requestId, LogValueSanitizer.Sanitize(path.Value), LogValueSanitizer.Sanitize(context.Request.Method),
+                        context.Request.Headers.ContainsKey("Authorization"),
+                        context.Request.Headers.Authorization.FirstOrDefault()?.StartsWith("Bearer ") == true);
 
                     // 🔥 IGNORAR HANGFIRE
                     if (path.StartsWithSegments("/hangfire"))
@@ -120,13 +132,18 @@ public static class JwtSetup
 
                         if (!string.IsNullOrWhiteSpace(rawToken))
                         {
+                            LogTokenMetadata(rawToken, trace, requestId);
                             var requestTenantContext = context.HttpContext.RequestServices
                                 .GetRequiredService<IRequestTenantContext>();
 
                             var tenantId = ExtractTenantIdFromRawToken(rawToken, logger);
+                            trace.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=TenantExtracted TenantId={TenantId} Extracted={Extracted}",
+                                requestId, tenantId, tenantId.HasValue);
                             if (tenantId.HasValue)
                             {
                                 requestTenantContext.SetTenantId(tenantId.Value);
+                                trace.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RequestTenantContextSet TenantId={TenantId} ContextTenantId={ContextTenantId}",
+                                    requestId, tenantId.Value, requestTenantContext.TenantId);
                                 logger.LogDebug(
                                     "[JWT] TenantId={TenantId} extraído do token (pré-validação) e definido no IRequestTenantContext",
                                     tenantId.Value);
@@ -141,8 +158,16 @@ public static class JwtSetup
                         // Buscar chaves do banco — agora com SESSION_CONTEXT corretamente
                         // definido pelos interceptores EF Core.
                         // ---------------------------------------------------------------
+                        trace.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=JwtKeysLookupStarted", requestId);
                         var allKeys = await keyRepository.GetAllAsync(default);
+                        trace.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=JwtKeysLookupCompleted Count={Count}", requestId, allKeys.Count());
+                        foreach (var key in allKeys)
+                        {
+                            trace.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=JwtKeyLoaded TenantId={TenantId} KeyId={KeyId} IsActive={IsActive} IsDeleted={IsDeleted} RevokedAtPresent={RevokedAtPresent} ExpiresAt={ExpiresAt} ValidForValidation={ValidForValidation}",
+                                requestId, key.TenantId, key.KeyId, key.IsActive, key.IsDeleted, key.RevokedAt.HasValue, key.ExpiresAt, key.IsValidForValidation());
+                        }
                         var keys = allKeys.Where(k => k.IsValidForValidation());
+                        trace.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=ValidKeys Count={Count}", requestId, keys.Count());
 
                         if (!keys.Any())
                         {
@@ -174,6 +199,9 @@ public static class JwtSetup
                         .Where(k => k != null)
                         .ToList();
 
+                        trace.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=SecurityKeys Count={Count} KeyIds={KeyIds}",
+                            requestId, securityKeys.Count, LogValueSanitizer.Sanitize(string.Join(",", securityKeys.Select(k => k!.KeyId))));
+
                         if (!securityKeys.Any())
                         {
                             logger.LogError("❌ Nenhuma chave JWT válida encontrada após processamento");
@@ -191,6 +219,8 @@ public static class JwtSetup
                     }
                     catch (Exception ex)
                     {
+                        trace.LogWarning("[AUTH-TRACE] RequestId={RequestId} Step=JwtKeysLookupFailed ExceptionType={ExceptionType} Message={Message}",
+                            requestId, ex.GetType().FullName, SafeDiagnosticMessage(ex.Message));
                         logger.LogError("❌ Erro ao carregar chaves JWT do banco de dados | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
                         var msg = localization?.GetMessage("Api.Configuration.Jwt.FailedToLoadSigningKeys") ?? "Api.Configuration.Jwt.FailedToLoadSigningKeys";
                         context.Fail(msg);
@@ -199,6 +229,12 @@ public static class JwtSetup
 
                 OnAuthenticationFailed = context =>
                 {
+                    context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("VianaHub.Global.Gerit.AuthTrace")
+                        .LogWarning("[AUTH-TRACE] RequestId={RequestId} Step=AuthenticationFailed Path={Path} ExceptionType={ExceptionType} Message={Message} InnerExceptionType={InnerExceptionType} InnerMessage={InnerMessage}",
+                            LogValueSanitizer.Sanitize(context.HttpContext.TraceIdentifier), LogValueSanitizer.Sanitize(context.Request.Path.Value),
+                            context.Exception.GetType().FullName, SafeDiagnosticMessage(context.Exception.Message),
+                            context.Exception.InnerException?.GetType().FullName, SafeDiagnosticMessage(context.Exception.InnerException?.Message));
                     var logger = context.HttpContext.RequestServices
                         .GetRequiredService<ILogger<JwtBearerHandler>>();
 
@@ -213,6 +249,14 @@ public static class JwtSetup
 
                 OnTokenValidated = context =>
                 {
+                    context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("VianaHub.Global.Gerit.AuthTrace")
+                        .LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=TokenValidated Path={Path} Sub={Sub} TenantId={TenantId} IsAuthenticated={IsAuthenticated} Roles={Roles} PermissionsPresent={PermissionsPresent}",
+                            LogValueSanitizer.Sanitize(context.HttpContext.TraceIdentifier), LogValueSanitizer.Sanitize(context.Request.Path.Value),
+                            LogValueSanitizer.Sanitize(context.Principal?.FindFirst("sub")?.Value ?? context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value),
+                            LogValueSanitizer.Sanitize(context.Principal?.FindFirst("tenant_id")?.Value), context.Principal?.Identity?.IsAuthenticated,
+                            LogValueSanitizer.Sanitize(string.Join(",", context.Principal?.Claims.Where(c => c.Type == "role" || c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value) ?? Enumerable.Empty<string>())),
+                            context.Principal?.HasClaim(c => c.Type == "permissions") == true);
                     var logger = context.HttpContext.RequestServices
                         .GetRequiredService<ILogger<JwtBearerHandler>>();
 
@@ -228,6 +272,12 @@ public static class JwtSetup
 
                 OnChallenge = context =>
                 {
+                    context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("VianaHub.Global.Gerit.AuthTrace")
+                        .LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=Challenge Path={Path} Error={Error} ErrorDescription={ErrorDescription} IsAuthenticated={IsAuthenticated} ResponseStatus={ResponseStatus}",
+                            LogValueSanitizer.Sanitize(context.HttpContext.TraceIdentifier), LogValueSanitizer.Sanitize(context.Request.Path.Value),
+                            SafeDiagnosticMessage(context.Error), SafeDiagnosticMessage(context.ErrorDescription),
+                            context.HttpContext.User.Identity?.IsAuthenticated, context.Response.StatusCode);
                     var logger = context.HttpContext.RequestServices
                         .GetRequiredService<ILogger<JwtBearerHandler>>();
 
@@ -243,6 +293,31 @@ public static class JwtSetup
 
         return services;
     }
+
+    // Metadados não validados servem apenas ao diagnóstico; nunca participam da autorização.
+    private static void LogTokenMetadata(string rawToken, ILogger logger, string requestId)
+    {
+        try
+        {
+            var handler = new JsonWebTokenHandler();
+            if (!handler.CanReadToken(rawToken)) return;
+            var token = handler.ReadJsonWebToken(rawToken);
+            logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=TokenMetadata TenantId={TenantId} Sub={Sub} Kid={Kid} Alg={Alg} Iss={Iss} Aud={Aud} Nbf={Nbf} Exp={Exp} Validated={Validated}",
+                requestId, LogValueSanitizer.Sanitize(token.Claims.FirstOrDefault(c => c.Type == "tenant_id")?.Value),
+                LogValueSanitizer.Sanitize(token.Subject), LogValueSanitizer.Sanitize(token.Kid), LogValueSanitizer.Sanitize(token.Alg),
+                LogValueSanitizer.Sanitize(token.Issuer), LogValueSanitizer.Sanitize(string.Join(",", token.Audiences)),
+                LogValueSanitizer.Sanitize(token.Claims.FirstOrDefault(c => c.Type == "nbf")?.Value),
+                LogValueSanitizer.Sanitize(token.Claims.FirstOrDefault(c => c.Type == "exp")?.Value), false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=TokenMetadataUnavailable ExceptionType={ExceptionType}", requestId, ex.GetType().FullName);
+        }
+    }
+
+    // Remove JWTs de mensagens técnicas antes de aplicar a sanitização existente.
+    private static string? SafeDiagnosticMessage(string? message) => LogValueSanitizer.Sanitize(message is null ? null :
+        System.Text.RegularExpressions.Regex.Replace(message, @"[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]*", "[REDACTED]"));
 
     /// <summary>
     /// Decodifica o payload do JWT sem validar a assinatura para extrair o tenant_id.

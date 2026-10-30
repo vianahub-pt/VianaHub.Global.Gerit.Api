@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System.Data.Common;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
+using VianaHub.Global.Gerit.Domain.Helpers;
 
 namespace VianaHub.Global.Gerit.Infra.Data.Interceptors;
 
@@ -81,7 +82,12 @@ public class TenantSessionCommandInterceptor : DbCommandInterceptor
         if (command.Connection is not SqlConnection sqlConnection)
             return;
 
+        _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RlsCommandExecuting CommandType={CommandType}",
+            LogValueSanitizer.Sanitize(_httpContextAccessor.HttpContext?.TraceIdentifier), command.CommandType);
         var tenantId = ResolveTenantId();
+        _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RlsCommandTenantResolved TenantId={TenantId} Source={Source}",
+            LogValueSanitizer.Sanitize(_httpContextAccessor.HttpContext?.TraceIdentifier), tenantId,
+            tenantId is null ? "unresolved" : _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated == true ? "authenticated JWT claim" : "IRequestTenantContext");
 
         if (tenantId is null)
         {
@@ -159,7 +165,11 @@ public class TenantSessionCommandInterceptor : DbCommandInterceptor
             param.Value = tenantId;
             cmd.Parameters.Add(param);
 
+            _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RlsCommandSessionSetting TenantId={TenantId}",
+                LogValueSanitizer.Sanitize(_httpContextAccessor.HttpContext?.TraceIdentifier), tenantId);
             await cmd.ExecuteNonQueryAsync(cancellationToken);
+            _logger.LogInformation("[AUTH-TRACE] RequestId={RequestId} Step=RlsCommandSessionSet TenantId={TenantId}",
+                LogValueSanitizer.Sanitize(_httpContextAccessor.HttpContext?.TraceIdentifier), tenantId);
 
             _logger.LogDebug("[RLS] SESSION_CONTEXT TenantId={TenantId} atualizado no interceptor de comando.", tenantId);
         }
