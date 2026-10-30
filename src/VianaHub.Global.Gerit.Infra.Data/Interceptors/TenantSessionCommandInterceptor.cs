@@ -8,17 +8,17 @@ using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 namespace VianaHub.Global.Gerit.Infra.Data.Interceptors;
 
 /// <summary>
-/// Interceptor de comando respons·vel por garantir que o SESSION_CONTEXT do SQL Server
-/// tenha o TenantId correto antes de cada execuÁ„o de comando.
+/// Interceptor de comando respons√°vel por garantir que o SESSION_CONTEXT do SQL Server
+/// tenha o TenantId correto antes de cada execu√ß√£o de comando.
 ///
-/// Necess·rio porque conexıes do pool podem ser reutilizadas entre requests distintos.
-/// A lÛgica de resoluÁ„o do TenantId È idÍntica ‡ do TenantSessionConnectionInterceptor:
-///   1. Usu·rio autenticado  ? claim 'tenant_id' do JWT
-///   2. Usu·rio n„o autenticado (ex: login) ? IRequestTenantContext (populado pelo AppService a partir do body)
-///   3. Nenhuma das anteriores ? n„o seta SESSION_CONTEXT; RLS bloqueia o acesso
+/// Necess√°rio porque conex√µes do pool podem ser reutilizadas entre requests distintos.
+/// A l√≥gica de resolu√ß√£o do TenantId √© id√™ntica √† do TenantSessionConnectionInterceptor:
+///   1. Usu√°rio autenticado  ? claim 'tenant_id' do JWT
+///   2. Usu√°rio n√£o autenticado (ex: login) ? IRequestTenantContext (populado pelo AppService a partir do body)
+///   3. Nenhuma das anteriores ? n√£o seta SESSION_CONTEXT; RLS bloqueia o acesso
 ///
-/// IMPORTANTE: A aplicaÁ„o NUNCA seta IsSuperAdmin no SESSION_CONTEXT.
-/// O TenantId passado È sempre o do tenant autenticado ou do body da requisiÁ„o.
+/// IMPORTANTE: A aplica√ß√£o NUNCA seta IsSuperAdmin no SESSION_CONTEXT.
+/// O TenantId passado √© sempre o do tenant autenticado ou do body da requisi√ß√£o.
 /// </summary>
 public class TenantSessionCommandInterceptor : DbCommandInterceptor
 {
@@ -67,13 +67,13 @@ public class TenantSessionCommandInterceptor : DbCommandInterceptor
     }
 
     /// <summary>
-    /// Garante que o SESSION_CONTEXT da sess„o SQL contenha o TenantId correto
+    /// Garante que o SESSION_CONTEXT da sess√£o SQL contenha o TenantId correto
     /// antes de qualquer comando ser executado.
-    /// Evita recurs„o verificando se o prÛprio comando j· È um sp_set_session_context.
+    /// Evita recurs√£o verificando se o pr√≥prio comando j√° √© um sp_set_session_context.
     /// </summary>
     private async Task EnsureTenantSessionContextAsync(DbCommand command, CancellationToken cancellationToken)
     {
-        // Evita recurs„o infinita: ignora comandos que j· s„o sp_set_session_context
+        // Evita recurs√£o infinita: ignora comandos que j√° s√£o sp_set_session_context
         if (command.CommandText is not null &&
             command.CommandText.IndexOf("sp_set_session_context", StringComparison.OrdinalIgnoreCase) >= 0)
             return;
@@ -85,7 +85,7 @@ public class TenantSessionCommandInterceptor : DbCommandInterceptor
 
         if (tenantId is null)
         {
-            _logger.LogDebug("[RLS] TenantId n„o resolvido no interceptor de comando. SESSION_CONTEXT n„o ser· atualizado.");
+            _logger.LogDebug("[RLS] TenantId n√£o resolvido no interceptor de comando. SESSION_CONTEXT n√£o ser√° atualizado.");
             return;
         }
 
@@ -100,15 +100,10 @@ public class TenantSessionCommandInterceptor : DbCommandInterceptor
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
-        if (httpContext is null)
-        {
-            _logger.LogDebug("[RLS] Sem HttpContext no interceptor de comando. TenantId n„o pode ser resolvido.");
-            return null;
-        }
+        // Jobs definem um tenant explicito no escopo; JWT autenticado continua tendo prioridade.
+        var user = httpContext?.User;
 
-        var user = httpContext.User;
-
-        // 1. Usu·rio autenticado: TenantId vem exclusivamente do claim do JWT
+        // 1. Usu√°rio autenticado: TenantId vem exclusivamente do claim do JWT
         if (user?.Identity?.IsAuthenticated == true)
         {
             var tenantClaim = user.FindFirst("tenant_id")
@@ -121,11 +116,11 @@ public class TenantSessionCommandInterceptor : DbCommandInterceptor
                 return tenantFromJwt;
             }
 
-            _logger.LogWarning("[RLS] Usu·rio autenticado sem claim tenant_id v·lida no token (interceptor de comando).");
+            _logger.LogWarning("[RLS] Usu√°rio autenticado sem claim tenant_id v√°lida no token (interceptor de comando).");
             return null;
         }
 
-        // 2. Usu·rio n„o autenticado: TenantId vem do IRequestTenantContext (ex: login)
+        // 2. Usu√°rio n√£o autenticado: TenantId vem do IRequestTenantContext (ex: login)
         if (_requestTenantContext.TenantId.HasValue)
         {
             _logger.LogDebug("[RLS] TenantId resolvido via IRequestTenantContext no interceptor de comando: {TenantId}",
@@ -133,13 +128,13 @@ public class TenantSessionCommandInterceptor : DbCommandInterceptor
             return _requestTenantContext.TenantId.Value;
         }
 
-        _logger.LogDebug("[RLS] Request n„o autenticado sem IRequestTenantContext definido (interceptor de comando). TenantId n„o resolvido.");
+        _logger.LogDebug("[RLS] Request n√£o autenticado sem IRequestTenantContext definido (interceptor de comando). TenantId n√£o resolvido.");
         return null;
     }
 
     /// <summary>
-    /// Executa o sp_set_session_context para definir o TenantId na sess„o SQL Server.
-    /// Utiliza par‚metro para evitar SQL injection.
+    /// Executa o sp_set_session_context para definir o TenantId na sess√£o SQL Server.
+    /// Utiliza par√¢metro para evitar SQL injection.
     /// </summary>
     private async Task SetTenantSessionContextAsync(SqlConnection connection, int tenantId, DbTransaction? transaction, CancellationToken cancellationToken)
     {
@@ -148,7 +143,7 @@ public class TenantSessionCommandInterceptor : DbCommandInterceptor
             await using var cmd = connection.CreateCommand();
             cmd.CommandText = "EXEC sp_set_session_context @key=N'TenantId', @value=@tenantId;";
 
-            // Associa a transaÁ„o ativa ao comando para evitar o erro
+            // Associa a transa√ß√£o ativa ao comando para evitar o erro
             // "BeginExecuteNonQuery requires the command to have a transaction
             //  when the connection assigned to the command is in a pending local transaction"
             if (transaction is SqlTransaction sqlTransaction)

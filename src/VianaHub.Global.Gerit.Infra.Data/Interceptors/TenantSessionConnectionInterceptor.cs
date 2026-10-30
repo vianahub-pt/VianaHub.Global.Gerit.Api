@@ -61,13 +61,8 @@ public class TenantSessionConnectionInterceptor : DbConnectionInterceptor
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
-        if (httpContext is null)
-        {
-            _logger.LogDebug("[RLS] Sem HttpContext. TenantId não pode ser resolvido.");
-            return null;
-        }
-
-        var user = httpContext.User;
+        // Jobs definem um tenant explicito no escopo; JWT autenticado continua tendo prioridade.
+        var user = httpContext?.User;
 
         // 1. Usuário autenticado: TenantId vem exclusivamente do claim do JWT
         if (user?.Identity?.IsAuthenticated == true)

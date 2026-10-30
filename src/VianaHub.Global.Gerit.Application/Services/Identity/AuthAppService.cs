@@ -252,7 +252,7 @@ public class AuthAppService : IAuthAppService
         _requestTenantContext.SetTenantId(request.TenantId);
 
         var tokenEntity = await _refreshRepo.GetByTokenAsync(request.RefreshToken, request.TenantId);
-        if (tokenEntity == null || !tokenEntity.IsActive())
+        if (tokenEntity == null || tokenEntity.TenantId != request.TenantId || !tokenEntity.IsActive())
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Refresh.InvalidRefreshToken"), 401);
             return null;
@@ -263,6 +263,12 @@ public class AuthAppService : IAuthAppService
         if (user == null)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Refresh.UserNotFound"), 410);
+            return null;
+        }
+
+        if (user.TenantId != request.TenantId)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Auth.Refresh.InvalidRefreshToken"), 401);
             return null;
         }
 
@@ -282,20 +288,23 @@ public class AuthAppService : IAuthAppService
             return null;
         }
 
-        var isTrial = await _subscriptionDomain.IsTrialAsync(user.Id, ct);
+        var isTrial = await _subscriptionDomain.IsTrialAsync(request.TenantId, ct);
         if (isTrial)
         {
-            if (await _subscriptionDomain.IsTrialPeriodExpiredAsync(user.Id, ct))
+            if (await _subscriptionDomain.IsTrialPeriodExpiredAsync(request.TenantId, ct))
             {
                 _notify.Add(_localization.GetMessage("Application.Service.Auth.RefreshToken.Subscription.TrialPeriodExpired"), 403);
                 return null;
             }
         }
-        else if (await _subscriptionDomain.IsSubscriptionPeriodExpiredAsync(user.Id, ct))
+        else if (await _subscriptionDomain.IsSubscriptionPeriodExpiredAsync(request.TenantId, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.RefreshToken.Subscription.PeriodExpired"), 403);
             return null;
         }
+
+        var accessToken = await GenerateAccessTokenAsync(user, isTrial, ct);
+        if (accessToken.Token == null) return null;
 
         // Rota��o: revogar token antigo e criar novo
         await _refreshRepo.RevokeAsync(tokenEntity.TokenHash, user.Id, request.TenantId);
@@ -303,8 +312,6 @@ public class AuthAppService : IAuthAppService
         var newRefreshValue = GenerateRefreshTokenValue();
         var newRefresh = new RefreshTokensEntity(request.TenantId, user.Id, newRefreshValue, DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays), user.Id);
         await _refreshRepo.AddAsync(newRefresh);
-
-        var accessToken = await GenerateAccessTokenAsync(user, isTrial, ct);
 
         _requestTenantContext.Clear();
 
@@ -420,10 +427,18 @@ public class AuthAppService : IAuthAppService
 
         // Carregar chave ativa do tenant
         var keyEntity = await _jwtKeyRepo.GetActiveKeyAsync(user.TenantId, ct);
-        if (keyEntity == null)
+        if (keyEntity == null || keyEntity.TenantId != user.TenantId || !keyEntity.IsValidForSigning())
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.NoActiveKey"), 500);
             _logger.LogError("Nenhuma chave JWT ativa encontrada para tenant {TenantId}", user.TenantId);
+            return (null, DateTime.MinValue);
+        }
+
+        // Preserva o lifetime configurado; uma chave perto da expiracao exige rotacao.
+        if (expires > keyEntity.ExpiresAt || _jwtSettings.AccessTokenExpirationMinutes > keyEntity.MaxTokenLifetimeMinutes)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.SigningKeyLifetimeInsufficient"), 500);
+            _logger.LogError("Signing key cannot cover the configured access token lifetime. TenantId={TenantId}, KeyId={KeyId}", user.TenantId, keyEntity.KeyId);
             return (null, DateTime.MinValue);
         }
 

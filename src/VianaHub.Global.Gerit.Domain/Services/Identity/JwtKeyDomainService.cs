@@ -90,7 +90,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
             return null;
         }
 
-        var created = await _repo.AddAsync(entity, ct);
+        var created = await _repo.ReplaceSigningKeyAsync(entity, ct);
         if (!created)
         {
             _notify.Add(_localization.GetMessage("Domain.JwtKey.CreateFailed"), 400);
@@ -194,7 +194,9 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         // Se for a �nica chave ativa, gerar uma nova antes de revogar
         if (existing.IsActive)
         {
-            var hasOtherActiveKey = await _repo.HasActiveKeyAsync(existing.TenantId, ct);
+            var activeKey = await _repo.GetActiveKeyAsync(existing.TenantId, ct);
+            var hasOtherActiveKey = activeKey != null && activeKey.TenantId == existing.TenantId &&
+                activeKey.KeyId != existing.KeyId && activeKey.IsValidForSigning();
             if (!hasOtherActiveKey)
             {
                 _logger.LogWarning("?? [RevokeAsync] Revogando �nica chave ativa. Gerando nova chave primeiro. Id={Id}",
@@ -218,9 +220,11 @@ public class JwtKeyDomainService : IJwtKeyDomainService
                     existing.OverlapPeriodDays,
                     existing.MaxTokenLifetimeMinutes);
 
-                await _repo.AddAsync(newKey, ct);
-                newKey.Activate(_currentUser.GetUserId());
-                await _repo.UpdateAsync(newKey, ct);
+                if (!await _repo.ReplaceSigningKeyAsync(newKey, ct))
+                {
+                    _notify.Add(_localization.GetMessage("Domain.JwtKey.CreateFailed"), 500);
+                    return false;
+                }
 
                 _logger.LogInformation("? [RevokeAsync] Nova chave gerada e ativada. Id={NewKeyId}, KeyId={NewKeyKeyId}", newKey.Id, newKey.KeyId);
             }
@@ -356,7 +360,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         foreach (var oldKey in keysList)
         {
             // Validar estado
-            if (!oldKey.IsActive || oldKey.IsDeleted || oldKey.IsRevoked())
+            if (!oldKey.IsEligibleForRotation())
             {
                 _logger.LogWarning("?? [RotateKeysAsync] Chave n�o est� mais eleg�vel. Id={Id}, KeyId={KeyId}",
                     oldKey.Id, oldKey.KeyId);
@@ -367,6 +371,16 @@ public class JwtKeyDomainService : IJwtKeyDomainService
             if (!await ValidateTenantAsync(oldKey.TenantId, ct))
             {
                 _logger.LogWarning("?? [RotateKeysAsync] Tenant ou Application inativo. TenantId={TenantId}", oldKey.TenantId);
+                continue;
+            }
+
+            // Uma chave antiga ainda ativa nao deve gerar outra substituta se ja existe uma nova valida.
+            var signingKey = await _repo.GetActiveKeyAsync(oldKey.TenantId, ct);
+            if (signingKey != null && signingKey.TenantId == oldKey.TenantId &&
+                signingKey.KeyId != oldKey.KeyId && signingKey.IsValidForSigning() && !signingKey.IsEligibleForRotation())
+            {
+                oldKey.Deactivate(0);
+                await _repo.UpdateAsync(oldKey, ct);
                 continue;
             }
 
@@ -388,17 +402,15 @@ public class JwtKeyDomainService : IJwtKeyDomainService
                 oldKey.OverlapPeriodDays,
                 oldKey.MaxTokenLifetimeMinutes);
 
-            // Ativar nova chave
-            newKey.Activate(0);
+            // A substituicao atomica respeita o indice de uma unica chave ativa por tenant.
+            if (!await _repo.ReplaceSigningKeyAsync(newKey, ct))
+            {
+                _notify.Add(_localization.GetMessage("Domain.JwtKey.CreateFailed"), 500);
+                continue;
+            }
 
-            // Inserir nova chave
-            await _repo.AddAsync(newKey, ct);
-
-            // Desativar chave antiga e estender expira��o pelo per�odo de sobreposi��o
+            // Preservar a validade original para os tokens emitidos durante a sobreposicao.
             oldKey.Deactivate(0);
-            oldKey.UpdateRotationSchedule(oldKey.OverlapPeriodDays, 0, 0);
-
-            await _repo.UpdateAsync(oldKey, ct);
 
             rotatedCount++;
 
@@ -419,9 +431,16 @@ public class JwtKeyDomainService : IJwtKeyDomainService
 
         _logger.LogInformation("?? [CleanupExpiredKeysAsync] Encontradas {Count} chaves expiradas para limpeza", keysList.Count);
 
+        var cutoffDate = DateTime.UtcNow.AddDays(-retentionDays);
         foreach (var key in keysList)
         {
-            await _repo.UpdateAsync(key, ct);
+            // Nao remover chaves ainda validas ou dentro do prazo de retencao.
+            if (key.IsActive || key.IsDeleted || !key.IsExpired() || key.ExpiresAt >= cutoffDate)
+                continue;
+
+            key.Delete(0);
+            if (!await _repo.UpdateAsync(key, ct))
+                continue;
             deletedCount++;
 
             _logger.LogInformation("??? [CleanupExpiredKeysAsync] Chave marcada como deletada. Id={Id}, KeyId={KeyId}, ExpiresAt={ExpiresAt}",
@@ -438,7 +457,7 @@ public class JwtKeyDomainService : IJwtKeyDomainService
 
         // Verificar se j� existe chave ativa
         var existingKey = await _repo.GetActiveKeyAsync(tenantId, ct);
-        if (existingKey != null)
+        if (existingKey != null && existingKey.TenantId == tenantId && existingKey.IsValidForSigning())
         {
             _logger.LogInformation("? [EnsureKeyExistsAsync] Chave ativa j� existe. KeyId={KeyId}", existingKey.KeyId);
             return existingKey;
@@ -501,11 +520,13 @@ public class JwtKeyDomainService : IJwtKeyDomainService
                 _logger.LogWarning("?? [EnsureKeyExistsAsync] Chave ativa j� foi criada por outro processo (race condition detectada). TenantId={TenantId}", tenantId);
 
                 // Retornar a chave existente
-                return await _repo.GetActiveKeyAsync(tenantId, ct);
+                var concurrentKey = await _repo.GetActiveKeyAsync(tenantId, ct);
+                if (concurrentKey != null && concurrentKey.TenantId == tenantId && concurrentKey.IsValidForSigning())
+                    return concurrentKey;
             }
 
             // Inserir no banco
-            var created = await _repo.AddAsync(newKey, ct);
+            var created = await _repo.ReplaceSigningKeyAsync(newKey, ct);
             if (!created)
             {
                 _logger.LogError("? [EnsureKeyExistsAsync] Falha ao criar chave JWT. TenantId={TenantId}", tenantId);

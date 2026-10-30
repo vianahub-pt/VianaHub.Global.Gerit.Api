@@ -1,5 +1,6 @@
-﻿using Hangfire;
+using Hangfire;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using VianaHub.Global.Gerit.Infra.Job.Interfaces;
 using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
@@ -9,11 +10,11 @@ namespace VianaHub.Global.Gerit.Infra.Job.Jobs.Security;
 
 /// <summary>
 /// Job de rotação automática de chaves JWT
-/// Executado diariamente às 03:00 UTC
+/// A agenda e o fuso horário são definidos exclusivamente pelo Hangfire.
 /// </summary>
 public class JwtKeyRotationJob : IJob
 {
-    private readonly IJwtKeyDomainService _jwtKeyService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ITenantDataRepository _tenantRepo;
     private readonly ILogger<JwtKeyRotationJob> _logger;
     private readonly ILocalizationService _localization;
@@ -24,12 +25,12 @@ public class JwtKeyRotationJob : IJob
     private static readonly int SystemUserId = 0;
 
     public JwtKeyRotationJob(
-        IJwtKeyDomainService jwtKeyService,
+        IServiceScopeFactory scopeFactory,
         ITenantDataRepository tenantRepo,
         ILogger<JwtKeyRotationJob> logger,
         ILocalizationService localization)
     {
-        _jwtKeyService = jwtKeyService;
+        _scopeFactory = scopeFactory;
         _tenantRepo = tenantRepo;
         _logger = logger;
         _localization = localization;
@@ -37,13 +38,6 @@ public class JwtKeyRotationJob : IJob
 
     public async Task Execute(CancellationToken cancellationToken = default)
     {
-        // Executar apenas às 01:00 hora local
-        if (DateTime.Now.Hour != 1)
-        {
-            _logger.LogInformation("[JwtKeyRotationJob] Execução ignorada: horário fora da janela programada");
-            return;
-        }
-
         _logger.LogInformation("[JwtKeyRotationJob] " + _localization.GetMessage("Job.SyncDefinitions.Starting"));
 
         try
@@ -55,33 +49,53 @@ public class JwtKeyRotationJob : IJob
             _logger.LogInformation("[JwtKeyRotationJob] " + _localization.GetMessage("Job.SyncDefinitions.Starting") + " Verificando existência de chaves para {Count} tenants ativos", activeTenants.Count);
 
             var createdCount = 0;
+            var rotatedCount = 0;
             foreach (var tenant in activeTenants)
             {
                 if (cancellationToken.IsCancellationRequested) break;
 
+                using var scope = _scopeFactory.CreateScope();
+                var tenantContext = scope.ServiceProvider.GetRequiredService<IRequestTenantContext>();
+                var previousTenantId = tenantContext.TenantId;
+                tenantContext.SetTenantId(tenant.Id);
                 try
                 {
-                    var existing = await _jwtKeyService.GetActiveKeyAsync(tenant.Id, cancellationToken);
-                    if (existing != null)
+                    var jwtKeyService = scope.ServiceProvider.GetRequiredService<IJwtKeyDomainService>();
+                    try
                     {
-                        _logger.LogDebug("[JwtKeyRotationJob] Tenant {TenantId} já possui chave ativa (KeyId={KeyId})", tenant.Id, existing.KeyId);
-                        continue;
+                        var existing = await jwtKeyService.GetActiveKeyAsync(tenant.Id, cancellationToken);
+                        if (existing != null)
+                        {
+                            _logger.LogDebug("[JwtKeyRotationJob] Tenant {TenantId} já possui chave ativa (KeyId={KeyId})", tenant.Id, existing.KeyId);
+                        }
+                        else
+                        {
+                            var newKey = await jwtKeyService.EnsureKeyExistsAsync(tenant.Id, SystemUserId, cancellationToken);
+                            if (newKey != null)
+                            {
+                                createdCount++;
+                                _logger.LogInformation("[JwtKeyRotationJob] Tenant {TenantId}: chave JWT criada (KeyId={KeyId})", tenant.Id, newKey.KeyId);
+                            }
+                            else
+                            {
+                                _logger.LogError("[JwtKeyRotationJob] Tenant {TenantId}: falha ao criar chave JWT", tenant.Id);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "[JwtKeyRotationJob] Erro ao garantir chave para Tenant {TenantId}", tenant.Id);
                     }
 
-                    var newKey = await _jwtKeyService.EnsureKeyExistsAsync(tenant.Id, SystemUserId, cancellationToken);
-                    if (newKey != null)
-                    {
-                        createdCount++;
-                        _logger.LogInformation("[JwtKeyRotationJob] Tenant {TenantId}: chave JWT criada (KeyId={KeyId})", tenant.Id, newKey.KeyId);
-                    }
-                    else
-                    {
-                        _logger.LogError("[JwtKeyRotationJob] Tenant {TenantId}: falha ao criar chave JWT", tenant.Id);
-                    }
+                    // A consulta de rotação usa a mesma sessão SQL isolada pelo tenant.
+                    rotatedCount += await jwtKeyService.RotateKeysAsync(cancellationToken);
                 }
-                catch (Exception ex)
+                finally
                 {
-                    _logger.LogError(ex, "[JwtKeyRotationJob] Erro ao garantir chave para Tenant {TenantId}", tenant.Id);
+                    if (previousTenantId.HasValue)
+                        tenantContext.SetTenantId(previousTenantId.Value);
+                    else
+                        tenantContext.Clear();
                 }
             }
 
@@ -89,9 +103,6 @@ public class JwtKeyRotationJob : IJob
             {
                 _logger.LogInformation("[JwtKeyRotationJob] Reconciliação de chaves finalizada. Chaves criadas: {CreatedCount}", createdCount);
             }
-
-            // 1. Executar rotação para chaves elegíveis
-            var rotatedCount = await _jwtKeyService.RotateKeysAsync(cancellationToken);
 
             if (rotatedCount > 0)
             {
@@ -104,7 +115,7 @@ public class JwtKeyRotationJob : IJob
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[JwtKeyRotationJob] " + _localization.GetMessage("Job.SyncDefinitions.Error") );
+            _logger.LogError(ex, "[JwtKeyRotationJob] " + _localization.GetMessage("Job.SyncDefinitions.Error"));
             throw;
         }
     }
