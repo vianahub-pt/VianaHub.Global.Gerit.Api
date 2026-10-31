@@ -2,7 +2,7 @@ using Hangfire;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
-using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
+using VianaHub.Global.Gerit.Domain.Interfaces.Job;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Infra.Job.Interfaces;
 
@@ -15,17 +15,17 @@ namespace VianaHub.Global.Gerit.Infra.Job.Jobs.Cleanup;
 public class CleanupExpiredJwtKeysJob : IJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ITenantDataRepository _tenantRepo;
+    private readonly IJwtSystemJobTenantDiscovery _tenantDiscovery;
     private readonly ILogger<CleanupExpiredJwtKeysJob> _logger;
     private const int RetentionDays = 90; // Período de retenção padrão
 
     public CleanupExpiredJwtKeysJob(
         IServiceScopeFactory scopeFactory,
-        ITenantDataRepository tenantRepo,
+        IJwtSystemJobTenantDiscovery tenantDiscovery,
         ILogger<CleanupExpiredJwtKeysJob> logger)
     {
         _scopeFactory = scopeFactory;
-        _tenantRepo = tenantRepo;
+        _tenantDiscovery = tenantDiscovery;
         _logger = logger;
     }
 
@@ -36,7 +36,8 @@ public class CleanupExpiredJwtKeysJob : IJob
         try
         {
             var deletedCount = 0;
-            var tenants = await _tenantRepo.GetAllAsync(cancellationToken);
+            var tenants = await _tenantDiscovery.GetAllAsync(cancellationToken);
+            _logger.LogInformation("[CleanupExpiredJwtKeysJob] Tenants to process: {Count}", tenants.Count(t => !t.IsDeleted));
             foreach (var tenant in tenants.Where(t => !t.IsDeleted))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -47,7 +48,10 @@ public class CleanupExpiredJwtKeysJob : IJob
                 try
                 {
                     var jwtKeyService = scope.ServiceProvider.GetRequiredService<IJwtKeyDomainService>();
-                    deletedCount += await jwtKeyService.CleanupExpiredKeysAsync(RetentionDays, cancellationToken);
+                    var tenantDeletedCount = await jwtKeyService.CleanupExpiredKeysAsync(RetentionDays, cancellationToken);
+                    deletedCount += tenantDeletedCount;
+                    _logger.LogInformation("[CleanupExpiredJwtKeysJob] Tenant {TenantId} processed. DeletedCount={DeletedCount}",
+                        tenant.Id, tenantDeletedCount);
                 }
                 finally
                 {

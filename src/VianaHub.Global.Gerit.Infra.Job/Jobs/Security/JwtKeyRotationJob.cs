@@ -2,7 +2,7 @@ using Hangfire;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using VianaHub.Global.Gerit.Infra.Job.Interfaces;
-using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
+using VianaHub.Global.Gerit.Domain.Interfaces.Job;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
@@ -15,7 +15,7 @@ namespace VianaHub.Global.Gerit.Infra.Job.Jobs.Security;
 public class JwtKeyRotationJob : IJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ITenantDataRepository _tenantRepo;
+    private readonly IJwtSystemJobTenantDiscovery _tenantDiscovery;
     private readonly ILogger<JwtKeyRotationJob> _logger;
     private readonly ILocalizationService _localization;
 
@@ -26,12 +26,12 @@ public class JwtKeyRotationJob : IJob
 
     public JwtKeyRotationJob(
         IServiceScopeFactory scopeFactory,
-        ITenantDataRepository tenantRepo,
+        IJwtSystemJobTenantDiscovery tenantDiscovery,
         ILogger<JwtKeyRotationJob> logger,
         ILocalizationService localization)
     {
         _scopeFactory = scopeFactory;
-        _tenantRepo = tenantRepo;
+        _tenantDiscovery = tenantDiscovery;
         _logger = logger;
         _localization = localization;
     }
@@ -43,8 +43,10 @@ public class JwtKeyRotationJob : IJob
         try
         {
             // 0. Garantir que cada tenant ativo possua uma chave ativa (reconciliação mínima)
-            var tenants = await _tenantRepo.GetAllAsync(cancellationToken);
+            var tenants = await _tenantDiscovery.GetAllAsync(cancellationToken);
             var activeTenants = tenants.Where(t => t.IsActive && !t.IsDeleted).ToList();
+
+            _logger.LogInformation("[JwtKeyRotationJob] Active tenants: {Count}", activeTenants.Count);
 
             _logger.LogInformation("[JwtKeyRotationJob] " + _localization.GetMessage("Job.SyncDefinitions.Starting") + " Verificando existência de chaves para {Count} tenants ativos", activeTenants.Count);
 
@@ -61,11 +63,13 @@ public class JwtKeyRotationJob : IJob
                 try
                 {
                     var jwtKeyService = scope.ServiceProvider.GetRequiredService<IJwtKeyDomainService>();
+                    Guid? signingKeyId = null;
                     try
                     {
                         var existing = await jwtKeyService.GetActiveKeyAsync(tenant.Id, cancellationToken);
                         if (existing != null)
                         {
+                            signingKeyId = existing.KeyId;
                             _logger.LogDebug("[JwtKeyRotationJob] Tenant {TenantId} já possui chave ativa (KeyId={KeyId})", tenant.Id, existing.KeyId);
                         }
                         else
@@ -73,6 +77,7 @@ public class JwtKeyRotationJob : IJob
                             var newKey = await jwtKeyService.EnsureKeyExistsAsync(tenant.Id, SystemUserId, cancellationToken);
                             if (newKey != null)
                             {
+                                signingKeyId = newKey.KeyId;
                                 createdCount++;
                                 _logger.LogInformation("[JwtKeyRotationJob] Tenant {TenantId}: chave JWT criada (KeyId={KeyId})", tenant.Id, newKey.KeyId);
                             }
@@ -88,7 +93,10 @@ public class JwtKeyRotationJob : IJob
                     }
 
                     // A consulta de rotação usa a mesma sessão SQL isolada pelo tenant.
-                    rotatedCount += await jwtKeyService.RotateKeysAsync(cancellationToken);
+                    var tenantRotationCount = await jwtKeyService.RotateKeysAsync(cancellationToken);
+                    rotatedCount += tenantRotationCount;
+                    _logger.LogInformation("[JwtKeyRotationJob] Tenant {TenantId} processed. SigningKeyIdBeforeRotation={SigningKeyId}, RotationResult={RotationResult}",
+                        tenant.Id, signingKeyId, tenantRotationCount);
                 }
                 finally
                 {

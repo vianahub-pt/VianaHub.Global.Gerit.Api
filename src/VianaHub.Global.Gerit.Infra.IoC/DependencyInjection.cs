@@ -282,6 +282,8 @@ public static class DependencyInjection
         services.AddScoped<ITenantAddressesDataRepository, TenantAddressesDataRepository>();
         services.AddScoped<ISubscriptionDataRepository, SubscriptionDataRepository>();
         services.AddScoped<IJwtKeyDataRepository, JwtKeyDataRepository>();
+        services.AddSingleton<IJwtSystemJobContext, JwtSystemJobContext>();
+        services.AddScoped<IJwtSystemJobTenantDiscovery, SqlJwtSystemJobTenantDiscovery>();
         services.AddScoped<IUserDataRepository, UserDataRepository>();
         services.AddScoped<IUserPreferencesDataRepository, UserPreferencesDataRepository>();
         services.AddScoped<IUserRoleDataRepository, UserRoleDataRepository>();

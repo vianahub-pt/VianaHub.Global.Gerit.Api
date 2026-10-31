@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
+using VianaHub.Global.Gerit.Domain.Interfaces.Job;
 using Microsoft.Extensions.DependencyInjection;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
@@ -15,7 +15,7 @@ namespace VianaHub.Global.Gerit.Infra.Job.Jobs.Security;
 public class ReconcileJwtKeysJob : IJob
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ITenantDataRepository _tenantRepo;
+    private readonly IJwtSystemJobTenantDiscovery _tenantDiscovery;
     private readonly ILogger<ReconcileJwtKeysJob> _logger;
 
     /// <summary>
@@ -25,11 +25,11 @@ public class ReconcileJwtKeysJob : IJob
 
     public ReconcileJwtKeysJob(
         IServiceScopeFactory scopeFactory,
-        ITenantDataRepository tenantRepo,
+        IJwtSystemJobTenantDiscovery tenantDiscovery,
         ILogger<ReconcileJwtKeysJob> logger)
     {
         _scopeFactory = scopeFactory;
-        _tenantRepo = tenantRepo;
+        _tenantDiscovery = tenantDiscovery;
         _logger = logger;
     }
 
@@ -44,7 +44,7 @@ public class ReconcileJwtKeysJob : IJob
         var totalErrors = 0;
 
         // 1. Buscar todos os tenants ativos
-        var tenants = await _tenantRepo.GetAllAsync(cancellationToken);
+        var tenants = await _tenantDiscovery.GetAllAsync(cancellationToken);
         var activeTenants = tenants.Where(t => t.IsActive && !t.IsDeleted).ToList();
 
         _logger.LogInformation("?? [ReconcileJwtKeysJob] Encontrados {TenantCount} tenants ativos para processar", activeTenants.Count);
@@ -88,6 +88,8 @@ public class ReconcileJwtKeysJob : IJob
 
             if (existingKey != null)
             {
+                _logger.LogInformation("[ReconcileJwtKeysJob] Tenant {TenantId} processed. SigningKeyId={SigningKeyId}, Created={Created}",
+                    tenantId, existingKey.KeyId, false);
                 _logger.LogDebug(
                     "[ReconcileJwtKeysJob] Tenant {TenantId}: chave JWT ativa já existe (KeyId: {KeyId}), pulando",
                     tenantId, existingKey.KeyId);
@@ -104,6 +106,8 @@ public class ReconcileJwtKeysJob : IJob
 
             if (newKey != null)
             {
+                _logger.LogInformation("[ReconcileJwtKeysJob] Tenant {TenantId} processed. SigningKeyId={SigningKeyId}, Created={Created}",
+                    tenantId, newKey.KeyId, true);
                 _logger.LogInformation(
                     "[ReconcileJwtKeysJob] Tenant {TenantId}: chave JWT criada com sucesso (Id: {KeyId})", tenantId, newKey.KeyId);
                 result.Created++;

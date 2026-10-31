@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System.Data.Common;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
+using VianaHub.Global.Gerit.Infra.Data.Security;
+using System.Data;
 
 namespace VianaHub.Global.Gerit.Infra.Data.Interceptors;
 
@@ -42,6 +44,8 @@ public class TenantSessionConnectionInterceptor : DbConnectionInterceptor
         if (connection is not SqlConnection)
             return;
 
+        // Não herdar flags de uma sessão anteriormente usada pelo pool.
+        await SqlRlsSessionContext.ResetAsync(connection, cancellationToken);
         var tenantId = ResolvetenantId();
 
         if (tenantId is null)
@@ -51,6 +55,69 @@ public class TenantSessionConnectionInterceptor : DbConnectionInterceptor
         }
 
         await SetTenantSessionContextAsync(connection, tenantId.Value, cancellationToken);
+    }
+
+    public override void ConnectionOpened(DbConnection connection, ConnectionEndEventData eventData)
+    {
+        base.ConnectionOpened(connection, eventData);
+        if (connection is not SqlConnection) return;
+        SqlRlsSessionContext.Reset(connection);
+        var tenantId = ResolvetenantId();
+        if (!tenantId.HasValue) return;
+        using var command = connection.CreateCommand();
+        command.CommandText = "EXEC sp_set_session_context @key=N'TenantId', @value=@tenantId;";
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "@tenantId";
+        parameter.Value = tenantId.Value;
+        command.Parameters.Add(parameter);
+        command.ExecuteNonQuery();
+    }
+
+    public override InterceptionResult ConnectionClosing(DbConnection connection, ConnectionEventData eventData, InterceptionResult result)
+    {
+        ResetBeforePooling(connection);
+        return base.ConnectionClosing(connection, eventData, result);
+    }
+
+    public override async ValueTask<InterceptionResult> ConnectionClosingAsync(DbConnection connection, ConnectionEventData eventData, InterceptionResult result)
+    {
+        await ResetBeforePoolingAsync(connection);
+        return await base.ConnectionClosingAsync(connection, eventData, result);
+    }
+
+    public override InterceptionResult ConnectionDisposing(DbConnection connection, ConnectionEventData eventData, InterceptionResult result)
+    {
+        ResetBeforePooling(connection);
+        return base.ConnectionDisposing(connection, eventData, result);
+    }
+
+    public override async ValueTask<InterceptionResult> ConnectionDisposingAsync(DbConnection connection, ConnectionEventData eventData, InterceptionResult result)
+    {
+        await ResetBeforePoolingAsync(connection);
+        return await base.ConnectionDisposingAsync(connection, eventData, result);
+    }
+
+    private void ResetBeforePooling(DbConnection connection)
+    {
+        if (connection is not SqlConnection sql || connection.State != ConnectionState.Open) return;
+        try { SqlRlsSessionContext.Reset(connection); }
+        catch (Exception ex)
+        {
+            // Descartar a conexão é obrigatório se não foi possível remover seu contexto.
+            SqlConnection.ClearPool(sql);
+            _logger.LogWarning("[RLS] Session cleanup failed; SQL connection discarded from pool. ExceptionType={ExceptionType}", ex.GetType().FullName);
+        }
+    }
+
+    private async Task ResetBeforePoolingAsync(DbConnection connection)
+    {
+        if (connection is not SqlConnection sql || connection.State != ConnectionState.Open) return;
+        try { await SqlRlsSessionContext.ResetAsync(connection, CancellationToken.None); }
+        catch (Exception ex)
+        {
+            SqlConnection.ClearPool(sql);
+            _logger.LogWarning("[RLS] Session cleanup failed; SQL connection discarded from pool. ExceptionType={ExceptionType}", ex.GetType().FullName);
+        }
     }
 
     /// <summary>

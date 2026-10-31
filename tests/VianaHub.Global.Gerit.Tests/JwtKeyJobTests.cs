@@ -1,11 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using VianaHub.Global.Gerit.Domain.Base;
-using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
-using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
+using VianaHub.Global.Gerit.Domain.Interfaces.Job;
+using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Infra.Job.Jobs.Cleanup;
 using VianaHub.Global.Gerit.Infra.Job.Jobs.Security;
@@ -29,7 +28,7 @@ public class JwtKeyJobTests
         Assert.Equal(2, fixture.Contexts.Count);
         Assert.NotSame(fixture.Contexts[0], fixture.Contexts[1]);
         Assert.All(fixture.Contexts, context => Assert.Equal(77, context.TenantId));
-        fixture.TenantRepo.Verify(repo => repo.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Discovery.Verify(repo => repo.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -41,6 +40,20 @@ public class JwtKeyJobTests
 
         Assert.Equal(2, fixture.Contexts.Count);
         Assert.All(fixture.Contexts, context => Assert.Null(context.TenantId));
+    }
+
+    [Fact]
+    public async Task Rotation_DoesNotStartTenantOperationsWhenDiscoveryFails()
+    {
+        using var fixture = new JobFixture();
+        fixture.Discovery.Setup(discovery => discovery.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Administrative tenant discovery failed"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Rotation().Execute());
+
+        Assert.Empty(fixture.Contexts);
+        Assert.Empty(fixture.TenantsFor("GetActive"));
+        Assert.Empty(fixture.TenantsFor("Rotate"));
     }
 
     [Fact]
@@ -64,7 +77,7 @@ public class JwtKeyJobTests
         Assert.Equal(new int?[] { 1, 2 }, fixture.TenantsFor("Ensure"));
         Assert.Equal(2, fixture.Contexts.Count);
         Assert.All(fixture.Contexts, context => Assert.Null(context.TenantId));
-        fixture.TenantRepo.Verify(repo => repo.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Discovery.Verify(repo => repo.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -115,7 +128,7 @@ public class JwtKeyJobTests
     private sealed class JobFixture : IDisposable
     {
         private readonly ServiceProvider _services;
-        public Mock<ITenantDataRepository> TenantRepo { get; } = new();
+        public Mock<IJwtSystemJobTenantDiscovery> Discovery { get; } = new();
         public List<RecordingTenantContext> Contexts { get; } = new();
         public List<int> RetentionDays { get; } = new();
         public string? FailingOperation { get; init; }
@@ -124,9 +137,9 @@ public class JwtKeyJobTests
         public JobFixture(bool keyExists = false, int? previousTenantId = null)
         {
             var tenants = new[] { Tenant(1), Tenant(2), Tenant(3), Tenant(4) };
-            tenants[2].Deactivate(0);
-            tenants[3].Delete(0);
-            TenantRepo.Setup(repo => repo.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(tenants);
+            tenants[2] = tenants[2] with { IsActive = false };
+            tenants[3] = tenants[3] with { IsDeleted = true };
+            Discovery.Setup(repo => repo.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(tenants);
             var services = new ServiceCollection();
             services.AddScoped<IRequestTenantContext>(_ =>
             {
@@ -182,13 +195,13 @@ public class JwtKeyJobTests
 
         public int?[] TenantsFor(string operation) => _calls.Where(call => call.Operation == operation).Select(call => call.TenantId).ToArray();
 
-        public JwtKeyRotationJob Rotation() => new(_services.GetRequiredService<IServiceScopeFactory>(), TenantRepo.Object,
+        public JwtKeyRotationJob Rotation() => new(_services.GetRequiredService<IServiceScopeFactory>(), Discovery.Object,
             NullLogger<JwtKeyRotationJob>.Instance, Mock.Of<ILocalizationService>());
 
-        public ReconcileJwtKeysJob Reconcile() => new(_services.GetRequiredService<IServiceScopeFactory>(), TenantRepo.Object,
+        public ReconcileJwtKeysJob Reconcile() => new(_services.GetRequiredService<IServiceScopeFactory>(), Discovery.Object,
             NullLogger<ReconcileJwtKeysJob>.Instance);
 
-        public CleanupExpiredJwtKeysJob Cleanup() => new(_services.GetRequiredService<IServiceScopeFactory>(), TenantRepo.Object,
+        public CleanupExpiredJwtKeysJob Cleanup() => new(_services.GetRequiredService<IServiceScopeFactory>(), Discovery.Object,
             NullLogger<CleanupExpiredJwtKeysJob>.Instance);
 
         private void Record(string operation, IRequestTenantContext context, int? expectedTenantId = null)
@@ -201,12 +214,7 @@ public class JwtKeyJobTests
 
         public void Dispose() => _services.Dispose();
 
-        private static TenantEntity Tenant(int id)
-        {
-            var tenant = new TenantEntity(1, 1, "Tenant", null, null, null, null, 0);
-            typeof(Entity).GetProperty(nameof(Entity.Id))!.SetValue(tenant, id);
-            return tenant;
-        }
+        private static SystemJobTenant Tenant(int id) => new(id, true, false);
 
         private static JwtKeysEntity Key(int tenantId) => new(tenantId, "public", "encrypted", 0);
     }

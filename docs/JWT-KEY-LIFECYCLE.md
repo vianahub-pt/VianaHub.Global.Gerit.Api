@@ -50,6 +50,16 @@ Após criar, usar `PATCH /v1/admin/job-definition/{id}/activate` para registrar 
 
 O cron/timezone da definição é a única agenda: o job não tem mais gate de `DateTime.Now.Hour`. Cada tenant tem escopo DI e `IRequestTenantContext` próprios. Os interceptors aceitam esse contexto explícito sem HTTP; uma claim JWT autenticada continua tendo prioridade e nunca há bypass de RLS.
 
+### Descoberta administrativa sob RLS
+
+`Tenants` também é protegida por RLS. Os três jobs JWT usam `IJwtSystemJobTenantDiscovery`, sem promover `ITenantDataRepository.GetAllAsync()` a uma consulta global. A implementação exige ausência de HTTP e um `JobContext` correspondente exatamente a um desses jobs.
+
+A descoberta abre uma conexão dedicada e habilita `IsSuperAdmin` apenas para a consulta fixa de `Id`, `IsActive` e `IsDeleted`. Em `finally`, limpa `IsSuperAdmin` e `TenantId` com cleanup não cancelável. Se esse cleanup falhar, descarta o pool da conexão e propaga a falha. O resultado só chega ao job depois da remoção do privilégio; as operações de chave continuam nos escopos individuais dos tenants.
+
+O interceptor de conexão limpa as duas flags antes de configurar um tenant e antes de fechar ou descartar conexões, nos caminhos síncronos e assíncronos. Se não conseguir limpar no fechamento, a conexão é marcada para descarte do pool. O lookup administrativo já existente de tenant por email também tem `finally`, preservando a consulta de login e removendo seu contexto antes de fechar a conexão.
+
+Os testes `SqlServerIntegration` usam SQL Server/RLS reais e um pool exclusivo com tamanho 1. Definir `GERIT_RLS_TEST_CONNECTIONSTRING` no processo de teste, sem versionar seu valor. Sem essa variável, os testes SQL são explicitamente ignorados; isso não constitui evidência de RLS. A execução local deve registrar os testes efetivamente executados, os SPIDs e o estado final das flags. Um cenário negativo usa leitura em `master`, sem criar objetos, para provocar erro 208 após o grant e provar o cleanup em erro.
+
 ## Recuperação de uma chave expirada
 
 Invocar `IJwtKeyDomainService.EnsureKeyExistsAsync(tenantId, systemUserId, ct)` em escopo com tenant explícito. Se não houver signing key válida, o domínio gera novo par RSA, criptografa a chave privada pelo provider existente e usa a substituição atômica. Não editar `ExpiresAt`, reativar a expirada ou apagar o histórico.
