@@ -87,6 +87,8 @@ public class JwtKeyRotationJob : IJob
                             }
                         }
                     }
+                    // Intencional: manter o tratamento de falhas de banco, criptografia e providers do tenant.
+                    // O finally externo sempre restaura o contexto, inclusive se a rotação posterior falhar.
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "[JwtKeyRotationJob] Erro ao garantir chave para Tenant {TenantId}", tenant.Id);

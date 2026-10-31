@@ -60,6 +60,26 @@ O interceptor de conexão limpa as duas flags antes de configurar um tenant e an
 
 Os testes `SqlServerIntegration` usam SQL Server/RLS reais e um pool exclusivo com tamanho 1. Definir `GERIT_RLS_TEST_CONNECTIONSTRING` no processo de teste, sem versionar seu valor. Sem essa variável, os testes SQL são explicitamente ignorados; isso não constitui evidência de RLS. A execução local deve registrar os testes efetivamente executados, os SPIDs e o estado final das flags. Um cenário negativo usa leitura em `master`, sem criar objetos, para provocar erro 208 após o grant e provar o cleanup em erro.
 
+## Revisão CodeQL do PR #437
+
+O fixture SQL/RLS exige `Encrypt=true`, mesmo quando a connection string de entrada informa outro valor. Nenhuma configuração de produção foi alterada.
+
+Na validação local de 31/10/2026, a tentativa com `Encrypt=true` e sem a opção de confiança explícita falhou exclusivamente no handshake TLS por cadeia emitida por autoridade não confiável. A execução SQL/RLS aprovada usa a opção `TrustServerCertificate=true` que já existia na entrada local do fixture. Essa opção não foi adicionada ao código, nem a qualquer configuração de produção; a criptografia é sempre exigida pelo fixture. Um ambiente com certificado confiável pode fornecer a conexão sem essa opção.
+
+Cada uma das três threads inline existentes foi auditada:
+
+| Alerta / comentário | Classificação | Decisão |
+|---|---|---|
+| #377 / 4432721132 — conexão SQL | `valid bug` | Exigir criptografia no fixture. |
+| #379 / 4432721140 — catch síncrono | `false positive` para remoção do catch | Manter captura e descarte seguro do pool. |
+| #380 / 4432721145 — catch assíncrono | `false positive` para remoção do catch | Manter captura e cleanup não cancelável. |
+
+O diagnóstico de catch genérico é correto, mas a captura é intencional para segurança. Falhas de comando, estado da conexão ou provider, inclusive as que não derivam de `DbException`, precisam marcar a conexão para descarte antes do retorno ao pool. O cleanup continua não cancelável e mantém `ClearPool` nos caminhos síncrono e assíncrono. Restringir os tipos capturados perderia essa garantia.
+
+A condição `tenantId.HasValue` posterior à guarda de rejeição era redundante (`valid improvement`); somente esse ramo inalcançável foi removido. O filtro da limpeza de chaves foi convertido para `Where` com avaliação lazy, mesma ordem e curto-circuito, mantendo as mutações dentro do loop (`valid improvement`).
+
+O catch do job também é intencional: a recuperação da chave pode falhar em banco, criptografia ou providers. A captura mantém o comportamento existente de registrar a falha antes da tentativa de rotação. O `finally` externo restaura o contexto do tenant mesmo se a rotação posterior falhar; as conexões continuam protegidas pelo cleanup do interceptor. Limitar a captura mudaria o lifecycle sem necessidade. Esses três Notes não são suprimidos nem dispensados no GitHub.
+
 ## Recuperação de uma chave expirada
 
 Invocar `IJwtKeyDomainService.EnsureKeyExistsAsync(tenantId, systemUserId, ct)` em escopo com tenant explícito. Se não houver signing key válida, o domínio gera novo par RSA, criptografa a chave privada pelo provider existente e usa a substituição atômica. Não editar `ExpiresAt`, reativar a expirada ou apagar o histórico.

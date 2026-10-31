@@ -181,6 +181,7 @@ public class JwtSystemJobRlsIntegrationTests(ITestOutputHelper output)
             Assert.False(string.IsNullOrWhiteSpace(configured), "Set GERIT_RLS_TEST_CONNECTIONSTRING to execute SQL Server/RLS evidence.");
             var builder = new SqlConnectionStringBuilder(configured)
             {
+                Encrypt = true,
                 ApplicationName = "Gerit.JwtRlsTest." + Guid.NewGuid().ToString("N"),
                 MaxPoolSize = 1,
                 MinPoolSize = 0,

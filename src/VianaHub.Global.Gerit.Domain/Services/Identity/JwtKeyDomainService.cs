@@ -432,12 +432,9 @@ public class JwtKeyDomainService : IJwtKeyDomainService
         _logger.LogInformation("?? [CleanupExpiredKeysAsync] Encontradas {Count} chaves expiradas para limpeza", keysList.Count);
 
         var cutoffDate = DateTime.UtcNow.AddDays(-retentionDays);
-        foreach (var key in keysList)
+        // Nao remover chaves ainda validas ou dentro do prazo de retencao.
+        foreach (var key in keysList.Where(key => !key.IsActive && !key.IsDeleted && key.IsExpired() && key.ExpiresAt < cutoffDate))
         {
-            // Nao remover chaves ainda validas ou dentro do prazo de retencao.
-            if (key.IsActive || key.IsDeleted || !key.IsExpired() || key.ExpiresAt >= cutoffDate)
-                continue;
-
             key.Delete(0);
             if (!await _repo.UpdateAsync(key, ct))
                 continue;

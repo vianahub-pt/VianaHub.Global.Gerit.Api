@@ -101,6 +101,7 @@ public class TenantSessionConnectionInterceptor : DbConnectionInterceptor
     {
         if (connection is not SqlConnection sql || connection.State != ConnectionState.Open) return;
         try { SqlRlsSessionContext.Reset(connection); }
+        // Intencional: qualquer falha de cleanup (SQL, estado da conexão ou provider) exige descarte do pool.
         catch (Exception ex)
         {
             // Descartar a conexão é obrigatório se não foi possível remover seu contexto.
@@ -113,6 +114,7 @@ public class TenantSessionConnectionInterceptor : DbConnectionInterceptor
     {
         if (connection is not SqlConnection sql || connection.State != ConnectionState.Open) return;
         try { await SqlRlsSessionContext.ResetAsync(connection, CancellationToken.None); }
+        // Intencional: capturar somente DbException deixaria outras falhas devolverem contexto ao pool.
         catch (Exception ex)
         {
             SqlConnection.ClearPool(sql);

@@ -136,17 +136,10 @@ public static class JwtSetup
                             var requestTenantContext = context.HttpContext.RequestServices
                                 .GetRequiredService<IRequestTenantContext>();
 
-                            if (tenantId.HasValue)
-                            {
-                                requestTenantContext.SetTenantId(tenantId.Value);
-                                logger.LogDebug(
-                                    "[JWT] TenantId={TenantId} extraído do token (pré-validação) e definido no IRequestTenantContext",
-                                    tenantId.Value);
-                            }
-                            else
-                            {
-                                logger.LogWarning("[JWT] Não foi possível extrair tenant_id do token antes da validação. RLS pode bloquear a busca de chaves.");
-                            }
+                            requestTenantContext.SetTenantId(tenantId.Value);
+                            logger.LogDebug(
+                                "[JWT] TenantId={TenantId} extraído do token (pré-validação) e definido no IRequestTenantContext",
+                                tenantId.Value);
                         }
 
                         // ---------------------------------------------------------------
