@@ -177,7 +177,7 @@ public class JwtSystemJobRlsIntegrationTests(ITestOutputHelper output)
             _requireConnection = requireConnection;
             var configured = requireConnection
                 ? Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING")
-                : "Server=unused.invalid;Database=unused;Integrated Security=true;Connect Timeout=1";
+                : "Server=unused.invalid;Database=unused;Integrated Security=true;Connect Timeout=1;Encrypt=true";
             Assert.False(string.IsNullOrWhiteSpace(configured), "Set GERIT_RLS_TEST_CONNECTIONSTRING to execute SQL Server/RLS evidence.");
             var builder = new SqlConnectionStringBuilder(configured)
             {

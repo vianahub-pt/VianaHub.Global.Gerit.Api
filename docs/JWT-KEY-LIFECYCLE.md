@@ -64,13 +64,16 @@ Os testes `SqlServerIntegration` usam SQL Server/RLS reais e um pool exclusivo c
 
 O fixture SQL/RLS exige `Encrypt=true`, mesmo quando a connection string de entrada informa outro valor. Nenhuma configuração de produção foi alterada.
 
+A primeira reanálise encerrou #377, mas abriu #383 para a string de conexão fictícia dos testes que rejeitam o escopo antes de abrir SQL. A regra também considera a construção de `SqlConnectionStringBuilder` um sink e procura um literal booleano no initializer; o provider atual converte `true` para `SqlConnectionEncryptOption`. A string fictícia agora também declara `Encrypt=true`, mantendo a exigência explícita no builder para toda entrada real. Isso cobre a origem literal identificada pela regra sem supressão e sem abrir conexões nesses testes negativos.
+
 Na validação local de 31/10/2026, a tentativa com `Encrypt=true` e sem a opção de confiança explícita falhou exclusivamente no handshake TLS por cadeia emitida por autoridade não confiável. A execução SQL/RLS aprovada usa a opção `TrustServerCertificate=true` que já existia na entrada local do fixture. Essa opção não foi adicionada ao código, nem a qualquer configuração de produção; a criptografia é sempre exigida pelo fixture. Um ambiente com certificado confiável pode fornecer a conexão sem essa opção.
 
-Cada uma das três threads inline existentes foi auditada:
+Cada thread inline foi auditada, incluindo a criada na primeira reanálise:
 
 | Alerta / comentário | Classificação | Decisão |
 |---|---|---|
 | #377 / 4432721132 — conexão SQL | `valid bug` | Exigir criptografia no fixture. |
+| #383 / 4432783378 — conexão fictícia | `valid improvement` | Declarar criptografia também no literal dos testes de guarda, sem conexão real. |
 | #379 / 4432721140 — catch síncrono | `false positive` para remoção do catch | Manter captura e descarte seguro do pool. |
 | #380 / 4432721145 — catch assíncrono | `false positive` para remoção do catch | Manter captura e cleanup não cancelável. |
 
