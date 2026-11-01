@@ -1,6 +1,6 @@
 ﻿GO
 CREATE TABLE dbo.PartyTypes (
-Id          TINYINT           NOT NULL,
+Id          TINYINT IDENTITY(1,1) NOT NULL,
 Code        NVARCHAR(50)      NOT NULL,
 IsActive    BIT               NOT NULL DEFAULT 1,
 IsDeleted   BIT               NOT NULL DEFAULT 0,
@@ -12,7 +12,9 @@ CONSTRAINT PK_PartyTypes PRIMARY KEY CLUSTERED (Id),
 CONSTRAINT CK_PartyTypes_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1))
 );
 GO
+SET IDENTITY_INSERT dbo.PartyTypes ON;
 INSERT INTO dbo.PartyTypes (Id, Code, CreatedBy) VALUES (1, N'INDIVIDUAL', 1), (2, N'ORGANIZATION', 1);
+SET IDENTITY_INSERT dbo.PartyTypes OFF;
 GO
 CREATE TABLE dbo.PartyTypeTranslations (
 Id              INT IDENTITY(1,1) NOT NULL,

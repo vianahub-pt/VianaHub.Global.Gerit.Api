@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType;
@@ -7,6 +8,7 @@ using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
+using VianaHub.Global.Gerit.Infra.Data.Context;
 using Xunit;
 
 namespace VianaHub.Global.Gerit.Tests.Application.Services.Business;
@@ -45,9 +47,9 @@ public class PartyTypeAppServiceTests
         notifyMock.Verify(n => n.Add("not found", 410), Times.Once);
     }
 
-    [Fact(DisplayName = "PartyTypeAppService - CreateAsync cria entidade e tradução pt-PT")]
+    [Fact(DisplayName = "PartyTypeAppService - CreateAsync delega agregado sem ID para a persistência do domínio")]
     [Trait("Application", "PartyType")]
-    public async Task CreateAsync_ShouldCreateEntityWithTranslation_WhenValidRequest()
+    public async Task CreateAsync_DelegatesUnassignedAggregateWithTranslationsToDomain()
     {
         var (service, repoMock, domainMock, _, _, currentUserMock, _) = CreateService();
 
@@ -58,20 +60,16 @@ public class PartyTypeAppServiceTests
             .Callback<PartyTypeEntity, CancellationToken>((entity, _) =>
             {
                 capturedEntity = entity;
-                // Simula o EF Core atribuindo o Id após persistência
-                // PartyTypeEntity declara 'new byte Id' que esconde o 'int Id' da base Entity,
-                // por isso usamos DeclaredOnly para resolver a ambiguidade.
-                typeof(PartyTypeEntity)
-                    .GetProperty("Id", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly)?
-                    .SetValue(entity, (byte)42);
+                // Sem persistência real não há ID gerado; a integração SQL cobre o sucesso com IDENTITY.
+                Assert.Equal((byte)0, entity.Id);
             })
-            .ReturnsAsync(true);
+            .ReturnsAsync(false);
 
         var request = new CreatePartyTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Pessoa Física", Description = "Pessoa singular" }, new() { LanguageCode = "en-US", Name = "Individual", Description = "Pessoa singular" }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 
-        Assert.Equal((byte)42, result);
+        Assert.Equal((byte)0, result);
         Assert.NotNull(capturedEntity);
         Assert.Equal("INDIVIDUAL", capturedEntity.Code);
         Assert.Equal(2, capturedEntity.Translations.Count);
@@ -108,9 +106,9 @@ public class PartyTypeAppServiceTests
 
         var entity = new PartyTypeEntity("PF", 1);
         entity.Translations.Add(new PartyTypeTranslationsEntity(0, "pt-PT", "Old Name", "Old Desc"));
-        typeof(PartyTypeEntity)
-            .GetProperty("Id", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly)?
-            .SetValue(entity, (byte)10);
+        using var context = new GeritDbContext(new DbContextOptionsBuilder<GeritDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        context.Entry(entity).Property(p => p.Id).CurrentValue = (byte)10;
 
         repoMock.Setup(r => r.GetByIdAsync((byte)10, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
         domainMock.Setup(d => d.UpdateAsync(It.IsAny<PartyTypeEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
