@@ -12,8 +12,5 @@ public class DeleteAddressTypeValidator : AbstractValidator<AddressTypeEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.AddressType.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.AddressType.AlreadyDeleted"));
     }
 }

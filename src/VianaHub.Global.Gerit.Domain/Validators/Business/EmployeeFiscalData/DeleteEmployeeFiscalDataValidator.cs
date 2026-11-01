@@ -7,9 +7,6 @@ public class DeleteEmployeeFiscalDataValidator : AbstractValidator<EmployeeFisca
 {
     public DeleteEmployeeFiscalDataValidator()
     {
-        RuleFor(x => x.IsDeleted)
-            .Equal(false).WithMessage("EmployeeFiscalData_AlreadyDeleted");
-
         RuleFor(x => x.ModifiedBy)
             .GreaterThan(0).WithMessage("ModifiedBy_Required");
     }

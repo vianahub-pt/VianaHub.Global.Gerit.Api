@@ -23,10 +23,6 @@ public class ActivateEmployeeContactPersonValidator : AbstractValidator<Employee
             .Equal(false)
             .WithMessage(_localization.GetMessage("Domain.EmployeeContactPerson.CannotActivateDeleted"));
 
-        RuleFor(x => x.IsActive)
-            .Equal(false)
-            .WithMessage(_localization.GetMessage("Domain.EmployeeContactPerson.AlreadyActive"));
-
         RuleFor(x => x.ModifiedBy)
             .GreaterThan(0)
             .WithMessage(_localization.GetMessage("Domain.EmployeeContactPerson.ModifiedByRequired"));

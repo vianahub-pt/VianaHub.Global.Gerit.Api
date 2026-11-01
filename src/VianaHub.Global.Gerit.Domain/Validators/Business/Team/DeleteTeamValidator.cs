@@ -12,8 +12,5 @@ public class DeleteTeamValidator : AbstractValidator<TeamEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Team.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Team.AlreadyDeleted"));
     }
 }

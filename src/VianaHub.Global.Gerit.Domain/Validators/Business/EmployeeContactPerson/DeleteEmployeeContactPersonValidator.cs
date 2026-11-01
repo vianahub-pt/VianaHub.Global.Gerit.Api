@@ -19,10 +19,6 @@ public class DeleteEmployeeContactPersonValidator : AbstractValidator<EmployeeCo
             .GreaterThan(0)
             .WithMessage(_localization.GetMessage("Domain.EmployeeContactPerson.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(_localization.GetMessage("Domain.EmployeeContactPerson.AlreadyDeleted"));
-
         RuleFor(x => x.ModifiedBy)
             .GreaterThan(0)
             .WithMessage(_localization.GetMessage("Domain.EmployeeContactPerson.ModifiedByRequired"));

@@ -12,8 +12,5 @@ public class DeleteVehicleValidator : AbstractValidator<VehicleEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Vehicle.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Vehicle.AlreadyDeleted"));
     }
 }

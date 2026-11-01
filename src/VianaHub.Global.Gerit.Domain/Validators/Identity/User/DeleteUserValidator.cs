@@ -12,8 +12,5 @@ public class DeleteUserValidator : AbstractValidator<UserEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.User.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.User.AlreadyDeleted"));
     }
 }

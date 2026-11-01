@@ -15,8 +15,5 @@ public class DeleteClientDocumentValidator : AbstractValidator<ClientDocumentsEn
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.ClientDocument.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.ClientDocument.AlreadyDeleted"));
     }
 }

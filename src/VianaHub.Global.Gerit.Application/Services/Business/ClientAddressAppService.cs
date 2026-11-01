@@ -158,7 +158,7 @@ public class ClientAddressAppService : IClientAddressAppService
         }
 
         clientAddress.Delete(UserId);
-        return await _domain.UpdateAsync(clientAddress, ct);
+        return await _domain.DeleteAsync(clientAddress, ct);
     }
 
     public async Task<bool> BulkUploadAsync(int clientId, IFormFile? file, CancellationToken ct)

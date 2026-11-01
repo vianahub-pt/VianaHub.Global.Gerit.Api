@@ -9,6 +9,5 @@ public class DeactivateAcquisitionSourceTypeValidator : AbstractValidator<Acquis
     public DeactivateAcquisitionSourceTypeValidator(ILocalizationService localization)
     {
         RuleFor(x => x.Id).GreaterThan(0).WithMessage(localization.GetMessage("Domain.AcquisitionSourceType.IdRequired"));
-        RuleFor(x => x.IsActive).Equal(true).WithMessage(localization.GetMessage("Domain.AcquisitionSourceType.AlreadyInactive"));
     }
 }
