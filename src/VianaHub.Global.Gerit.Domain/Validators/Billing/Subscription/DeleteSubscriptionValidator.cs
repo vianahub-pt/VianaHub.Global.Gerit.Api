@@ -12,8 +12,5 @@ public class DeleteSubscriptionValidator : AbstractValidator<SubscriptionEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Subscription.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Subscription.AlreadyDeleted"));
     }
 }

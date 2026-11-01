@@ -12,8 +12,5 @@ public class DeactivateDocumentTypeValidator : AbstractValidator<DocumentTypeEnt
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.DocumentType.IdRequired"));
 
-        RuleFor(x => x.IsActive)
-            .Equal(true)
-            .WithMessage(localization.GetMessage("Domain.DocumentType.AlreadyInactive"));
     }
 }

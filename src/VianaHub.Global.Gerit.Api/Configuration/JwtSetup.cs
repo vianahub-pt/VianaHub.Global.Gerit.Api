@@ -14,6 +14,7 @@ namespace VianaHub.Global.Gerit.Api.Configuration;
 /// </summary>
 public static class JwtSetup
 {
+    private const string RequestSigningKeys = "Gerit.Jwt.ValidationKeys";
     /// <summary>
     /// Adiciona a configuração de autenticação JWT ao pipeline de serviços.
     /// Suporta chaves dinâmicas do banco de dados e rotação sem downtime.
@@ -62,8 +63,10 @@ public static class JwtSetup
                 // Resolver chaves de assinatura dinamicamente do banco de dados
                 IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
                 {
-                    // NOTA: Chaves serão resolvidas no evento OnMessageReceived
-                    // que tem acesso ao HttpContext e IServiceProvider
+                    // As chaves pertencem somente a esta requisição, já filtradas por tenant e kid.
+                    var httpContext = new HttpContextAccessor().HttpContext;
+                    if (httpContext?.Items[RequestSigningKeys] is IEnumerable<SecurityKey> keys)
+                        return keys.Where(key => string.Equals(key.KeyId, kid, StringComparison.OrdinalIgnoreCase));
                     return Array.Empty<SecurityKey>();
                 }
             };
@@ -118,31 +121,33 @@ public static class JwtSetup
                             .FirstOrDefault()?.Replace("Bearer ", string.Empty, StringComparison.OrdinalIgnoreCase)
                             ?? context.Token;
 
+                        var tenantId = string.IsNullOrWhiteSpace(rawToken) ? null : ExtractTenantIdFromRawToken(rawToken, logger);
+                        var tokenKeyId = Guid.Empty;
+                        var readableToken = !string.IsNullOrWhiteSpace(rawToken) && new JsonWebTokenHandler().CanReadToken(rawToken);
+                        if (!tenantId.HasValue || !readableToken ||
+                            !Guid.TryParse(new JsonWebTokenHandler().ReadJsonWebToken(rawToken!).Kid, out tokenKeyId))
+                        {
+                            context.Fail(localization?.GetMessage("Api.Configuration.Jwt.NoActiveSigningKeys") ?? "Api.Configuration.Jwt.NoActiveSigningKeys");
+                            return;
+                        }
+
                         if (!string.IsNullOrWhiteSpace(rawToken))
                         {
                             var requestTenantContext = context.HttpContext.RequestServices
                                 .GetRequiredService<IRequestTenantContext>();
 
-                            var tenantId = ExtractTenantIdFromRawToken(rawToken, logger);
-                            if (tenantId.HasValue)
-                            {
-                                requestTenantContext.SetTenantId(tenantId.Value);
-                                logger.LogDebug(
-                                    "[JWT] TenantId={TenantId} extraído do token (pré-validação) e definido no IRequestTenantContext",
-                                    tenantId.Value);
-                            }
-                            else
-                            {
-                                logger.LogWarning("[JWT] Não foi possível extrair tenant_id do token antes da validação. RLS pode bloquear a busca de chaves.");
-                            }
+                            requestTenantContext.SetTenantId(tenantId.Value);
+                            logger.LogDebug(
+                                "[JWT] TenantId={TenantId} extraído do token (pré-validação) e definido no IRequestTenantContext",
+                                tenantId.Value);
                         }
 
                         // ---------------------------------------------------------------
                         // Buscar chaves do banco — agora com SESSION_CONTEXT corretamente
                         // definido pelos interceptores EF Core.
                         // ---------------------------------------------------------------
-                        var allKeys = await keyRepository.GetAllAsync(default);
-                        var keys = allKeys.Where(k => k.IsValidForValidation());
+                        var allKeys = await keyRepository.GetByTenantAsync(tenantId.Value, default);
+                        var keys = allKeys.Where(k => k.TenantId == tenantId.Value && k.KeyId == tokenKeyId && k.IsValidForValidation());
 
                         if (!keys.Any())
                         {
@@ -182,8 +187,8 @@ public static class JwtSetup
                             return;
                         }
 
-                        // Atualizar parâmetros de validação com as chaves carregadas
-                        context.Options.TokenValidationParameters.IssuerSigningKeys = securityKeys;
+                        // Não alterar opções compartilhadas entre requests/tenants concorrentes.
+                        context.HttpContext.Items[RequestSigningKeys] = securityKeys;
 
                         logger.LogDebug(
                             "✅ {Count} chave(s) JWT carregada(s) para validação",

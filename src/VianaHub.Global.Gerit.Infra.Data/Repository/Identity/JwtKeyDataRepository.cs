@@ -34,8 +34,9 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
 
     public async Task<JwtKeysEntity?> GetActiveKeyAsync(int tenantId, CancellationToken ct)
     {
-        return await _context.Set<JwtKeysEntity>().AsNoTracking()
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.IsActive && !x.IsDeleted && x.RevokedAt == null, ct);
+        return await SigningKeys(tenantId)
+            .OrderByDescending(x => x.ActivatedAt).ThenByDescending(x => x.Id)
+            .FirstOrDefaultAsync(ct);
     }
 
     public async Task<IEnumerable<JwtKeysEntity>> GetAllAsync(CancellationToken ct)
@@ -109,8 +110,15 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
 
     public async Task<bool> HasActiveKeyAsync(int tenantId, CancellationToken ct)
     {
-        return await _context.Set<JwtKeysEntity>().AsNoTracking()
-            .AnyAsync(x => x.TenantId == tenantId && x.IsActive && !x.IsDeleted && x.RevokedAt == null, ct);
+        return await SigningKeys(tenantId).AnyAsync(ct);
+    }
+
+    // Equivalente SQL de IsValidForSigning; métodos de domínio não são traduzidos pelo EF.
+    private IQueryable<JwtKeysEntity> SigningKeys(int tenantId)
+    {
+        var now = DateTime.UtcNow;
+        return _context.Set<JwtKeysEntity>().AsNoTracking().Where(x =>
+            x.TenantId == tenantId && x.IsActive && !x.IsDeleted && x.RevokedAt == null && x.ExpiresAt > now);
     }
 
     public async Task<bool> AddAsync(JwtKeysEntity entity, CancellationToken ct)
@@ -126,6 +134,49 @@ public class JwtKeyDataRepository : IJwtKeyDataRepository
             _logger.LogError("?? [CreateAsync] Add JwtKeysEntity | falha ao criar chave JwtKey | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             throw new Exception("Falha ao criar chave JwtKey", ex);
         }
+    }
+
+    public async Task<bool> ReplaceSigningKeyAsync(JwtKeysEntity replacement, CancellationToken ct)
+    {
+        // O índice único exige desativar a anterior antes do INSERT, na mesma transação.
+        // A expiração histórica não muda; rollback mantém a assinatura anterior disponível.
+        var strategy = _context.Database.CreateExecutionStrategy();
+        var attempt = 0;
+        return await strategy.ExecuteAsync(async () =>
+        {
+            // KeyId torna o retry idempotente quando o resultado do COMMIT é desconhecido.
+            var persisted = await _context.Set<JwtKeysEntity>().AsNoTracking()
+                .FirstOrDefaultAsync(k => k.KeyId == replacement.KeyId, ct);
+            if (persisted is not null)
+                return persisted.TenantId == replacement.TenantId && persisted.PublicKey == replacement.PublicKey && persisted.IsValidForSigning();
+            if (attempt++ > 0) _context.Entry(replacement).Property(k => k.Id).CurrentValue = 0;
+            await using var transaction = _context.Database.IsRelational()
+                ? await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct)
+                : null;
+            var previous = await _context.Set<JwtKeysEntity>()
+                .Where(k => k.TenantId == replacement.TenantId && k.IsActive && !k.IsDeleted)
+                .ToListAsync(ct);
+            try
+            {
+                foreach (var key in previous) key.Deactivate(replacement.CreatedBy);
+                if (previous.Count > 0) await _context.SaveChangesAsync(ct);
+                await _context.Set<JwtKeysEntity>().AddAsync(replacement, ct);
+                var saved = await _context.SaveChangesAsync(ct);
+                if (transaction is not null) await transaction.CommitAsync(ct);
+                return saved > 0;
+            }
+            catch
+            {
+                if (transaction is not null) await transaction.RollbackAsync(ct);
+                _context.Entry(replacement).State = EntityState.Detached;
+                throw;
+            }
+            finally
+            {
+                // Os serviços recebem entidades AsNoTracking; não manter cópias conflitantes no contexto.
+                foreach (var key in previous) _context.Entry(key).State = EntityState.Detached;
+            }
+        });
     }
 
     public async Task<bool> UpdateAsync(JwtKeysEntity entity, CancellationToken ct)

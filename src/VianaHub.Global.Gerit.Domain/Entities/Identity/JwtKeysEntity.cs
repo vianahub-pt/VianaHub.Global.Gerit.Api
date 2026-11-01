@@ -151,7 +151,7 @@ public class JwtKeysEntity : Entity
 
     public bool IsExpired()
     {
-        return DateTime.UtcNow > ExpiresAt;
+        return DateTime.UtcNow >= ExpiresAt;
     }
 
     public bool IsRevoked()

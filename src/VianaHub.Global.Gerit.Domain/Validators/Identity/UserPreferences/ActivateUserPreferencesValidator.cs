@@ -16,8 +16,5 @@ public class ActivateUserPreferencesValidator : AbstractValidator<UserPreference
             .Equal(false)
             .WithMessage(localization.GetMessage("Domain.UserPreferences.CannotActivateDeleted"));
 
-        RuleFor(x => x.IsActive)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.UserPreferences.AlreadyActive"));
     }
 }

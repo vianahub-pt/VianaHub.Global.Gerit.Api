@@ -12,8 +12,5 @@ public class DeactivateAddressTypeValidator : AbstractValidator<AddressTypeEntit
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.AddressType.IdRequired"));
 
-        RuleFor(x => x.IsActive)
-            .Equal(true)
-            .WithMessage(localization.GetMessage("Domain.AddressType.AlreadyInactive"));
     }
 }

@@ -9,6 +9,5 @@ public class DeleteAcquisitionSourceTypeValidator : AbstractValidator<Acquisitio
     public DeleteAcquisitionSourceTypeValidator(ILocalizationService localization)
     {
         RuleFor(x => x.Id).GreaterThan(0).WithMessage(localization.GetMessage("Domain.AcquisitionSourceType.IdRequired"));
-        RuleFor(x => x.IsDeleted).Equal(false).WithMessage(localization.GetMessage("Domain.AcquisitionSourceType.AlreadyDeleted"));
     }
 }

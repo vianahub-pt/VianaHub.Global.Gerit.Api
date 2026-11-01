@@ -12,8 +12,5 @@ public class DeleteUserPreferencesValidator : AbstractValidator<UserPreferencesE
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.UserPreferences.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.UserPreferences.AlreadyDeleted"));
     }
 }

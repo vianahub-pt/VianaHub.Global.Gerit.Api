@@ -12,8 +12,5 @@ public class DeactivatePartyTypeValidator : AbstractValidator<PartyTypeEntity>
             .NotEqual((byte)0)
             .WithMessage(localization.GetMessage("Domain.PartyType.IdRequired"));
 
-        RuleFor(x => x.IsActive)
-            .Equal(true)
-            .WithMessage(localization.GetMessage("Domain.PartyType.AlreadyInactive"));
     }
 }

@@ -12,8 +12,5 @@ public class DeleteEquipmentTypeValidator : AbstractValidator<EquipmentTypeEntit
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.EquipmentType.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.EquipmentType.AlreadyDeleted"));
     }
 }

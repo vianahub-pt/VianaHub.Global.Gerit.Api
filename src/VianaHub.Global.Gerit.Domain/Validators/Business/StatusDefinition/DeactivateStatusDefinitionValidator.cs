@@ -12,8 +12,5 @@ public class DeactivateStatusDefinitionValidator : AbstractValidator<StatusDefin
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.StatusDefinition.IdRequired"));
 
-        RuleFor(x => x.IsActive)
-            .Equal(true)
-            .WithMessage(localization.GetMessage("Domain.StatusDefinition.AlreadyInactive"));
     }
 }

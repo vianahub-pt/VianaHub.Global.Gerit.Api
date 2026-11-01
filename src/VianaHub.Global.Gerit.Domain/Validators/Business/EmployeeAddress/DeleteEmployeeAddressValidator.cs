@@ -23,8 +23,5 @@ public class DeleteEmployeeAddressValidator : AbstractValidator<EmployeeAddresse
             .GreaterThan(0)
             .WithMessage(_localization.GetMessage("Domain.EmployeeAddress.ModifiedByRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(_localization.GetMessage("Domain.EmployeeAddress.AlreadyDeleted"));
     }
 }

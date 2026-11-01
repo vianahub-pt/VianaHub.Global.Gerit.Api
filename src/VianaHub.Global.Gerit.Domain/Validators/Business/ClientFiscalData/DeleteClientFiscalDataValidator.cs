@@ -7,9 +7,6 @@ public class DeleteClientFiscalDataValidator : AbstractValidator<ClientFiscalDat
 {
     public DeleteClientFiscalDataValidator()
     {
-        RuleFor(x => x.IsDeleted)
-            .Equal(false).WithMessage("ClientFiscalData_AlreadyDeleted");
-
         RuleFor(x => x.ModifiedBy)
             .GreaterThan(0).WithMessage("ModifiedBy_Required");
     }

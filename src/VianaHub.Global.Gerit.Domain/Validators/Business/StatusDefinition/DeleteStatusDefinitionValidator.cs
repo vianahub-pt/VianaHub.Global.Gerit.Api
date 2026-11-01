@@ -12,8 +12,5 @@ public class DeleteStatusDefinitionValidator : AbstractValidator<StatusDefinitio
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.StatusDefinition.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.StatusDefinition.AlreadyDeleted"));
     }
 }
