@@ -19,8 +19,5 @@ public class DeleteVisitContactValidator : AbstractValidator<VisitContactPersons
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.VisitContactPerson.ModifiedByRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.VisitContactPerson.IsDeleted"));
     }
 }

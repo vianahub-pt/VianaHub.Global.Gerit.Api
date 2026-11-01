@@ -12,8 +12,5 @@ public class DeletePartyTypeValidator : AbstractValidator<PartyTypeEntity>
             .NotEqual((byte)0)
             .WithMessage(localization.GetMessage("Domain.PartyType.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.PartyType.AlreadyDeleted"));
     }
 }

@@ -12,8 +12,5 @@ public class DeleteTenantValidator : AbstractValidator<TenantEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Tenant.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Tenant.AlreadyDeleted"));
     }
 }

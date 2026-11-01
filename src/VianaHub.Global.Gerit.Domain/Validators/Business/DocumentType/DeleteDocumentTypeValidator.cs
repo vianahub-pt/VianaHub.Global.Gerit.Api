@@ -12,8 +12,5 @@ public class DeleteDocumentTypeValidator : AbstractValidator<DocumentTypeEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.DocumentType.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.DocumentType.AlreadyDeleted"));
     }
 }

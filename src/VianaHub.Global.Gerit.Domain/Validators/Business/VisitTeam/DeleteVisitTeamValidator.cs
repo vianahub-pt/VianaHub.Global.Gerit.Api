@@ -10,6 +10,5 @@ public class DeleteVisitTeamValidator : AbstractValidator<VisitTeamEntity>
     {
         RuleFor(x => x.Id).GreaterThan(0).WithMessage(localization.GetMessage("Domain.VisitTeam.IdRequired"));
         RuleFor(x => x.ModifiedBy).GreaterThan(0).WithMessage(localization.GetMessage("Domain.VisitTeam.ModifiedByRequired"));
-        RuleFor(x => x.IsDeleted).Equal(false).WithMessage(localization.GetMessage("Domain.VisitTeam.IsDeleted"));
     }
 }

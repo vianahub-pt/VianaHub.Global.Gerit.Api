@@ -12,8 +12,5 @@ public class DeleteVisitValidator : AbstractValidator<VisitEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Visit.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Must(x => !x)
-            .WithMessage(localization.GetMessage("Domain.Visit.AlreadyDeleted"));
     }
 }
