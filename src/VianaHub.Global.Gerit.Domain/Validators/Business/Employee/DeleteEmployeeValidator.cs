@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 

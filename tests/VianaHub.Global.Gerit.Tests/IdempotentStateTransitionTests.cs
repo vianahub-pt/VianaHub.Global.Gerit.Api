@@ -381,9 +381,10 @@ public class IdempotentStateTransitionTests
             {
                 if (type != _resource.ValidatorType) return Resolve(_resource.ValidatorType);
             }
-            else if (_resource.DomainType is not null && type.IsAssignableFrom(_resource.DomainType) && type != typeof(object))
+            else if (_resource.DomainType is not null && type.IsAssignableFrom(_resource.DomainType) &&
+                     type != typeof(object) && type != _resource.DomainType)
             {
-                if (type != _resource.DomainType) return Resolve(_resource.DomainType);
+                return Resolve(_resource.DomainType);
             }
 
             if (type.IsInterface)
