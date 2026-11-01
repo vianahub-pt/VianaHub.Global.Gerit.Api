@@ -61,10 +61,12 @@ BEGIN TRY
     FROM dbo.PartyTypes pt
     INNER JOIN @PartyTypeSeed s ON s.Id = pt.Id;
 
+    SET IDENTITY_INSERT dbo.PartyTypes ON;
     INSERT INTO dbo.PartyTypes (Id, Code, IsActive, IsDeleted, CreatedBy, CreatedAt)
     SELECT s.Id, s.Code, 1, 0, @SeedActorId, @UtcNow
     FROM @PartyTypeSeed s
     WHERE NOT EXISTS (SELECT 1 FROM dbo.PartyTypes pt WHERE pt.Id = s.Id);
+    SET IDENTITY_INSERT dbo.PartyTypes OFF;
 
     UPDATE tr
        SET tr.Name = CASE WHEN tr.LanguageCode = N'pt-PT' THEN s.PtName ELSE s.EnName END,
