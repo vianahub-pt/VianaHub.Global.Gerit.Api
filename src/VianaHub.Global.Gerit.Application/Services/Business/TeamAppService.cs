@@ -79,7 +79,7 @@ public class TeamAppService : ITeamAppService
         var exists = await _repo.ExistsByNameAsync(tenantId, request.Name, ct);
         if (exists)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.Team.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Service.Team.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
@@ -94,6 +94,13 @@ public class TeamAppService : ITeamAppService
         if (entity == null)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Team.Update.ResourceNotFound"), 410);
+            return false;
+        }
+
+        var exists = await _repo.ExistsByNameExceptIdAsync(_currentUser.GetTenantId(), request.Name, id, ct);
+        if (exists)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Team.Create.ResourceAlreadyExists"), 409);
             return false;
         }
 
