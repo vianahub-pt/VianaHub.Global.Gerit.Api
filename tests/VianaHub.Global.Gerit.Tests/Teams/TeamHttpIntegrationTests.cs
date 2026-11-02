@@ -152,8 +152,7 @@ public class TeamHttpIntegrationTests(ITestOutputHelper output)
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(locale);
         var first = await Create(client, "First");
         await Create(client, "Second");
-        using var dictionary = JsonDocument.Parse(await File.ReadAllTextAsync(
-            Path.Combine(AppContext.BaseDirectory, "locales", locale, "common.json")));
+        using var dictionary = await ReadDictionaryAsync(locale);
         var expected = dictionary.RootElement.GetProperty("Application.Service.Team.Create.ResourceAlreadyExists").GetString();
         foreach (var response in new[]
         {
@@ -199,8 +198,7 @@ public class TeamHttpIntegrationTests(ITestOutputHelper output)
         using var client = host.Client(Actions);
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(locale);
         var id = await Create(client, "Valid");
-        using var dictionary = JsonDocument.Parse(await File.ReadAllTextAsync(
-            Path.Combine(AppContext.BaseDirectory, "locales", locale, "common.json")));
+        using var dictionary = await ReadDictionaryAsync(locale);
         var expected = dictionary.RootElement.GetProperty("Api.Validator.Team.Create.Name").GetString();
         foreach (var response in new[]
         {
@@ -358,8 +356,19 @@ public class TeamHttpIntegrationTests(ITestOutputHelper output)
         _ => []
     };
 
-    private static async Task<JsonDocument> ReadDictionaryAsync(string locale) => JsonDocument.Parse(
-        await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "locales", locale, "common.json")));
+    private static async Task<JsonDocument> ReadDictionaryAsync(string locale)
+    {
+        // Somente caminhos literais conhecidos podem ser resolvidos dentro do output de testes.
+        var relativePath = locale switch
+        {
+            "pt-PT" => "locales/pt-PT/common.json",
+            "pt-BR" => "locales/pt-BR/common.json",
+            "en-US" => "locales/en-US/common.json",
+            "es-ES" => "locales/es-ES/common.json",
+            _ => throw new ArgumentOutOfRangeException(nameof(locale))
+        };
+        return JsonDocument.Parse(await File.ReadAllTextAsync(Path.Join(AppContext.BaseDirectory, relativePath)));
+    }
 
     private static void AssertCultures(HttpResponseMessage response, string locale)
     {
