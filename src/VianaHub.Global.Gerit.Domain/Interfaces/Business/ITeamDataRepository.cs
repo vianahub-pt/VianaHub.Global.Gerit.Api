@@ -11,6 +11,7 @@ public interface ITeamDataRepository
     Task<ListPage<TeamEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
     Task<bool> ExistsByNameAsync(int tenantId, string? name, CancellationToken ct);
+    Task<bool> ExistsByNameExceptIdAsync(int tenantId, string? name, int excludedId, CancellationToken ct);
     Task<bool> AddAsync(TeamEntity entity, CancellationToken ct);
     Task<bool> UpdateAsync(TeamEntity entity, CancellationToken ct);
 }

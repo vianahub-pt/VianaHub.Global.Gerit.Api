@@ -69,6 +69,12 @@ public class TeamDataRepository : ITeamDataRepository
         return await _context.Set<TeamEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Name == name && !x.IsDeleted, ct);
     }
 
+    public async Task<bool> ExistsByNameExceptIdAsync(int tenantId, string? name, int excludedId, CancellationToken ct)
+    {
+        return await _context.Set<TeamEntity>().AsNoTracking()
+            .AnyAsync(x => x.TenantId == tenantId && x.Name == name && x.Id != excludedId && !x.IsDeleted, ct);
+    }
+
     public async Task<bool> AddAsync(TeamEntity entity, CancellationToken ct)
     {
         await _context.Set<TeamEntity>().AddAsync(entity, ct);
