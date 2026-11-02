@@ -1,6 +1,7 @@
 using VianaHub.Global.Gerit.Domain.Helpers;
 using FluentValidation;
 using System.Net;
+using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
 namespace VianaHub.Global.Gerit.Api.Filters;
@@ -86,9 +87,10 @@ public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
                     g => g.Select(e => e.ErrorMessage).ToArray()
                 );
 
+            var localization = context.HttpContext.RequestServices.GetRequiredService<ILocalizationService>();
             return Results.BadRequest(new
             {
-                title = "Erro de validação",
+                title = localization.GetMessage("Api.Helpers.NotifyExtensions.Error.ValidationError"),
                 errors = errors
             });
         }
