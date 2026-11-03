@@ -69,6 +69,12 @@ public class EquipmentTypeDataRepository : IEquipmentTypeDataRepository
         return await _context.Set<EquipmentTypeEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Name == name && !x.IsDeleted, ct);
     }
 
+    public Task<bool> ExistsByNameExceptIdAsync(int tenantId, string? name, int excludedId, CancellationToken ct)
+    {
+        return _context.Set<EquipmentTypeEntity>().AsNoTracking()
+            .AnyAsync(x => x.TenantId == tenantId && x.Name == name && x.Id != excludedId && !x.IsDeleted, ct);
+    }
+
     public async Task<bool> AddAsync(EquipmentTypeEntity entity, CancellationToken ct)
     {
         await _context.Set<EquipmentTypeEntity>().AddAsync(entity, ct);

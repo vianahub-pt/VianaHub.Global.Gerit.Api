@@ -1,3 +1,5 @@
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.EquipmentType;
+using VianaHub.Global.Gerit.Api.Validators.Business.EquipmentType;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.AddressType;
 using VianaHub.Global.Gerit.Api.Validators.Business.AddressType;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType;
@@ -88,6 +90,9 @@ public static class RouteValidatorSetup
     /// <returns>A própria coleção de serviços para encadeamento.</returns>
     public static IServiceCollection AddRouteValidatorSetup(this IServiceCollection services)
     {
+        services.AddScoped<IValidator<CreateEquipmentTypeRequest>, CreateEquipmentTypeRouteValidator>();
+        services.AddScoped<IValidator<UpdateEquipmentTypeRequest>, UpdateEquipmentTypeRouteValidator>();
+
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
         // Action Route Validators

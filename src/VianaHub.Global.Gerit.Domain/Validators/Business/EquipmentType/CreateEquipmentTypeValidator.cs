@@ -19,6 +19,7 @@ public class CreateEquipmentTypeValidator : AbstractValidator<EquipmentTypeEntit
             .WithMessage(localization.GetMessage("Domain.EquipmentType.NameMaxLength", 200));
 
         RuleFor(x => x.Description)
+            .NotNull().WithMessage(localization.GetMessage("Domain.EquipmentType.DescriptionRequired"))
             .MaximumLength(500)
             .WithMessage(localization.GetMessage("Domain.EquipmentType.DescriptionMaxLength", 500));
     }

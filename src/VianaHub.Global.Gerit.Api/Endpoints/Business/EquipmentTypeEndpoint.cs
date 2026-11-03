@@ -61,6 +61,7 @@ public static class EquipmentTypeEndpoint
         groupV1.MapPost("/", async ([FromBody] CreateEquipmentTypeRequest request, [FromServices] IEquipmentTypeAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var id = await appService.CreateAsync(request, ct);
+            if (id == 0) return notify.CustomResponse(400);
             return notify.CustomResponse(new GenericResponse { Id = id }, 201);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "EquipmentTypes", "Create")
@@ -71,6 +72,7 @@ public static class EquipmentTypeEndpoint
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .WithValidation<CreateEquipmentTypeRequest>();
 
         groupV1.MapPut("/{id}", async ([FromRoute] int id, [FromBody] UpdateEquipmentTypeRequest request, [FromServices] IEquipmentTypeAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -87,16 +89,18 @@ public static class EquipmentTypeEndpoint
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .WithValidation<UpdateEquipmentTypeRequest>();
 
         groupV1.MapPatch("/{id}/activate", async ([FromRoute] int id, [FromServices] IEquipmentTypeAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.ActivateAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "EquipmentTypes", "Activate")
         .WithName("ActivateEquipmentType")
         .WithSummary("Swagger.Endpoint.EquipmentType.Activate.Summary")
+        .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
@@ -107,11 +111,12 @@ public static class EquipmentTypeEndpoint
         groupV1.MapPatch("/{id}/deactivate", async ([FromRoute] int id, [FromServices] IEquipmentTypeAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeactivateAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "EquipmentTypes", "Deactivate")
         .WithName("DeactivateEquipmentType")
         .WithSummary("Swagger.Endpoint.EquipmentType.Deactivate.Summary")
+        .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
@@ -122,11 +127,12 @@ public static class EquipmentTypeEndpoint
         groupV1.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] IEquipmentTypeAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeleteAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "EquipmentTypes", "Delete")
         .WithName("DeleteEquipmentType")
         .WithSummary("Swagger.Endpoint.EquipmentType.Delete.Summary")
+        .Produces(StatusCodes.Status400BadRequest)
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)

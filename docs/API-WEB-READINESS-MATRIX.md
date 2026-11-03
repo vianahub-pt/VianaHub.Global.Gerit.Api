@@ -41,13 +41,13 @@ SQL80 não foi aplicado apenas por existir constraint: GlobalExceptionMiddleware
 
 | Tier | Quantidade |
 |---|---:|
-| A | 2 |
-| B | 9 |
+| A | 3 |
+| B | 8 |
 | C | 23 |
 | D | 8 |
 | NON-UI / PLATFORM | 3 |
 
-Os três NON-UI têm score técnico, mas são contados separadamente dos quatro tiers de UI. TierA exige100; TierB não é certificação100. Actions (referência fornecida) e Teams (certificação abaixo) estão nesse nível; os demais recursos não foram recertificados nesta execução. A [fila](API-WEB-IMPLEMENTATION-QUEUE.md) distingue candidatos cujo contrato já permite iniciar UI de certificação final e de dependências bloqueadas.
+Os três NON-UI têm score técnico, mas são contados separadamente dos quatro tiers de UI. TierA exige100; TierB não é certificação100. Actions (referência fornecida), Teams e EquipmentTypes (certificações abaixo) estão nesse nível; os demais recursos não foram recertificados nesta execução. A [fila](API-WEB-IMPLEMENTATION-QUEUE.md) distingue candidatos cujo contrato já permite iniciar UI de certificação final e de dependências bloqueadas.
 
 ## Matriz principal — score final decrescente
 
@@ -55,13 +55,13 @@ Os três NON-UI têm score técnico, mas são contados separadamente dos quatro 
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|---|---|
 | 1 | [Action](#action) | Identity/Admin | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 0 — global/contexto auth | Low | Referência homologada fornecida no pedido; Name imutável, Description recuperável, transições repetidas200, delete repetido410. | Referência existente |
 | 2 | [Team](#team) | Business CRUD | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Low | 91→99→100: Locale5/5 comprovado com Accept-Language em400/409/403/410, quatro culturas e fallback. Setenta regressões específicas PASS; zero novo diagnóstico de formatter. | Pronto para implementação no Web; sem iniciar outro recurso |
-| 3 | [Auth](#auth) | Authentication | 97 | 20 | 15 | 10 | 14 | 15 | 10 | 9 | 4 | nenhum | needs product decision | High | 1 — Tenants | Medium | NON-UI: login/register/refresh/logout. Lifecycle de entidade não aplicável. Testes claims/JWT presentes; não é CRUD/página adicional. | Plataforma, não página de negócio |
-| 4 | [Job](#job) | Infrastructure/Job | 95 | 20 | 15 | 10 | 13 | 15 | 10 | 7 | 5 | nenhum | needs product decision | High | 0 — global/contexto auth | Medium | NON-UI: jobs têm efeitos/filas; Execute existe nos seeds. Não executar nem tratar como CRUD independente de negócio. | Plataforma, não página de negócio |
-| 5 | [ClientAddress](#clientaddress) | Child/sub-resource | 92 | 20 | 15 | 10 | 12 | 15 | 10 | 5 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Clients, AddressTypes | High | IDs e pai encaminhados ao repository; validar primary/ownership/HTTP; não é página independente. | Início de UI em escopo explícito; fechar gates para100% |
-| 6 | [ClientContactPerson](#clientcontactperson) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Low | 2 — Tenants, Clients | Medium | DTOs recuperáveis; listas recebem clientId. Aba de cliente existente, não certifica CRUD principal. | Início de UI em escopo explícito; fechar gates para100% |
-| 7 | [EmployeeAddress](#employeeaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Employees, AddressTypes | High | Parent scope encaminhado; dados recuperáveis; falta jornada específica de primary/ownership/HTTP. | Início de UI em escopo explícito; fechar gates para100% |
-| 8 | [EmployeeTeams](#employeeteams) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Teams, Employees | Medium | IDs de vínculo, liderança e tempos expostos; testar intervalos e troca de relação; não exigir página global artificial. | Início de UI em escopo explícito; fechar gates para100% |
-| 9 | [EquipmentType](#equipmenttype) | Catalog CRUD | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Low | CRUD simples completo; duplicate Create400, Update sem precheck; UNIQUE coberto pelo middleware409; falta regressão dedicada de CRUD/HTTP. | Início de UI em escopo explícito; fechar gates para100% |
+| 3 | [EquipmentType](#equipmenttype) | Catalog CRUD | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Low | 91→100: 409 consistente, persistência propagada, validators registrados, locale e 74 regressões específicas. | Pronto para Web no escopo local certificado; smoke produtivo após promoção/deploy |
+| 4 | [Auth](#auth) | Authentication | 97 | 20 | 15 | 10 | 14 | 15 | 10 | 9 | 4 | nenhum | needs product decision | High | 1 — Tenants | Medium | NON-UI: login/register/refresh/logout. Lifecycle de entidade não aplicável. Testes claims/JWT presentes; não é CRUD/página adicional. | Plataforma, não página de negócio |
+| 5 | [Job](#job) | Infrastructure/Job | 95 | 20 | 15 | 10 | 13 | 15 | 10 | 7 | 5 | nenhum | needs product decision | High | 0 — global/contexto auth | Medium | NON-UI: jobs têm efeitos/filas; Execute existe nos seeds. Não executar nem tratar como CRUD independente de negócio. | Plataforma, não página de negócio |
+| 6 | [ClientAddress](#clientaddress) | Child/sub-resource | 92 | 20 | 15 | 10 | 12 | 15 | 10 | 5 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Clients, AddressTypes | High | IDs e pai encaminhados ao repository; validar primary/ownership/HTTP; não é página independente. | Início de UI em escopo explícito; fechar gates para100% |
+| 7 | [ClientContactPerson](#clientcontactperson) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Low | 2 — Tenants, Clients | Medium | DTOs recuperáveis; listas recebem clientId. Aba de cliente existente, não certifica CRUD principal. | Início de UI em escopo explícito; fechar gates para100% |
+| 8 | [EmployeeAddress](#employeeaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Employees, AddressTypes | High | Parent scope encaminhado; dados recuperáveis; falta jornada específica de primary/ownership/HTTP. | Início de UI em escopo explícito; fechar gates para100% |
+| 9 | [EmployeeTeams](#employeeteams) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Teams, Employees | Medium | IDs de vínculo, liderança e tempos expostos; testar intervalos e troca de relação; não exigir página global artificial. | Início de UI em escopo explícito; fechar gates para100% |
 | 10 | [TenantFiscalData](#tenantfiscaldata) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 1 — Tenants | Low | Campos/pai recuperáveis; faltam regressões fiscais/HTTP; prontidão da aba não certifica aggregate Tenant. | Início de UI em escopo explícito; fechar gates para100% |
 | 11 | [UserPreferences](#userpreferences) | Identity/Admin | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 2 — Tenants, Users | Medium | Formulário recuperável; Create usa usuário corrente; aba de configurações autorizada, não catálogo de negócio. Duplicado400 e fallback de horários merecem regressões. | Início de UI em escopo explícito; fechar gates para100% |
 | 12 | [VisitAddress](#visitaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Visits, AddressTypes | High | Campos e pai expostos; faltam regressões de primary/ownership/HTTP; aba de visita. | Início de UI em escopo explícito; fechar gates para100% |
@@ -640,7 +640,9 @@ Schema SQL (sem execução):
 
 <a id="equipmenttype"></a>
 
-### EquipmentType — 91% (B)
+### EquipmentType — 100% (A)
+
+Certificação local atual: [evidências 91→100](#equipmenttype-certification). O texto de auditoria e score 91 abaixo é histórico preservado.
 
 CRUD simples completo; duplicate Create400, Update sem precheck; UNIQUE coberto pelo middleware409; falta regressão dedicada de CRUD/HTTP.
 
@@ -3321,3 +3323,40 @@ Baseline global:188 diagnósticos em137 arquivos, comparados ao log do checkpoin
 |20/20|15/15|10/10|15/15|15/15|10/10|10/10|5/5|100/100|
 
 Teams API ready for Gerit Web: **YES**, no escopo de contrato e regressões solicitado. TierA:Actions100 eTeams100. Próximo candidato: **EquipmentTypes**, sem iniciar sua implementação nesta execução. Sem commit,push,merge ou deploy; working tree permanece disponível para revisão humana.
+
+
+<a id="equipmenttype-certification"></a>
+
+## EquipmentTypes — certificação local 91→100
+
+Base develop fa6c08eee7da90e4962a6a24a77ff30f1f7d213f; branch fix/equipment-type-api-readiness.
+
+A auditoria confirmou Create duplicado400, Update sem precheck e endpoints de estado que ignoravam bool. Agora Create/Update duplicados retornam409; Update exclui o próprio ID, retorna204 e permite editar Name/Description. Create não retorna201 com ID0; Activate/Deactivate/Delete retornam400 quando a persistência falha. O domínio já propagava bool e permaneceu intacto. Estados repetidos retornam200; Delete200, GET removido410 e Delete repetido410.
+
+A identidade é Name no tenant autenticado, usando comparação/collation existente e IsDeleted=0. Inativos reservam nome; removidos não. UX_EquipmentTypes_Tenant_Name continua como defesa de concorrência, sem mudanças no índice/schema. Tenant é derivado do usuário; payload externo não decide tenant. Equipments depende do par EquipmentTypeId/TenantId por FK composta; EquipmentTypes depende de Tenants. Nenhum desses vínculos foi modificado.
+
+Description é NOT NULL no SQL. Foram adicionadas regras NotNull de Create/Update em rota e domínio e duas chaves em cada um dos quatro dicionários. Descrição vazia continua válida, limite500 preservado; Name obrigatório e limite200 preservados. Os DTOs existentes já fornecem Id/Name/IsActive na lista e TenantId/Description/CreatedAt no detalhe; nenhuma adição foi necessária. Mapper intacto.
+
+A auditoria de Program e RouteValidatorSetup encontrou ausência dos registros de CreateEquipmentTypeRequest e UpdateEquipmentTypeRequest. A única alteração compartilhada é registrar esses dois validators; o harness agora usa AddRouteValidatorSetup real, sem registro alternativo desses validators. Nenhum registro de outro recurso foi alterado.
+
+CustomAuthorize mantém EquipmentTypes:GetAll/GetBy/GetPaged/Create/Update/Activate/Deactivate/Delete, roles existentes e ambos os formatos de claims. Resources e Actions estão presentes em Initial_BackOffice-v2.sql; RolePermissions usa esses catálogos para BackOffice/Manager. Não houve execução de seed ou mudança de grants.
+
+### Evidência específica
+
+[Testes](../tests/VianaHub.Global.Gerit.Tests/EquipmentTypes/EquipmentTypeHttpIntegrationTests.cs): 74 PASS, sendo33 AppService/domínio/repository e41 HTTP. Cobrem CRUD, edição do próprio nome, duplicidade, bool=false em cinco mutações, soft delete, contexto autenticado, unicidade entre tenants, oito permissões positivas/negativas,401/403, estados repetidos,400/409/410.
+
+Validação, conflito, autorização negada e gone são verificados em pt-PT, pt-BR, en-US e es-ES, com títulos e mensagens exatos dos dicionários e sem chaves cruas. GetById e Delete possuem mensagens distintas e ambas são preservadas. Todas as chamadas normais recebem Accept-Language explícito; somente os dois testes deliberados de ausência/fr-FR removem/substituem o header para provar fallbackpt-PT sem rejeitar chamadas válidas. Culturas observadas no mesmo request, sem mecanismo alternativo de locale.
+
+O harness usa Kestrel loopback, JwtBearer assinado, CustomAuthorize, AppService, domínio, mapper e repositório reais com EF InMemory. Prova de unicidade entre tenants e contexto não equivale a RLS SQL; collation, constraints e login/RS256 produtivo não foram executados. Seis testes SQL condicionais permanecem SKIP. A certificação é local/contratual; produção continua pendente. Bulk upload existente não foi redesenhado por esta tarefa de CRUD.
+
+### Gates
+
+Suíte .NET:1342 PASS /0 FAIL /6 SKIP /1348 discovered. Restore e build Release -warnaserror PASS. Formatter dos arquivos alterados PASS; diagnóstico global comparado ao baseline188/137: resultado atual188/137, zero novos diagnósticos; exit2 global permanece dívida preexistente. git diff --check PASS. Seis testes do helper de smoke PASS.
+
+[Smoke preparado](../scripts/smoke/equipment-types.mjs) reutiliza client.mjs e GERIT_SMOKE_BASE_URL/EMAIL/PASSWORD, sem duplicar login. Não foi executado. Executar somente após PR→develop→main→deploy, com autorização operacional; registra IDs, cleanup em finally e verifica410. O script é um smoke mínimo de contrato, não substitui os testes de localization/authorization.
+
+| Read | Mutations | Lifecycle | Validation | Authorization | DTO | Tests | Locale | Total |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+|20/20|15/15|10/10|15/15|15/15|10/10|10/10|5/5|100/100|
+
+EquipmentTypes API ready for Gerit Web: **YES**, no escopo local acima. Tier A: Actions, Teams e EquipmentTypes. Próximo candidato: UserPreferences, não iniciado. Não houve Web, PartyType, migração de mapper, schema ou deploy.

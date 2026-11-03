@@ -1,4 +1,6 @@
 {
+  "Api.EquipmentType.DescriptionRequired": "La descripción es obligatoria",
+  "Domain.EquipmentType.DescriptionRequired": "La descripción es obligatoria",
   "Application.Catalog.TranslationLanguagesUnique": "Cada idioma solo puede tener una traducción por catálogo.",
   "Application.Catalog.TranslationDescriptionInvalid": "La descripción de la traducción no puede superar {0} caracteres.",
   "Application.Catalog.TranslationNameInvalid": "Se requiere un nombre de traducción de hasta {0} caracteres.",
