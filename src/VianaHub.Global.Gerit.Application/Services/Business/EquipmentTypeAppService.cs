@@ -75,7 +75,7 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
         var exists = await _repo.ExistsByNameAsync(tenantId, request.Name, ct);
         if (exists)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
@@ -90,6 +90,12 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
         if (entity == null)
         {
             _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.Update.ResourceNotFound"), 410);
+            return false;
+        }
+
+        if (await _repo.ExistsByNameExceptIdAsync(_currentUser.GetTenantId(), request.Name, id, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.Create.ResourceAlreadyExists"), 409);
             return false;
         }
 

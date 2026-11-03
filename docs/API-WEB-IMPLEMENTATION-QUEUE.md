@@ -1,3 +1,13 @@
+# Fila atual — EquipmentTypes certificado localmente
+
+EquipmentTypes **91→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#equipmenttype-certification). Tier A: **Actions, Teams, EquipmentTypes**. NEXT1: **UserPreferences**, não iniciado.
+
+Certificação local com74 regressões específicas, contrato409, persistência, validators reais registrados e locale comprovado. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
+
+## Histórico anterior preservado
+
+As prioridades e conclusões abaixo são checkpoints anteriores, superados pela fila atual acima.
+
 # API → Web: fila após certificação de Teams100
 
 Atualização de02/11/2026, mesma branch fix/team-api-readiness. Histórico preservado: **Teams91→99→100%**. [Contrato transversal Accept-Language e evidências](API-WEB-READINESS-MATRIX.md#team-accept-language-certification).
