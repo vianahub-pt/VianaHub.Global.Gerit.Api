@@ -33,7 +33,7 @@ public class UserPreferencesEntity : Entity
 
     protected UserPreferencesEntity() { }
 
-    public UserPreferencesEntity(int tenantId, int userId, string? appearance, string? currencyCode, string? locale, string? timezone, string? dateFormat, string? timeFormat, TimeSpan dayStart, TimeSpan dayEnd, int createdBy)
+    public UserPreferencesEntity(int tenantId, int userId, string? appearance, string? currencyCode, string? locale, string? timezone, string? dateFormat, string? timeFormat, TimeSpan dayStart, TimeSpan dayEnd, int createdBy, bool emailNewsletter = false, bool emailWeeklyReport = false, bool emailApproval = false, bool emailAlerts = true, bool emailReminders = true, bool emailPlanner = true)
     {
         TenantId = tenantId;
         UserId = userId;
@@ -46,12 +46,12 @@ public class UserPreferencesEntity : Entity
         DayStart = dayStart;
         DayEnd = dayEnd;
 
-        EmailNewsletter = false;
-        EmailWeeklyReport = false;
-        EmailApproval = false;
-        EmailAlerts = true;
-        EmailReminders = true;
-        EmailPlanner = true;
+        EmailNewsletter = emailNewsletter;
+        EmailWeeklyReport = emailWeeklyReport;
+        EmailApproval = emailApproval;
+        EmailAlerts = emailAlerts;
+        EmailReminders = emailReminders;
+        EmailPlanner = emailPlanner;
 
         IsActive = true;
         IsDeleted = false;

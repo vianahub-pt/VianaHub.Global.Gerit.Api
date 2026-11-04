@@ -1,8 +1,8 @@
-# Fila atual — EquipmentTypes certificado localmente
+# Fila atual — UserPreferences certificado localmente
 
-EquipmentTypes **91→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#equipmenttype-certification). Tier A: **Actions, Teams, EquipmentTypes**. NEXT1: **UserPreferences**, não iniciado.
+UserPreferences **91→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#userpreferences-certification). Tier A: **Actions, Teams, EquipmentTypes, UserPreferences**. NEXT1 pela matriz atual: **ClientAddress (92%)**, não iniciado.
 
-Certificação local com74 regressões específicas, contrato409, persistência, validators reais registrados e locale comprovado. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
+Certificação local com38 regressões específicas, ownership de User, contrato409, horários estritos, flags de email, persistência e locale comprovados. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
 
 ## Histórico anterior preservado
 

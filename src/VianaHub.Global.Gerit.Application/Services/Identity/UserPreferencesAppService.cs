@@ -1,4 +1,5 @@
 using AutoMapper;
+using System.Globalization;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.UserPreferences;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.UserPreferences;
@@ -45,7 +46,9 @@ public class UserPreferencesAppService : IUserPreferencesAppService
 
     public async Task<IEnumerable<UserPreferencesResponse>> GetAllAsync(CancellationToken ct)
     {
-        var entities = await _repo.GetAllAsync(ct);
+        var entities = IsRestrictedUser()
+            ? await _repo.GetAllByUserAsync(_currentUser.GetTenantId(), _currentUser.GetUserId(), ct)
+            : await _repo.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<UserPreferencesResponse>>(entities);
     }
 
@@ -57,11 +60,17 @@ public class UserPreferencesAppService : IUserPreferencesAppService
             _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Update.ResourceNotFound"), 410);
             return null;
         }
+        if (!CanAccess(entity)) return null;
         return _mapper.Map<UserPreferencesDetailResponse>(entity);
     }
 
     public async Task<UserPreferencesResponse?> GetByUserAsync(int userId, CancellationToken ct)
     {
+        if (IsRestrictedUser() && userId != _currentUser.GetUserId())
+        {
+            NotifyForbidden();
+            return null;
+        }
         var tenantId = _currentUser.GetTenantId();
         var entity = await _repo.GetByUserAsync(tenantId, userId, ct);
         if (entity == null || entity.IsDeleted)
@@ -75,7 +84,9 @@ public class UserPreferencesAppService : IUserPreferencesAppService
     public async Task<ListPageResponse<UserPreferencesResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
-        var paged = await _repo.GetPagedAsync(filter, ct);
+        var paged = IsRestrictedUser()
+            ? await _repo.GetPagedByUserAsync(_currentUser.GetTenantId(), _currentUser.GetUserId(), filter, ct)
+            : await _repo.GetPagedAsync(filter, ct);
         return _mapper.Map<ListPageResponse<UserPreferencesResponse>>(paged);
     }
 
@@ -87,16 +98,13 @@ public class UserPreferencesAppService : IUserPreferencesAppService
         var exists = await _repo.ExistsByUserAsync(tenantId, userId, ct);
         if (exists)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
-        if (!TimeSpan.TryParse(request.DayStart, out var dayStart))
-            dayStart = TimeSpan.Parse("09:00");
-        if (!TimeSpan.TryParse(request.DayEnd, out var dayEnd))
-            dayEnd = TimeSpan.Parse("18:00");
+        if (!TryParseDayTimes(request.DayStart, request.DayEnd, out var dayStart, out var dayEnd)) return 0;
 
-        var entity = new UserPreferencesEntity(tenantId, userId, request.Appearance, request.CurrencyCode, request.Locale, request.Timezone, request.DateFormat, request.TimeFormat, dayStart, dayEnd, _currentUser.GetUserId());
+        var entity = new UserPreferencesEntity(tenantId, userId, request.Appearance, request.CurrencyCode, request.Locale, request.Timezone, request.DateFormat, request.TimeFormat, dayStart, dayEnd, _currentUser.GetUserId(), request.EmailNewsletter, request.EmailWeeklyReport, request.EmailApproval, request.EmailAlerts, request.EmailReminders, request.EmailPlanner);
 
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
@@ -110,15 +118,43 @@ public class UserPreferencesAppService : IUserPreferencesAppService
             _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Update.ResourceNotFound"), 410);
             return false;
         }
+        if (!CanAccess(entity)) return false;
 
-        if (!TimeSpan.TryParse(request.DayStart, out var dayStart))
-            dayStart = entity.DayStart;
-        if (!TimeSpan.TryParse(request.DayEnd, out var dayEnd))
-            dayEnd = entity.DayEnd;
+        if (!TryParseDayTimes(request.DayStart, request.DayEnd, out var dayStart, out var dayEnd)) return false;
 
         entity.Update(request.Appearance, request.Locale, request.CurrencyCode, request.Timezone, request.DateFormat, request.TimeFormat, dayStart, dayEnd, request.EmailNewsletter, request.EmailWeeklyReport, request.EmailApproval, request.EmailAlerts, request.EmailReminders, request.EmailPlanner, _currentUser.GetUserId());
 
         return await _domain.UpdateAsync(entity, ct);
+    }
+
+    private bool TryParseDayTimes(string? start, string? end, out TimeSpan dayStart, out TimeSpan dayEnd)
+    {
+        var startOk = TimeSpan.TryParseExact(start, @"hh\:mm", CultureInfo.InvariantCulture, out dayStart) && dayStart < TimeSpan.FromDays(1);
+        var endOk = TimeSpan.TryParseExact(end, @"hh\:mm", CultureInfo.InvariantCulture, out dayEnd) && dayEnd < TimeSpan.FromDays(1);
+        if (!startOk) _notify.Add(_localization.GetMessage("Domain.UserPreferences.DayStartFormat"), 400);
+        if (!endOk) _notify.Add(_localization.GetMessage("Domain.UserPreferences.DayEndFormat"), 400);
+        return startOk && endOk;
+    }
+
+    private bool IsRestrictedUser()
+    {
+        return _currentUser.IsInRole("User") &&
+               !_currentUser.IsInRole("Admin") &&
+               !_currentUser.IsInRole("BackOffice") &&
+               !_currentUser.IsInRole("Manager") &&
+               !_currentUser.IsInRole("Operator");
+    }
+
+    private bool CanAccess(UserPreferencesEntity entity)
+    {
+        if (!IsRestrictedUser() || entity.UserId == _currentUser.GetUserId()) return true;
+        NotifyForbidden();
+        return false;
+    }
+
+    private void NotifyForbidden()
+    {
+        _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Forbidden.OtherUser"), 403);
     }
 
     public async Task<bool> ActivateAsync(int id, CancellationToken ct)
@@ -129,6 +165,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
             _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Activate.ResourceNotFound"), 410);
             return false;
         }
+        if (!CanAccess(entity)) return false;
 
         entity.Activate(_currentUser.GetUserId());
         return await _domain.ActivateAsync(entity, ct);
@@ -142,6 +179,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
             _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Deactivate.ResourceNotFound"), 410);
             return false;
         }
+        if (!CanAccess(entity)) return false;
 
         entity.Deactivate(_currentUser.GetUserId());
         return await _domain.DeactivateAsync(entity, ct);
@@ -155,6 +193,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
             _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Delete.ResourceNotFound"), 410);
             return false;
         }
+        if (!CanAccess(entity)) return false;
 
         entity.Delete(_currentUser.GetUserId());
         return await _domain.DeleteAsync(entity, ct);

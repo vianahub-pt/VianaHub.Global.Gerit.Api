@@ -1,4 +1,8 @@
 {
+  "Domain.UserPreferences.CurrencyCodeRequired": "O código da moeda é obrigatório",
+  "Domain.UserPreferences.CurrencyCodeMaxLength": "O código da moeda deve ter no máximo 3 caracteres",
+  "Domain.UserPreferences.DayStartFormat": "A hora de início é obrigatória no formato HH:mm",
+  "Domain.UserPreferences.DayEndFormat": "A hora de fim é obrigatória no formato HH:mm",
   "Api.EquipmentType.DescriptionRequired": "A descrição é obrigatória",
   "Domain.EquipmentType.DescriptionRequired": "A descrição é obrigatória",
   "Application.Catalog.TranslationLanguagesUnique": "Cada idioma pode ter apenas uma tradução por catálogo.",
@@ -1127,6 +1131,7 @@
   "Application.Service.UserPreferences.Create.ResourceAlreadyExists": "As preferências do utilizador já existem para este utilizador",
   "Application.Service.UserPreferences.Deactivate.ResourceNotFound": "Preferências do utilizador não encontradas",
   "Application.Service.UserPreferences.Delete.ResourceNotFound": "Preferências do utilizador não encontradas",
+  "Application.Service.UserPreferences.Forbidden.OtherUser": "Só pode aceder às suas próprias preferências de utilizador",
   "Application.Service.UserPreferences.Update.ResourceNotFound": "Preferências do utilizador não encontradas ou inativas",
   "Application.Service.UserRole.Activate.ResourceNotFound": "Função do utilizador não encontrada",
   "Application.Service.UserRole.BulkUpload.EmptyFile": "O ficheiro CSV está vazio",
