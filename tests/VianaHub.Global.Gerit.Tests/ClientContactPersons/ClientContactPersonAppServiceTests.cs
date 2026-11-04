@@ -126,6 +126,17 @@ public class ClientContactPersonAppServiceTests
     }
 
     [Fact]
+    public void Deactivate_Primary_RemovesPrimaryToRespectSqlConstraint()
+    {
+        var entity = Entity(primary: true);
+
+        entity.Deactivate(17);
+
+        Assert.False(entity.IsActive);
+        Assert.False(entity.IsPrimary);
+    }
+
+    [Fact]
     public void LegacyWhatsappAlias_PersistsThroughCanonicalField()
     {
         var entity = new ClientContactPersonsEntity(7, 10, "Contact", null, "+351900000000", true,

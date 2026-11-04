@@ -83,6 +83,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
 
         public void Deactivate(int modifiedBy)
         {
+            IsPrimary = false;
             IsActive = false;
             ModifiedBy = modifiedBy;
             ModifiedAt = DateTime.UtcNow;

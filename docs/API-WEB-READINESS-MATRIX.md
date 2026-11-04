@@ -3393,7 +3393,7 @@ Base develop `b048b0c51586fc5f266726ad43da3125b314e0ec`; branch `fix/client-cont
 
 A identidade funcional segue o índice e os seeds: `TenantId + ClientId + Email`, para contatos ativos e não removidos. Name não participa. Inativar ou remover libera a identidade ativa; reativar executa precheck e retorna409 se houver colisão. Update exclui o próprio ID. Mesmo email em outro Client é permitido.
 
-Primary segue `UX_ClientContactPersons_Primary`: no máximo um primary ativo/não removido por Client. Não existe evidência de auto-demotion, portanto Create/Update/Activate conflitante retorna409. Deactivate preserva `IsPrimary` como intenção do registro inativo; Delete remove primary. Novo primary pode ocupar a vaga enquanto o anterior está inativo, e a reativação do anterior então conflita.
+Primary segue `UX_ClientContactPersons_Primary`: no máximo um primary ativo/não removido por Client. Não existe evidência de auto-demotion, portanto Create/Update conflitante retorna409. Deactivate e Delete removem primary, respeitando `CK_ClientContactPersons_Primary_Active`; uma reativação posterior permanece non-primary.
 
 `IsCellPhoneWhatsapp` é o campo persistido. `IsWhatsapp`, ignorado pelo EF, permanece como alias de entrada backward-compatible e passa a ter efeito canônico em vez de ser silenciosamente descartado; o Detail projeta o valor persistido em ambos. Telefones respeitam NVARCHAR(50); a API mantém JobTitle/Department em100 como regra de domínio mais restritiva que o SQL histórico de150. Email é nullable no schema, mas obrigatório no contrato API.
 
@@ -3401,7 +3401,7 @@ O BulkUpload publicado deixou de retornar sucesso sem criar: cada linha válida 
 
 O harness local usa Kestrel loopback, JwtBearer, CustomAuthorize, middleware de locale, endpoint/AppService/domínio/repository reais, EF InMemory e RouteValidatorSetup. EF InMemory não prova RLS, collation ou índices filtrados SQL; JWT de teste não prova login produtivo. O smoke seguro exige `GERIT_SMOKE_CLIENT_ID` conhecido, cria somente contato temporário não-primary e registra cleanup antes das demais operações; foi testado com mocks e **não executado em produção**.
 
-Evidência local: **41 testes específicos PASS** (AppService, repository e HTTP) e **2 testes do smoke PASS**. A suíte completa passou com **1421 PASS /0 FAIL /6 SKIP /1427 discovered**. Restore e build Release com warnings como erro passaram; formatter dos arquivos C# alterados e `git diff --check` passaram. O diagnóstico global atual é184 diagnósticos/133 arquivos contra o baseline histórico188/137, sem diagnóstico novo nos arquivos alterados; a dívida global preexistente não foi formatada em massa.
+Evidência local: **42 testes específicos PASS** (AppService, repository e HTTP) e **2 testes do smoke PASS**. A suíte completa passou com **1422 PASS /0 FAIL /6 SKIP /1428 discovered**. Restore e build Release com warnings como erro passaram; formatter dos arquivos C# alterados e `git diff --check` passaram. O diagnóstico global atual é184 diagnósticos/133 arquivos contra o baseline histórico188/137, sem diagnóstico novo nos arquivos alterados; a dívida global preexistente não foi formatada em massa.
 
 | Read | Mutations | Lifecycle | Validation | Authorization | DTO | Tests | Locale | Total |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|

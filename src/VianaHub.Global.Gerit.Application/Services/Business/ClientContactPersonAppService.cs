@@ -147,13 +147,6 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.Create.ResourceAlreadyExists"), 409);
             return false;
         }
-        if (!clientContact.IsActive && clientContact.IsPrimary &&
-            await _repo.ExistsActivePrimaryAsync(clientId, id, ct))
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.PrimaryAlreadyExists"), 409);
-            return false;
-        }
-
         clientContact.Activate(UserId);
 
         return await _repo.UpdateAsync(clientContact, ct);
