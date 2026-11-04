@@ -186,10 +186,8 @@ public class LocalizationService : ILocalizationService
 
             return messages;
         }
-        // Fronteira intencional de fallback: qualquer falha de leitura ou desserialização
-        // retorna um mapa vazio para preservar o contrato de localização sem propagar
-        // detalhes de filesystem para a requisição.
-        catch (Exception ex)
+        // Apenas falhas esperadas de leitura/desserialização entram no fallback.
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
             Log.Error("[Gerit:LocalizationService] Error loading file {File} | Exception: {ExceptionDetails}", Path.GetFileName(commonFilePath), LogValueSanitizer.ExceptionDetails(ex));
             return new Dictionary<string, string>();
