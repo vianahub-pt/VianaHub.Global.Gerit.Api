@@ -92,6 +92,22 @@ public class LocalizationServiceThreadSafetyTests
         }
     }
 
+    [Theory]
+    [InlineData("fr-FR")]
+    [InlineData("../en-US")]
+    [InlineData("..\\en-US")]
+    [InlineData("C:\\locales\\en-US")]
+    [InlineData("/tmp/en-US")]
+    [InlineData("pt-PT/../en-US")]
+    public void InvalidOrPathLikeCulture_FallsBackToPtPt(string culture)
+    {
+        ClearCache();
+
+        var service = CreateService(culture);
+
+        Assert.Equal("Erro de validação", service.GetMessage(ValidationTitleKey));
+    }
+
     private static LocalizationService CreateService(string culture)
     {
         var context = new DefaultHttpContext();

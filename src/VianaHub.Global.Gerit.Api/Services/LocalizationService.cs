@@ -22,7 +22,7 @@ public class LocalizationService : ILocalizationService
 
     public string GetMessage(string key)
     {
-        var culture = GetCurrentCulture();
+        var culture = NormalizeCulture(GetCurrentCulture());
 
         var messages = GetMessages(culture);
 
@@ -69,11 +69,26 @@ public class LocalizationService : ILocalizationService
 
     private static IReadOnlyDictionary<string, string> GetMessages(string culture)
     {
+        culture = NormalizeCulture(culture);
         return _cache.GetOrAdd(
             culture,
             static cultureName => new Lazy<IReadOnlyDictionary<string, string>>(
                 () => LoadMessages(cultureName),
                 LazyThreadSafetyMode.ExecutionAndPublication)).Value;
+    }
+
+    private static string NormalizeCulture(string? culture)
+    {
+        if (string.Equals(culture, "pt-PT", StringComparison.OrdinalIgnoreCase))
+            return "pt-PT";
+        if (string.Equals(culture, "pt-BR", StringComparison.OrdinalIgnoreCase))
+            return "pt-BR";
+        if (string.Equals(culture, "en-US", StringComparison.OrdinalIgnoreCase))
+            return "en-US";
+        if (string.Equals(culture, "es-ES", StringComparison.OrdinalIgnoreCase))
+            return "es-ES";
+
+        return "pt-PT";
     }
 
     private static IReadOnlyDictionary<string, string> LoadMessages(string culture)
@@ -141,6 +156,9 @@ public class LocalizationService : ILocalizationService
 
             return messages;
         }
+        // Fronteira intencional de fallback: qualquer falha de leitura ou desserialização
+        // retorna um mapa vazio para preservar o contrato de localização sem propagar
+        // detalhes de filesystem para a requisição.
         catch (Exception ex)
         {
             Log.Error("[Gerit:LocalizationService] Error loading file {File} | Exception: {ExceptionDetails}", Path.GetFileName(commonFilePath), LogValueSanitizer.ExceptionDetails(ex));
