@@ -1,4 +1,8 @@
 {
+  "Domain.UserPreferences.CurrencyCodeRequired": "Currency code is required",
+  "Domain.UserPreferences.CurrencyCodeMaxLength": "Currency code must be at most 3 characters",
+  "Domain.UserPreferences.DayStartFormat": "Start time is required in HH:mm format",
+  "Domain.UserPreferences.DayEndFormat": "End time is required in HH:mm format",
   "Api.EquipmentType.DescriptionRequired": "Description is required",
   "Domain.EquipmentType.DescriptionRequired": "Description is required",
   "Application.Catalog.TranslationLanguagesUnique": "Each language can have only one translation per catalog.",
@@ -1128,6 +1132,7 @@
   "Application.Service.UserPreferences.Create.ResourceAlreadyExists": "User preferences already exist for this user",
   "Application.Service.UserPreferences.Deactivate.ResourceNotFound": "User preferences not found",
   "Application.Service.UserPreferences.Delete.ResourceNotFound": "User preferences not found",
+  "Application.Service.UserPreferences.Forbidden.OtherUser": "You can only access your own user preferences",
   "Application.Service.UserPreferences.Update.ResourceNotFound": "User preferences not found or inactive",
   "Application.Service.UserRole.Activate.ResourceNotFound": "User role not found",
   "Application.Service.UserRole.BulkUpload.EmptyFile": "CSV file is empty",

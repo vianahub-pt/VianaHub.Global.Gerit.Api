@@ -76,6 +76,7 @@ public static class UserPreferencesEndpoint
         groupV1.MapPost("/", async ([FromBody] CreateUserPreferencesRequest request, [FromServices] IUserPreferencesAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var id = await appService.CreateAsync(request, ct);
+            if (id == 0) return notify.CustomResponse(400);
             return notify.CustomResponse(new GenericResponse { Id = id }, 201);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Create")
@@ -86,12 +87,13 @@ public static class UserPreferencesEndpoint
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .WithValidation<CreateUserPreferencesRequest>();
 
         groupV1.MapPut("/{id}", async ([FromRoute] int id, [FromBody] UpdateUserPreferencesRequest request, [FromServices] IUserPreferencesAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var updated = await appService.UpdateAsync(id, request, ct);
-            return notify.CustomResponse(updated, 200);
+            return notify.CustomResponse(updated, updated ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Update")
         .WithName("UpdateUserPreferences")
@@ -108,7 +110,7 @@ public static class UserPreferencesEndpoint
         groupV1.MapPatch("/{id}/activate", async ([FromRoute] int id, [FromServices] IUserPreferencesAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.ActivateAsync(id, ct);
-            return notify.CustomResponse(ok);
+            return notify.CustomResponse(ok, ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Activate")
         .WithName("ActivateUserPreferences")
@@ -123,7 +125,7 @@ public static class UserPreferencesEndpoint
         groupV1.MapPatch("/{id}/deactivate", async ([FromRoute] int id, [FromServices] IUserPreferencesAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeactivateAsync(id, ct);
-            return notify.CustomResponse(ok);
+            return notify.CustomResponse(ok, ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Deactivate")
         .WithName("DeactivateUserPreferences")
@@ -138,7 +140,7 @@ public static class UserPreferencesEndpoint
         groupV1.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] IUserPreferencesAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeleteAsync(id, ct);
-            return notify.CustomResponse(ok);
+            return notify.CustomResponse(ok, ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager,Operator,User", "UserPreferences", "Delete")
         .WithName("DeleteUserPreferences")
