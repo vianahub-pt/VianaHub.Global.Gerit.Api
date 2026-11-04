@@ -580,6 +580,7 @@
   "Application.Service.ClientContactPerson.Create.ResourceAlreadyExists": "Já existe um contato com este e-mail para este cliente",
   "Application.Service.ClientContactPerson.Deactivate.ResourceNotFound": "contato do cliente não encontrado",
   "Application.Service.ClientContactPerson.Delete.ResourceNotFound": "contato do cliente não encontrado",
+  "Application.Service.ClientContactPerson.PrimaryAlreadyExists": "Já existe um contato principal ativo para este cliente",
   "Application.Service.ClientContactPerson.GetById.ResourceNotFound": "contato do cliente não encontrado ou inativo",
   "Application.Service.ClientContactPerson.ProcessBulkItems.ExistsByEmail": "O contato com e-mail '{1}' já existe para o cliente {0}",
   "Application.Service.ClientContactPerson.ProcessBulkItems.FailedToCreate": "Falha ao criar o contato '{0}'",

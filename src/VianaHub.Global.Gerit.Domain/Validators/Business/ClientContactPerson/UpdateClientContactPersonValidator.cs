@@ -48,8 +48,8 @@ public class UpdateClientContactPersonValidator : AbstractValidator<ClientContac
             .When(x => !string.IsNullOrWhiteSpace(x.Department));
 
         RuleFor(x => x.CellPhoneNumber)
-            .MaximumLength(30)
-            .WithMessage(localization.GetMessage("Domain.ClientContactPerson.CellPhoneNumberMaxLength", 30))
+            .MaximumLength(50)
+            .WithMessage(localization.GetMessage("Domain.ClientContactPerson.CellPhoneNumberMaxLength", 50))
             .When(x => !string.IsNullOrWhiteSpace(x.CellPhoneNumber));
 
         // Quando IsCellPhoneWhatsapp for true, CellPhoneNumber é obrigatório

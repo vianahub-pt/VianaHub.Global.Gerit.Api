@@ -74,14 +74,22 @@ public class ClientContactPersonRepository : IClientContactPersonDataRepository
         };
     }
 
-    public async Task<bool> ExistsByClientAndEmailAsync(int clientId, string? name, string? email, CancellationToken ct)
+    public async Task<bool> ExistsActiveByClientAndEmailAsync(int clientId, string? email, int? excludeId, CancellationToken ct)
     {
         return await _context.ClientContactPersons
             .AsNoTracking()
-            .AnyAsync(x => x.Client.Id == clientId &&
-                           x.Name == name &&
+            .AnyAsync(x => x.ClientId == clientId &&
                            x.Email == email &&
-                           !x.IsDeleted, ct);
+                           x.IsActive && !x.IsDeleted &&
+                           (!excludeId.HasValue || x.Id != excludeId.Value), ct);
+    }
+
+    public async Task<bool> ExistsActivePrimaryAsync(int clientId, int? excludeId, CancellationToken ct)
+    {
+        return await _context.ClientContactPersons
+            .AsNoTracking()
+            .AnyAsync(x => x.ClientId == clientId && x.IsPrimary && x.IsActive && !x.IsDeleted &&
+                           (!excludeId.HasValue || x.Id != excludeId.Value), ct);
     }
 
     public async Task<bool> AddAsync(ClientContactPersonsEntity entity, CancellationToken ct)

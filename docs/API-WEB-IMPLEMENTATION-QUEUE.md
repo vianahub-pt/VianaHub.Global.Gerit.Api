@@ -1,8 +1,8 @@
-# Fila atual — UserPreferences certificado localmente
+# Fila atual — ClientContactPerson certificado localmente
 
-UserPreferences **91→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#userpreferences-certification). Tier A: **Actions, Teams, EquipmentTypes, UserPreferences**. NEXT1 pela matriz atual: **ClientAddress (92%)**, não iniciado.
+ClientContactPerson **91→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#clientcontactperson-certification). Tier A: **Actions, Teams, EquipmentTypes, UserPreferences, ClientContactPerson**. Próximo candidato funcional: **ClientAddress**, não iniciado.
 
-Certificação local com38 regressões específicas, ownership de User, contrato409, horários estritos, flags de email, persistência e locale comprovados. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
+Certificação parent-scoped cobre identidade por email, primary, alias WhatsApp, propagação de persistência e BulkUpload real. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
 
 ## Histórico anterior preservado
 

@@ -38,11 +38,6 @@ public class ClientContactPersonDomainService : IClientContactPersonDomainServic
     {
         return await _repo.GetPagedAsync(clientId, request, ct);
     }
-    public async Task<bool> ExistsByClientAndEmailAsync(int clientId, string name, string email, CancellationToken ct)
-    {
-        return await _repo.ExistsByClientAndEmailAsync(clientId, name, email, ct);
-    }
-
     public async Task<bool> CreateAsync(ClientContactPersonsEntity entity, CancellationToken ct)
     {
         var validationResult = await _validator.ValidateForCreateAsync(entity);
