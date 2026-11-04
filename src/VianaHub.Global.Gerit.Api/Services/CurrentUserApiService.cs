@@ -167,6 +167,15 @@ public class CurrentUserApiService : ICurrentUserService
         return httpContext.User?.Identity?.IsAuthenticated == true;
     }
 
+    public bool IsInRole(string role)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        return user?.Identity?.IsAuthenticated == true &&
+               (user.IsInRole(role) || user.Claims.Any(claim =>
+                   (claim.Type == ClaimTypes.Role || claim.Type == "role") &&
+                   string.Equals(claim.Value, role, StringComparison.OrdinalIgnoreCase)));
+    }
+
     /// <summary>
     /// Obtém o identificador do usuário para usar em CreatedBy/ModifiedBy
     /// Ordem de preferência: 1) Email 2) Nome de usuário 3) ID do usuário 4) "system"

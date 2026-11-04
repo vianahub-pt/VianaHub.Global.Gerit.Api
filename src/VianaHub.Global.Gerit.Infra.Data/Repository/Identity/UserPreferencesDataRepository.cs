@@ -43,6 +43,16 @@ public class UserPreferencesDataRepository : IUserPreferencesDataRepository
             .Where(x => !x.IsDeleted).ToListAsync(ct);
     }
 
+    public async Task<IEnumerable<UserPreferencesEntity>> GetAllByUserAsync(int tenantId, int userId, CancellationToken ct)
+    {
+        return await _context.Set<UserPreferencesEntity>()
+            .AsNoTracking()
+            .Include(x => x.Tenant)
+            .Include(x => x.User)
+            .Where(x => x.TenantId == tenantId && x.UserId == userId && !x.IsDeleted)
+            .ToListAsync(ct);
+    }
+
     public async Task<ListPage<UserPreferencesEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct)
     {
         var query = _context.Set<UserPreferencesEntity>()
@@ -50,6 +60,26 @@ public class UserPreferencesDataRepository : IUserPreferencesDataRepository
             .Include(x => x.Tenant)
             .Include(x => x.User)
             .Where(x => !x.IsDeleted);
+
+        return await GetPagedAsync(query, request, ct);
+    }
+
+    public async Task<ListPage<UserPreferencesEntity>> GetPagedByUserAsync(int tenantId, int userId, PagedFilter request, CancellationToken ct)
+    {
+        var query = _context.Set<UserPreferencesEntity>()
+            .AsNoTracking()
+            .Include(x => x.Tenant)
+            .Include(x => x.User)
+            .Where(x => x.TenantId == tenantId && x.UserId == userId && !x.IsDeleted);
+
+        return await GetPagedAsync(query, request, ct);
+    }
+
+    private static async Task<ListPage<UserPreferencesEntity>> GetPagedAsync(
+        IQueryable<UserPreferencesEntity> query,
+        PagedFilter request,
+        CancellationToken ct)
+    {
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {

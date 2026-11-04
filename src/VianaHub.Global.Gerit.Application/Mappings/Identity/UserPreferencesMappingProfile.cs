@@ -13,7 +13,14 @@ public class UserPreferencesMappingProfile : Profile
         CreateMap<UserPreferencesEntity, UserPreferencesResponse>()
             .ForMember(dest => dest.Tenant, opt => opt.MapFrom(src => src.Tenant == null ? null : src.Tenant.Name))
             .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User == null ? null : src.User.Name))
-            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
+            .ForMember(dest => dest.DayStart, opt => opt.MapFrom(src => src.DayStart.ToString(@"hh\:mm")))
+            .ForMember(dest => dest.DayEnd, opt => opt.MapFrom(src => src.DayEnd.ToString(@"hh\:mm")));
+
+        CreateMap<UserPreferencesEntity, UserPreferencesDetailResponse>()
+            .ForMember(dest => dest.Tenant, opt => opt.MapFrom(src => src.Tenant == null ? null : src.Tenant.Name))
+            .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User == null ? null : src.User.Name))
+            .ForMember(dest => dest.DayStart, opt => opt.MapFrom(src => src.DayStart.ToString(@"hh\:mm")))
+            .ForMember(dest => dest.DayEnd, opt => opt.MapFrom(src => src.DayEnd.ToString(@"hh\:mm")));
 
         CreateMap<ListPage<UserPreferencesEntity>, ListPageResponse<UserPreferencesResponse>>();
     }

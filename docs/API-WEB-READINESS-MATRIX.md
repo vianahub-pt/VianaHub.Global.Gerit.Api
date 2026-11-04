@@ -6,7 +6,7 @@ Develop SHA: **77f4a9bfc53264c6f5abf2d3d711524c99e19215**. Branch develop atuali
 
 Foram inventariados **45 módulos / 406 definições de operações HTTP** em todos os arquivos de Endpoints. Base/EndpointMapperAttribute é infraestrutura de descoberta, não recurso adicional. Isso não significa45 páginas nem406 operações homologadas em runtime.
 
-> Certificação de Teams em02/11/2026: **91→99→100%**. Ver [contrato de Accept-Language e evidências](#team-accept-language-certification). Checkpoints anteriores preservados como histórico; demais recursos não foram reavaliados.
+> Certificação de UserPreferences em04/11/2026: **91→100%**. Ver [evidências e limites](#userpreferences-certification). Checkpoints anteriores preservados como histórico; demais recursos não foram reavaliados.
 
 ## Evidência e baseline
 
@@ -41,13 +41,13 @@ SQL80 não foi aplicado apenas por existir constraint: GlobalExceptionMiddleware
 
 | Tier | Quantidade |
 |---|---:|
-| A | 3 |
-| B | 8 |
+| A | 4 |
+| B | 7 |
 | C | 23 |
 | D | 8 |
 | NON-UI / PLATFORM | 3 |
 
-Os três NON-UI têm score técnico, mas são contados separadamente dos quatro tiers de UI. TierA exige100; TierB não é certificação100. Actions (referência fornecida), Teams e EquipmentTypes (certificações abaixo) estão nesse nível; os demais recursos não foram recertificados nesta execução. A [fila](API-WEB-IMPLEMENTATION-QUEUE.md) distingue candidatos cujo contrato já permite iniciar UI de certificação final e de dependências bloqueadas.
+Os três NON-UI têm score técnico, mas são contados separadamente dos quatro tiers de UI. TierA exige100; TierB não é certificação100. Actions (referência fornecida), Teams, EquipmentTypes e UserPreferences (certificações abaixo) estão nesse nível; os demais recursos não foram recertificados nesta execução. A [fila](API-WEB-IMPLEMENTATION-QUEUE.md) distingue candidatos cujo contrato já permite iniciar UI de certificação final e de dependências bloqueadas.
 
 ## Matriz principal — score final decrescente
 
@@ -56,14 +56,14 @@ Os três NON-UI têm score técnico, mas são contados separadamente dos quatro 
 | 1 | [Action](#action) | Identity/Admin | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 0 — global/contexto auth | Low | Referência homologada fornecida no pedido; Name imutável, Description recuperável, transições repetidas200, delete repetido410. | Referência existente |
 | 2 | [Team](#team) | Business CRUD | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Low | 91→99→100: Locale5/5 comprovado com Accept-Language em400/409/403/410, quatro culturas e fallback. Setenta regressões específicas PASS; zero novo diagnóstico de formatter. | Pronto para implementação no Web; sem iniciar outro recurso |
 | 3 | [EquipmentType](#equipmenttype) | Catalog CRUD | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Low | 91→100: 409 consistente, persistência propagada, validators registrados, locale e 74 regressões específicas. | Pronto para Web no escopo local certificado; smoke produtivo após promoção/deploy |
-| 4 | [Auth](#auth) | Authentication | 97 | 20 | 15 | 10 | 14 | 15 | 10 | 9 | 4 | nenhum | needs product decision | High | 1 — Tenants | Medium | NON-UI: login/register/refresh/logout. Lifecycle de entidade não aplicável. Testes claims/JWT presentes; não é CRUD/página adicional. | Plataforma, não página de negócio |
-| 5 | [Job](#job) | Infrastructure/Job | 95 | 20 | 15 | 10 | 13 | 15 | 10 | 7 | 5 | nenhum | needs product decision | High | 0 — global/contexto auth | Medium | NON-UI: jobs têm efeitos/filas; Execute existe nos seeds. Não executar nem tratar como CRUD independente de negócio. | Plataforma, não página de negócio |
-| 6 | [ClientAddress](#clientaddress) | Child/sub-resource | 92 | 20 | 15 | 10 | 12 | 15 | 10 | 5 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Clients, AddressTypes | High | IDs e pai encaminhados ao repository; validar primary/ownership/HTTP; não é página independente. | Início de UI em escopo explícito; fechar gates para100% |
-| 7 | [ClientContactPerson](#clientcontactperson) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Low | 2 — Tenants, Clients | Medium | DTOs recuperáveis; listas recebem clientId. Aba de cliente existente, não certifica CRUD principal. | Início de UI em escopo explícito; fechar gates para100% |
-| 8 | [EmployeeAddress](#employeeaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Employees, AddressTypes | High | Parent scope encaminhado; dados recuperáveis; falta jornada específica de primary/ownership/HTTP. | Início de UI em escopo explícito; fechar gates para100% |
-| 9 | [EmployeeTeams](#employeeteams) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Teams, Employees | Medium | IDs de vínculo, liderança e tempos expostos; testar intervalos e troca de relação; não exigir página global artificial. | Início de UI em escopo explícito; fechar gates para100% |
-| 10 | [TenantFiscalData](#tenantfiscaldata) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 1 — Tenants | Low | Campos/pai recuperáveis; faltam regressões fiscais/HTTP; prontidão da aba não certifica aggregate Tenant. | Início de UI em escopo explícito; fechar gates para100% |
-| 11 | [UserPreferences](#userpreferences) | Identity/Admin | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 2 — Tenants, Users | Medium | Formulário recuperável; Create usa usuário corrente; aba de configurações autorizada, não catálogo de negócio. Duplicado400 e fallback de horários merecem regressões. | Início de UI em escopo explícito; fechar gates para100% |
+| 5 | [Auth](#auth) | Authentication | 97 | 20 | 15 | 10 | 14 | 15 | 10 | 9 | 4 | nenhum | needs product decision | High | 1 — Tenants | Medium | NON-UI: login/register/refresh/logout. Lifecycle de entidade não aplicável. Testes claims/JWT presentes; não é CRUD/página adicional. | Plataforma, não página de negócio |
+| 6 | [Job](#job) | Infrastructure/Job | 95 | 20 | 15 | 10 | 13 | 15 | 10 | 7 | 5 | nenhum | needs product decision | High | 0 — global/contexto auth | Medium | NON-UI: jobs têm efeitos/filas; Execute existe nos seeds. Não executar nem tratar como CRUD independente de negócio. | Plataforma, não página de negócio |
+| 7 | [ClientAddress](#clientaddress) | Child/sub-resource | 92 | 20 | 15 | 10 | 12 | 15 | 10 | 5 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Clients, AddressTypes | High | IDs e pai encaminhados ao repository; validar primary/ownership/HTTP; não é página independente. | Início de UI em escopo explícito; fechar gates para100% |
+| 8 | [ClientContactPerson](#clientcontactperson) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Low | 2 — Tenants, Clients | Medium | DTOs recuperáveis; listas recebem clientId. Aba de cliente existente, não certifica CRUD principal. | Início de UI em escopo explícito; fechar gates para100% |
+| 9 | [EmployeeAddress](#employeeaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Employees, AddressTypes | High | Parent scope encaminhado; dados recuperáveis; falta jornada específica de primary/ownership/HTTP. | Início de UI em escopo explícito; fechar gates para100% |
+| 10 | [EmployeeTeams](#employeeteams) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Teams, Employees | Medium | IDs de vínculo, liderança e tempos expostos; testar intervalos e troca de relação; não exigir página global artificial. | Início de UI em escopo explícito; fechar gates para100% |
+| 11 | [TenantFiscalData](#tenantfiscaldata) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 1 — Tenants | Low | Campos/pai recuperáveis; faltam regressões fiscais/HTTP; prontidão da aba não certifica aggregate Tenant. | Início de UI em escopo explícito; fechar gates para100% |
+| 4 | [UserPreferences](#userpreferences) | Identity/Admin | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Medium | 2 — Tenants, Users | Medium | 91→100: ownership de User, horários estritos, flags de email, 409, persistência e locale comprovados por 38 regressões específicas. | Pronto para Web no escopo local certificado; smoke produtivo após promoção/deploy |
 | 12 | [VisitAddress](#visitaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Visits, AddressTypes | High | Campos e pai expostos; faltam regressões de primary/ownership/HTTP; aba de visita. | Início de UI em escopo explícito; fechar gates para100% |
 | 13 | [User](#user) | Identity/Admin | 90 | 18 | 15 | 10 | 11 | 15 | 9 | 7 | 5 | nenhum | needs product decision | High | 1 — Tenants | Medium | Create/senha/edição são operações diferentes; não retornar password. GetById sem guard410 explícito; jornada credenciais/grants requer evidência própria. | Início de UI em escopo explícito; fechar gates para100% |
 | 14 | [VisitTeam](#visitteam) | Aggregate CRUD | 88 | 20 | 14 | 9 | 11 | 15 | 10 | 4 | 5 | nenhum | needs product decision | High | 2 — Visits, Teams | Medium | VisitId/TeamId expostos; Update sobrescreve tempos com UtcNow/null e domínio ignora bool; associação temporal exige UX própria. | Correções necessárias antes de priorizar |
@@ -839,9 +839,9 @@ Schema SQL (sem execução):
 
 <a id="userpreferences"></a>
 
-### UserPreferences — 91% (B)
+### UserPreferences — 91% (B) — histórico
 
-Formulário recuperável; Create usa usuário corrente; aba de configurações autorizada, não catálogo de negócio. Duplicado400 e fallback de horários merecem regressões.
+Certificação local atual: [evidências 91→100](#userpreferences-certification). O texto de auditoria e score 91 abaixo é histórico preservado.
 
 - A/B/C/D/E/F/G/H: `20/15/10/12/15/10/4/5`; soma=91; cap=100; final=91. Caps: nenhum.
 - Category: Identity/Admin; Web complexity: Medium; Business value: needs product decision.
@@ -3360,3 +3360,27 @@ Suíte .NET:1342 PASS /0 FAIL /6 SKIP /1348 discovered. Restore e build Release 
 |20/20|15/15|10/10|15/15|15/15|10/10|10/10|5/5|100/100|
 
 EquipmentTypes API ready for Gerit Web: **YES**, no escopo local acima. Tier A: Actions, Teams e EquipmentTypes. Próximo candidato: UserPreferences, não iniciado. Não houve Web, PartyType, migração de mapper, schema ou deploy.
+
+<a id="userpreferences-certification"></a>
+
+## UserPreferences — certificação local 91→100
+
+Base develop `6ba1fd34388c4b90e27900132f543c3c06445918`; branch `fix/user-preferences-api-readiness`.
+
+O contrato agora preserva os seis flags de email enviados no Create, mapeia lista e detalhe com horários determinísticos `HH:mm`, rejeita horários e valores de enum inválidos sem fallback silencioso, exige `CurrencyCode` compatível com o schema e usa409 para a preferência não removida já existente. A política permanece uma preferência não removida por utilizador: inativa ainda reserva a identidade; removida permite novo Create.
+
+Role `User` consulta e altera somente a própria preferência, incluindo listas e paginação filtradas no repository. Admin, BackOffice, Manager e Operator mantêm o acesso definido pelas permissões existentes. Tenant continua derivado do contexto autenticado e protegido por RLS; não houve alteração de grants, schema, migrations ou seeds.
+
+Os endpoints deixam de devolver sucesso falso quando Create/Update/Activate/Deactivate/Delete não persistem. Estados repetidos preservam a idempotência existente; recursos removidos continuam410. Quatro dicionários localizam validação, conflito, autorização e gone, com fallback pt-PT.
+
+### Evidência e limites
+
+[Testes HTTP e de mapping](../tests/VianaHub.Global.Gerit.Tests/UserPreferences/) usam Kestrel loopback, JwtBearer assinado, filtros, AppService, domínio, mapper e repository reais com EF InMemory isolado. São38 regressões específicas PASS: CRUD/roundtrip, seis flags, horários, validação,409, inactive uniqueness, falha de persistência, oito permissões, ownership, quatro locales e fallback. Não constituem prova de RLS/collation/constraints em SQL Server real.
+
+Suíte completa: **1380 PASS /0 FAIL /6 SKIP /1386 discovered**. Build Release com warnings como erro PASS. Formatter dos arquivos C# alterados PASS; `git diff --check` PASS. Os sete testes mockados do [smoke](../scripts/smoke/user-preferences.mjs) passaram. O smoke produtivo não foi executado: por padrão é somente leitura; mutação exige opt-in, snapshot completo, cleanup em `finally` e verificação da restauração. Create/Delete nunca são disparados pelo script.
+
+| Read | Mutations | Lifecycle | Validation | Authorization | DTO | Tests | Locale | Total |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+|20/20|15/15|10/10|15/15|15/15|10/10|10/10|5/5|100/100|
+
+UserPreferences API ready for Gerit Web: **YES**, no escopo local acima. Tier A: Actions, Teams, EquipmentTypes e UserPreferences. Próximo candidato pela matriz atual: **ClientAddress (92%)**, sem iniciar sua implementação. Não houve Web, PartyType, migração de mapper, schema, smoke produtivo ou deploy.
