@@ -68,7 +68,7 @@ public class LocalizationServiceThreadSafetyTests
             .Select(_ => Task.Run(() => service.GetMessage(formatKey, 25)));
         var formattedMessages = await Task.WhenAll(formattedTasks);
 
-        Assert.All(formattedMessages, message => Assert.Equal(string.Format(template, 25), message));
+        Assert.All(formattedMessages, message => Assert.Equal("Note must be at most 25 characters", message));
         Assert.Equal("Chave.Inexistente", service.GetMessage("Chave.Inexistente"));
         Assert.Equal("Erro de validação", CreateService("fr-FR").GetMessage(ValidationTitleKey));
     }
