@@ -581,6 +581,7 @@
   "Application.Service.ClientContactPerson.Create.ResourceAlreadyExists": "A contact with this email already exists for this client",
   "Application.Service.ClientContactPerson.Deactivate.ResourceNotFound": "Client contact not found",
   "Application.Service.ClientContactPerson.Delete.ResourceNotFound": "Client contact not found",
+  "Application.Service.ClientContactPerson.PrimaryAlreadyExists": "An active primary contact already exists for this client",
   "Application.Service.ClientContactPerson.GetById.ResourceNotFound": "Client contact not found or inactive",
   "Application.Service.ClientContactPerson.ProcessBulkItems.ExistsByEmail": "Contact with email '{1}' already exists for client {0}",
   "Application.Service.ClientContactPerson.ProcessBulkItems.FailedToCreate": "Failed to create contact '{0}'",
