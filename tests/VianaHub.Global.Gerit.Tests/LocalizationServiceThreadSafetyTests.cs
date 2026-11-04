@@ -94,11 +94,15 @@ public class LocalizationServiceThreadSafetyTests
 
     [Theory]
     [InlineData("fr-FR")]
+    [InlineData("../../etc")]
+    [InlineData("../pt-BR")]
     [InlineData("../en-US")]
     [InlineData("..\\en-US")]
     [InlineData("C:\\locales\\en-US")]
+    [InlineData("/absolute/path")]
     [InlineData("/tmp/en-US")]
     [InlineData("pt-PT/../en-US")]
+    [InlineData("pt-PT/../../x")]
     public void InvalidOrPathLikeCulture_FallsBackToPtPt(string culture)
     {
         ClearCache();
@@ -106,6 +110,49 @@ public class LocalizationServiceThreadSafetyTests
         var service = CreateService(culture);
 
         Assert.Equal("Erro de validação", service.GetMessage(ValidationTitleKey));
+    }
+
+    [Fact]
+    public void MessageWithoutPlaceholders_IgnoresArguments()
+    {
+        ClearCache();
+
+        Assert.Equal("Validation Error", CreateService("en-US").GetMessage(ValidationTitleKey, "ignored"));
+    }
+
+    [Fact]
+    public void EmptyArguments_PreserveMessage()
+    {
+        ClearCache();
+
+        Assert.Equal(
+            "Note must be at most {0} characters",
+            CreateService("en-US").GetMessage("Api.Validator.Client.Create.Note.MaximumLength", Array.Empty<object?>()));
+    }
+
+    [Fact]
+    public void MessageWithMultiplePlaceholders_FormatsArguments()
+    {
+        ClearCache();
+
+        var service = CreateService("en-US");
+
+        Assert.Equal(
+            "Address of type billing already exists for client 42",
+            service.GetMessage("Application.Service.ClientAddress.ProcessBulkItems.ExistsByClientAndType", 42, "billing"));
+    }
+
+    [Fact]
+    public void MalformedMessage_PreservesOriginalText()
+    {
+        Assert.Equal("Broken {", FormatForTest("Broken {", 1));
+    }
+
+    private static string FormatForTest(string message, params object?[] args)
+    {
+        var method = typeof(LocalizationService)
+            .GetMethod("FormatMessage", BindingFlags.Static | BindingFlags.NonPublic)!;
+        return (string)method.Invoke(null, [message, args])!;
     }
 
     private static LocalizationService CreateService(string culture)

@@ -2,6 +2,7 @@ using VianaHub.Global.Gerit.Domain.Helpers;
 using Serilog;
 using System.Collections.Concurrent;
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
@@ -42,14 +43,7 @@ public class LocalizationService : ILocalizationService
     public string GetMessage(string key, params object?[] args)
     {
         var message = GetMessage(key);
-        try
-        {
-            return string.Format(message, args);
-        }
-        catch
-        {
-            return message;
-        }
+        return FormatMessage(message, args);
     }
 
     public string GetCurrentCulture()
@@ -91,12 +85,48 @@ public class LocalizationService : ILocalizationService
         return "pt-PT";
     }
 
+    private static string FormatMessage(string message, object?[] args)
+    {
+        if (args is null || args.Length == 0 || !message.Contains('{', StringComparison.Ordinal))
+            return message;
+
+        var builder = new StringBuilder(message.Length);
+        for (var index = 0; index < message.Length; index++)
+        {
+            if (message[index] != '{')
+            {
+                builder.Append(message[index]);
+                continue;
+            }
+
+            var closingBrace = message.IndexOf('}', index + 1);
+            if (closingBrace < 0)
+            {
+                builder.Append(message[index..]);
+                break;
+            }
+
+            var placeholder = message[(index + 1)..closingBrace];
+            if (int.TryParse(placeholder, out var argumentIndex)
+                && argumentIndex >= 0
+                && argumentIndex < args.Length)
+            {
+                builder.Append(args[argumentIndex]);
+            }
+            else
+            {
+                builder.Append(message[index..(closingBrace + 1)]);
+            }
+
+            index = closingBrace;
+        }
+
+        return builder.ToString();
+    }
+
     private static IReadOnlyDictionary<string, string> LoadMessages(string culture)
     {
-        var localesPath = Path.Combine(
-            AppContext.BaseDirectory,
-            "locales"
-        );
+        var localesPath = Path.Join(AppContext.BaseDirectory, "locales");
 
         if (!Directory.Exists(localesPath))
         {
@@ -104,8 +134,8 @@ public class LocalizationService : ILocalizationService
             return new Dictionary<string, string>();
         }
 
-        // Carregar o ficheiro comum para a cultura: locales/{culture}/common.json
-        var commonFilePath = Path.Combine(localesPath, culture, "common.json");
+        // A cultura já foi normalizada e apenas seleciona um caminho relativo conhecido.
+        var commonFilePath = Path.Join(localesPath, GetLocaleRelativePath(culture));
 
         if (!File.Exists(commonFilePath))
         {
@@ -114,7 +144,7 @@ public class LocalizationService : ILocalizationService
             // Tentar fallback para pt-PT
             if (culture != "pt-PT")
             {
-                var fallbackPath = Path.Combine(localesPath, "pt-PT", "common.json");
+                var fallbackPath = Path.Join(localesPath, "pt-PT", "common.json");
                 if (File.Exists(fallbackPath))
                 {
                     Log.Warning("[Gerit:LocalizationService] Trying pt-PT fallback");
@@ -165,4 +195,13 @@ public class LocalizationService : ILocalizationService
             return new Dictionary<string, string>();
         }
     }
+
+    private static string GetLocaleRelativePath(string culture) => culture switch
+    {
+        "pt-PT" => "pt-PT/common.json",
+        "pt-BR" => "pt-BR/common.json",
+        "en-US" => "en-US/common.json",
+        "es-ES" => "es-ES/common.json",
+        _ => "pt-PT/common.json"
+    };
 }
