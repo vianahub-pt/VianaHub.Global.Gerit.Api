@@ -33,12 +33,12 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             Name = name;
             PhoneNumber = phoneNumber;
             CellPhoneNumber = cellPhoneNumber;
-            IsWhatsapp = isWhatsapp;
+            IsWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             Email = email;
             IsPrimary = isPrimary;
             JobTitle = jobTitle;
             Department = department;
-            IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
+            IsCellPhoneWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             IsActive = true;
             IsDeleted = false;
             CreatedBy = createdBy;
@@ -50,12 +50,12 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             Name = name;
             PhoneNumber = phoneNumber;
             CellPhoneNumber = cellPhoneNumber;
-            IsWhatsapp = isWhatsapp;
+            IsWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             Email = email;
             IsPrimary = isPrimary;
             JobTitle = jobTitle;
             Department = department;
-            IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
+            IsCellPhoneWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             ModifiedBy = modifiedBy;
             ModifiedAt = DateTime.UtcNow;
         }

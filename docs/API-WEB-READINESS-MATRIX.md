@@ -41,13 +41,13 @@ SQL80 não foi aplicado apenas por existir constraint: GlobalExceptionMiddleware
 
 | Tier | Quantidade |
 |---|---:|
-| A | 4 |
-| B | 7 |
+| A | 5 |
+| B | 6 |
 | C | 23 |
 | D | 8 |
 | NON-UI / PLATFORM | 3 |
 
-Os três NON-UI têm score técnico, mas são contados separadamente dos quatro tiers de UI. TierA exige100; TierB não é certificação100. Actions (referência fornecida), Teams, EquipmentTypes e UserPreferences (certificações abaixo) estão nesse nível; os demais recursos não foram recertificados nesta execução. A [fila](API-WEB-IMPLEMENTATION-QUEUE.md) distingue candidatos cujo contrato já permite iniciar UI de certificação final e de dependências bloqueadas.
+Os três NON-UI têm score técnico, mas são contados separadamente dos quatro tiers de UI. TierA exige100; TierB não é certificação100. Actions (referência fornecida), Teams, EquipmentTypes, UserPreferences e ClientContactPerson (certificações abaixo) estão nesse nível; os demais recursos não foram recertificados nesta execução. A [fila](API-WEB-IMPLEMENTATION-QUEUE.md) distingue candidatos cujo contrato já permite iniciar UI de certificação final e de dependências bloqueadas.
 
 ## Matriz principal — score final decrescente
 
@@ -57,10 +57,10 @@ Os três NON-UI têm score técnico, mas são contados separadamente dos quatro 
 | 2 | [Team](#team) | Business CRUD | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Low | 91→99→100: Locale5/5 comprovado com Accept-Language em400/409/403/410, quatro culturas e fallback. Setenta regressões específicas PASS; zero novo diagnóstico de formatter. | Pronto para implementação no Web; sem iniciar outro recurso |
 | 3 | [EquipmentType](#equipmenttype) | Catalog CRUD | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Low | 91→100: 409 consistente, persistência propagada, validators registrados, locale e 74 regressões específicas. | Pronto para Web no escopo local certificado; smoke produtivo após promoção/deploy |
 | 4 | [UserPreferences](#userpreferences) | Identity/Admin | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Medium | 2 — Tenants, Users | Medium | 91→100: ownership de User, horários estritos, flags de email, 409, persistência e locale comprovados por 38 regressões específicas. | Pronto para Web no escopo local certificado; smoke produtivo após promoção/deploy |
-| 5 | [Auth](#auth) | Authentication | 97 | 20 | 15 | 10 | 14 | 15 | 10 | 9 | 4 | nenhum | needs product decision | High | 1 — Tenants | Medium | NON-UI: login/register/refresh/logout. Lifecycle de entidade não aplicável. Testes claims/JWT presentes; não é CRUD/página adicional. | Plataforma, não página de negócio |
-| 6 | [Job](#job) | Infrastructure/Job | 95 | 20 | 15 | 10 | 13 | 15 | 10 | 7 | 5 | nenhum | needs product decision | High | 0 — global/contexto auth | Medium | NON-UI: jobs têm efeitos/filas; Execute existe nos seeds. Não executar nem tratar como CRUD independente de negócio. | Plataforma, não página de negócio |
-| 7 | [ClientAddress](#clientaddress) | Child/sub-resource | 92 | 20 | 15 | 10 | 12 | 15 | 10 | 5 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Clients, AddressTypes | High | IDs e pai encaminhados ao repository; validar primary/ownership/HTTP; não é página independente. | Início de UI em escopo explícito; fechar gates para100% |
-| 8 | [ClientContactPerson](#clientcontactperson) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Low | 2 — Tenants, Clients | Medium | DTOs recuperáveis; listas recebem clientId. Aba de cliente existente, não certifica CRUD principal. | Início de UI em escopo explícito; fechar gates para100% |
+| 5 | [ClientContactPerson](#clientcontactperson) | Child/sub-resource | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 2 — Tenants, Clients | Medium | 91→100: parent scope, email/primary, alias WhatsApp, persistência, BulkUpload e locale certificados. | Pronto para a aba Client → Contact Persons; smoke após deploy |
+| 6 | [Auth](#auth) | Authentication | 97 | 20 | 15 | 10 | 14 | 15 | 10 | 9 | 4 | nenhum | needs product decision | High | 1 — Tenants | Medium | NON-UI: login/register/refresh/logout. Lifecycle de entidade não aplicável. Testes claims/JWT presentes; não é CRUD/página adicional. | Plataforma, não página de negócio |
+| 7 | [Job](#job) | Infrastructure/Job | 95 | 20 | 15 | 10 | 13 | 15 | 10 | 7 | 5 | nenhum | needs product decision | High | 0 — global/contexto auth | Medium | NON-UI: jobs têm efeitos/filas; Execute existe nos seeds. Não executar nem tratar como CRUD independente de negócio. | Plataforma, não página de negócio |
+| 8 | [ClientAddress](#clientaddress) | Child/sub-resource | 92 | 20 | 15 | 10 | 12 | 15 | 10 | 5 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Clients, AddressTypes | High | IDs e pai encaminhados ao repository; validar primary/ownership/HTTP; não é página independente. | Início de UI em escopo explícito; fechar gates para100% |
 | 9 | [EmployeeAddress](#employeeaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Employees, AddressTypes | High | Parent scope encaminhado; dados recuperáveis; falta jornada específica de primary/ownership/HTTP. | Início de UI em escopo explícito; fechar gates para100% |
 | 10 | [EmployeeTeams](#employeeteams) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Teams, Employees | Medium | IDs de vínculo, liderança e tempos expostos; testar intervalos e troca de relação; não exigir página global artificial. | Início de UI em escopo explícito; fechar gates para100% |
 | 11 | [TenantFiscalData](#tenantfiscaldata) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 1 — Tenants | Low | Campos/pai recuperáveis; faltam regressões fiscais/HTTP; prontidão da aba não certifica aggregate Tenant. | Início de UI em escopo explícito; fechar gates para100% |
@@ -434,9 +434,9 @@ Schema SQL (sem execução):
 
 <a id="clientcontactperson"></a>
 
-### ClientContactPerson — 91% (B)
+### ClientContactPerson — 91% (B) — histórico
 
-DTOs recuperáveis; listas recebem clientId. Aba de cliente existente, não certifica CRUD principal.
+Certificação local atual: [evidências 91→100](#clientcontactperson-certification). O texto e score 91 abaixo permanecem como histórico.
 
 - A/B/C/D/E/F/G/H: `20/15/10/12/15/10/4/5`; soma=91; cap=100; final=91. Caps: nenhum.
 - Category: Child/sub-resource; Web complexity: Low; Business value: needs product decision.
@@ -3384,3 +3384,27 @@ Suíte completa: **1380 PASS /0 FAIL /6 SKIP /1386 discovered**. Build Release c
 |20/20|15/15|10/10|15/15|15/15|10/10|10/10|5/5|100/100|
 
 UserPreferences API ready for Gerit Web: **YES**, no escopo local acima. Tier A: Actions, Teams, EquipmentTypes e UserPreferences. Próximo candidato pela matriz atual: **ClientAddress (92%)**, sem iniciar sua implementação. Não houve Web, PartyType, migração de mapper, schema, smoke produtivo ou deploy.
+
+<a id="clientcontactperson-certification"></a>
+
+## ClientContactPerson — certificação local 91→100
+
+Base develop `b048b0c51586fc5f266726ad43da3125b314e0ec`; branch `fix/client-contact-person-api-readiness`. Alvo de UI: **Client detail → Contact Persons**, nunca página global.
+
+A identidade funcional segue o índice e os seeds: `TenantId + ClientId + Email`, para contatos ativos e não removidos. Name não participa. Inativar ou remover libera a identidade ativa; reativar executa precheck e retorna409 se houver colisão. Update exclui o próprio ID. Mesmo email em outro Client é permitido.
+
+Primary segue `UX_ClientContactPersons_Primary`: no máximo um primary ativo/não removido por Client. Não existe evidência de auto-demotion, portanto Create/Update/Activate conflitante retorna409. Deactivate preserva `IsPrimary` como intenção do registro inativo; Delete remove primary. Novo primary pode ocupar a vaga enquanto o anterior está inativo, e a reativação do anterior então conflita.
+
+`IsCellPhoneWhatsapp` é o campo persistido. `IsWhatsapp`, ignorado pelo EF, permanece como alias de entrada backward-compatible e passa a ter efeito canônico em vez de ser silenciosamente descartado; o Detail projeta o valor persistido em ambos. Telefones respeitam NVARCHAR(50); a API mantém JobTitle/Department em100 como regra de domínio mais restritiva que o SQL histórico de150. Email é nullable no schema, mas obrigatório no contrato API.
+
+O BulkUpload publicado deixou de retornar sucesso sem criar: cada linha válida percorre Create, domínio, parent/tenant, duplicidade, primary e persistência. Arquivo ausente/vazio/inválido, linha inválida, duplicidade, limite e falha de persistência resultam em erro; sucesso significa linhas efetivamente gravadas. O processamento é sequencial e pode persistir linhas anteriores antes de uma linha inválida, comportamento explícito sem transação global inventada.
+
+O harness local usa Kestrel loopback, JwtBearer, CustomAuthorize, middleware de locale, endpoint/AppService/domínio/repository reais, EF InMemory e RouteValidatorSetup. EF InMemory não prova RLS, collation ou índices filtrados SQL; JWT de teste não prova login produtivo. O smoke seguro exige `GERIT_SMOKE_CLIENT_ID` conhecido, cria somente contato temporário não-primary e registra cleanup antes das demais operações; foi testado com mocks e **não executado em produção**.
+
+Evidência local: **41 testes específicos PASS** (AppService, repository e HTTP) e **2 testes do smoke PASS**. A suíte completa passou com **1421 PASS /0 FAIL /6 SKIP /1427 discovered**. Restore e build Release com warnings como erro passaram; formatter dos arquivos C# alterados e `git diff --check` passaram. O diagnóstico global atual é184 diagnósticos/133 arquivos contra o baseline histórico188/137, sem diagnóstico novo nos arquivos alterados; a dívida global preexistente não foi formatada em massa.
+
+| Read | Mutations | Lifecycle | Validation | Authorization | DTO | Tests | Locale | Total |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+|20/20|15/15|10/10|15/15|15/15|10/10|10/10|5/5|100/100|
+
+ClientContactPerson API ready for Gerit Web: **YES**, no escopo local e parent-scoped acima. Tier A: Actions, Teams, EquipmentTypes, UserPreferences e ClientContactPerson. Próximo candidato funcional: **ClientAddress**, não iniciado. Sem Web, PartyType, Mapperly, schema, deploy ou production smoke.
