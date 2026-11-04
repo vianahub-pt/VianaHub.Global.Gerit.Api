@@ -1,5 +1,6 @@
 using VianaHub.Global.Gerit.Domain.Helpers;
 using Serilog;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -11,8 +12,7 @@ namespace VianaHub.Global.Gerit.Api.Services;
 /// </summary>
 public class LocalizationService : ILocalizationService
 {
-    private static readonly Dictionary<string, Dictionary<string, string>> _cache = new();
-    private static readonly object _lock = new();
+    private static readonly ConcurrentDictionary<string, Lazy<IReadOnlyDictionary<string, string>>> _cache = new();
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public LocalizationService(IHttpContextAccessor httpContextAccessor)
@@ -67,91 +67,84 @@ public class LocalizationService : ILocalizationService
         return fallbackCulture;
     }
 
-    private Dictionary<string, string> GetMessages(string culture)
+    private static IReadOnlyDictionary<string, string> GetMessages(string culture)
     {
-        if (_cache.TryGetValue(culture, out var cached))
-            return cached;
+        return _cache.GetOrAdd(
+            culture,
+            static cultureName => new Lazy<IReadOnlyDictionary<string, string>>(
+                () => LoadMessages(cultureName),
+                LazyThreadSafetyMode.ExecutionAndPublication)).Value;
+    }
 
-        lock (_lock)
+    private static IReadOnlyDictionary<string, string> LoadMessages(string culture)
+    {
+        var localesPath = Path.Combine(
+            AppContext.BaseDirectory,
+            "locales"
+        );
+
+        if (!Directory.Exists(localesPath))
         {
-            // Double check após lock
-            if (_cache.TryGetValue(culture, out cached))
-                return cached;
+            Log.Error("[Gerit:LocalizationService] Locales folder not found: {Path}", localesPath);
+            return new Dictionary<string, string>();
+        }
 
-            var localesPath = Path.Combine(
-                AppContext.BaseDirectory,
-                "locales"
-            );
+        // Carregar o ficheiro comum para a cultura: locales/{culture}/common.json
+        var commonFilePath = Path.Combine(localesPath, culture, "common.json");
 
-            if (!Directory.Exists(localesPath))
+        if (!File.Exists(commonFilePath))
+        {
+            Log.Warning("[Gerit:LocalizationService] No common.json found for culture {Culture} at {Path}", culture, commonFilePath);
+
+            // Tentar fallback para pt-PT
+            if (culture != "pt-PT")
             {
-                Log.Error("[Gerit:LocalizationService] Locales folder not found: {Path}", localesPath);
-                _cache[culture] = new Dictionary<string, string>();
-                return _cache[culture];
-            }
-
-            // Carregar o ficheiro comum para a cultura: locales/{culture}/common.json
-            var commonFilePath = Path.Combine(localesPath, culture, "common.json");
-
-            if (!File.Exists(commonFilePath))
-            {
-                Log.Warning("[Gerit:LocalizationService] No common.json found for culture {Culture} at {Path}", culture, commonFilePath);
-
-                // Tentar fallback para pt-PT
-                if (culture != "pt-PT")
+                var fallbackPath = Path.Combine(localesPath, "pt-PT", "common.json");
+                if (File.Exists(fallbackPath))
                 {
-                    var fallbackPath = Path.Combine(localesPath, "pt-PT", "common.json");
-                    if (File.Exists(fallbackPath))
-                    {
-                        Log.Warning("[Gerit:LocalizationService] Trying pt-PT fallback");
-                        commonFilePath = fallbackPath;
-                    }
-                    else
-                    {
-                        Log.Error("[Gerit:LocalizationService] No fallback file found for culture {Culture}", culture);
-                        _cache[culture] = new Dictionary<string, string>();
-                        return _cache[culture];
-                    }
+                    Log.Warning("[Gerit:LocalizationService] Trying pt-PT fallback");
+                    commonFilePath = fallbackPath;
                 }
                 else
                 {
-                    Log.Error("[Gerit:LocalizationService] No pt-PT fallback file found");
-                    _cache[culture] = new Dictionary<string, string>();
-                    return _cache[culture];
+                    Log.Error("[Gerit:LocalizationService] No fallback file found for culture {Culture}", culture);
+                    return new Dictionary<string, string>();
                 }
             }
-
-            Log.Debug("[Gerit:LocalizationService] Loading {File}", commonFilePath);
-
-            try
+            else
             {
-                var json = File.ReadAllText(commonFilePath);
-                var options = new JsonSerializerOptions
-                {
-                    ReadCommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true
-                };
-                var messages = JsonSerializer.Deserialize<Dictionary<string, string>>(json, options);
-
-                if (messages == null || messages.Count == 0)
-                {
-                    Log.Warning("[Gerit:LocalizationService] File {File} is empty or invalid", Path.GetFileName(commonFilePath));
-                    _cache[culture] = new Dictionary<string, string>();
-                    return _cache[culture];
-                }
-
-                _cache[culture] = messages;
-                Log.Information("[Gerit:LocalizationService] Successfully loaded {Count} messages for culture {Culture}",
-                    messages.Count, culture);
-
-                return messages;
+                Log.Error("[Gerit:LocalizationService] No pt-PT fallback file found");
+                return new Dictionary<string, string>();
             }
-            catch (Exception ex)
+        }
+
+        Log.Debug("[Gerit:LocalizationService] Loading {File}", commonFilePath);
+
+        try
+        {
+            var json = File.ReadAllText(commonFilePath);
+            var options = new JsonSerializerOptions
             {
-                Log.Error("[Gerit:LocalizationService] Error loading file {File} | Exception: {ExceptionDetails}", Path.GetFileName(commonFilePath), LogValueSanitizer.ExceptionDetails(ex));
-                _cache[culture] = new Dictionary<string, string>();
-                return _cache[culture];
+                ReadCommentHandling = JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            };
+            var messages = JsonSerializer.Deserialize<Dictionary<string, string>>(json, options);
+
+            if (messages == null || messages.Count == 0)
+            {
+                Log.Warning("[Gerit:LocalizationService] File {File} is empty or invalid", Path.GetFileName(commonFilePath));
+                return new Dictionary<string, string>();
             }
+
+            Log.Information("[Gerit:LocalizationService] Successfully loaded {Count} messages for culture {Culture}",
+                messages.Count, culture);
+
+            return messages;
+        }
+        catch (Exception ex)
+        {
+            Log.Error("[Gerit:LocalizationService] Error loading file {File} | Exception: {ExceptionDetails}", Path.GetFileName(commonFilePath), LogValueSanitizer.ExceptionDetails(ex));
+            return new Dictionary<string, string>();
         }
     }
 }
