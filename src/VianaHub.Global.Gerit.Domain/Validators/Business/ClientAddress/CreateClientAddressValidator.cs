@@ -63,7 +63,7 @@ public class CreateClientAddressValidator : AbstractValidator<ClientAddressesEnt
             .WithMessage(localization.GetMessage("Domain.ClientAddress.StreetNumberMaxLength"));
 
         RuleFor(x => x.Complement)
-            .MaximumLength(200)
+            .MaximumLength(100)
             .When(x => !string.IsNullOrEmpty(x.Complement))
             .WithMessage(localization.GetMessage("Domain.ClientAddress.ComplementMaxLength"));
 
@@ -75,5 +75,17 @@ public class CreateClientAddressValidator : AbstractValidator<ClientAddressesEnt
         RuleFor(x => x.CreatedBy)
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.ClientAddress.CreatedByRequired"));
+
+        RuleFor(x => x)
+            .Must(x => x.Latitude.HasValue == x.Longitude.HasValue)
+            .WithMessage(localization.GetMessage("Domain.ClientAddress.CoordinatesRequiredTogether"));
+        RuleFor(x => x.Latitude)
+            .InclusiveBetween(-90, 90)
+            .When(x => x.Latitude.HasValue)
+            .WithMessage(localization.GetMessage("Domain.ClientAddress.LatitudeRange"));
+        RuleFor(x => x.Longitude)
+            .InclusiveBetween(-180, 180)
+            .When(x => x.Longitude.HasValue)
+            .WithMessage(localization.GetMessage("Domain.ClientAddress.LongitudeRange"));
     }
 }

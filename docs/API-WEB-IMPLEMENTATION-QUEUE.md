@@ -1,6 +1,6 @@
-# Fila atual — ClientContactPerson certificado localmente
+# Fila atual — ClientAddress certificado localmente
 
-ClientContactPerson **91→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#clientcontactperson-certification). Tier A: **Actions, Teams, EquipmentTypes, UserPreferences, ClientContactPerson**. Próximo candidato funcional: **ClientAddress**, não iniciado.
+ClientAddress **92→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#clientaddress). Tier A: **Actions, Teams, EquipmentTypes, UserPreferences, ClientContactPerson, ClientAddress**. Próximo capability do aggregate Client: **ClientFiscalData**.
 
 Certificação parent-scoped cobre identidade por email, primary, alias WhatsApp, propagação de persistência e BulkUpload real. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
 
@@ -43,7 +43,7 @@ Não declarar100%: o título compartilhado de validação não é localizado par
 | NEXT2 | EquipmentTypes |91%| Candidato seguinte; não houve reavaliação/correção nesta branch |
 | NEXT3 | UserPreferences |91%| Configurações do usuário, não catálogo de negócio |
 | NEXT4 | ClientContactPerson |91%| Aba de cliente existente |
-| NEXT5 | ClientAddress |92%| Aba de cliente existente |
+| NEXT5 | ClientAddress |100%| Aba de cliente existente |
 
 Quick-fix de Teams após esta execução: o gap restante de contrato é o título do ValidationFilter compartilhado; prechecks409, regressões CRUD/HTTP e propagação de persistência já foram fechados. A correção do título precisa preservar o escopo dos outros recursos. Higiene global do formatter é bloqueio de gate separado. Não existem cinco novos recursos certificados100%; TierA continua Actions.
 
@@ -82,7 +82,7 @@ Os NEXT abaixo têm contrato recuperável e nenhum hard cap confirmado **no esco
 | NEXT 2 | EquipmentTypes —91% | Catálogo de tipos de equipamento por tenant | Name/Description/estado expostos, baixo número de dependências; desbloqueia Equipments | Não é catálogo global. Create duplicado400; UNIQUE de Update coberto por middleware409; adicionar testes reais do contrato |
 | NEXT 3 | UserPreferences —91% | Configurações do usuário autorizado | Todos os campos editáveis expostos; Create usa usuário/tenant correntes; GET /user/{userId} usa ID real da sessão | Não inventar /current ou nova página de negócio; confirmar defaults de horário e grants para a role alvo; não ampliar autorização |
 | NEXT 4 | ClientContactPerson —91% | Aba de contatos de um Client existente | Detail/Update recuperáveis; clientId encaminhado ao repository; não necessita criar Client nem escolher status | Depende de shell/rota do pai no Web e de cliente existente. Não declarar CRUD completo de Clients pronto; testar ownership entre pais |
-| NEXT 5 | ClientAddress —92% | Aba de endereços de um Client existente | Dados/IDs de edição disponíveis e parent scope explícito; AddressTypes tem leitura suficiente para lookup | Precisa shell do pai e lookup de tipos; não requer implementar editor multilíngue de AddressTypes para usar IDs existentes; testar primary/ownership |
+| NEXT 5 | ClientAddress —100% | Aba de endereços de um Client existente | Parent scope, mapping, identidade, primary/lifecycle, coordenadas e BulkUpload certificados | Requer shell do pai e lookup de tipos; smoke produtivo pendente |
 
 Essas são cinco entregas de UI, não cinco novas páginas independentes. Se produto exigir apenas novos aggregates completos com página própria, NEXT4/NEXT5 não são substitutos: ficam reservados até corrigir os blockers dos próximos aggregates. Business value de todos permanece **needs product decision**; não há evidência de receita, adoção ou ROI para inventar High/Medium/Low.
 

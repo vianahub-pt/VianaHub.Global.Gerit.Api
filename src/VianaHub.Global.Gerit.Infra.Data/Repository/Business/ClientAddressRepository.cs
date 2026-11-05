@@ -116,6 +116,22 @@ public class ClientAddressRepository : IClientAddressDataRepository
                            !x.IsDeleted, ct);
     }
 
+    public Task<bool> ExistsByIdentityAsync(int clientId, int? excludeId, string? countryCode, string? street, string? streetNumber, string? neighborhood, string? city, string? district, string? postalCode, CancellationToken ct)
+    {
+        return _context.ClientAddresses.AsNoTracking().AnyAsync(x =>
+            x.ClientId == clientId && (!excludeId.HasValue || x.Id != excludeId.Value) &&
+            x.CountryCode == countryCode && x.Street == street && x.StreetNumber == streetNumber &&
+            x.Neighborhood == neighborhood && x.City == city && x.District == district &&
+            x.PostalCode == postalCode && x.IsActive && !x.IsDeleted, ct);
+    }
+
+    public Task<bool> ExistsPrimaryAsync(int clientId, int? excludeId, CancellationToken ct)
+    {
+        return _context.ClientAddresses.AsNoTracking().AnyAsync(x =>
+            x.ClientId == clientId && (!excludeId.HasValue || x.Id != excludeId.Value) &&
+            x.IsPrimary && x.IsActive && !x.IsDeleted, ct);
+    }
+
     public async Task<bool> ExistsByClientAndAddressTypeAsync(int clientId, int addressTypeId, CancellationToken ct)
     {
         return await _context.ClientAddresses
