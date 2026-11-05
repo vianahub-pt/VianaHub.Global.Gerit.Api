@@ -154,7 +154,7 @@ public class ClientAddressAppService : IClientAddressAppService
 
         clientAddress.Update(request.AddressTypeId, request.CountryCode, request.Street, request.StreetNumber, request.Complement, request.Neighborhood, request.City, request.District, request.PostalCode, request.Latitude, request.Longitude, request.Note, request.IsPrimary, UserId);
 
-        return await _domain.ActivateAsync(clientAddress, ct);
+        return await _domain.UpdateAsync(clientAddress, ct);
     }
 
     public async Task<bool> ActivateAsync(int clientId, int id, CancellationToken ct)

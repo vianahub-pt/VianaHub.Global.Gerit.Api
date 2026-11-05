@@ -51,7 +51,7 @@ public class CreateClientAddressRouteValidator : AbstractValidator<CreateClientA
         RuleFor(x => x.Complement)
             .MaximumLength(100)
             .When(x => !string.IsNullOrEmpty(x.Complement))
-            .WithMessage(localization.GetMessage("Api.Validator.ClientAddress.Create.Complement.MaximumLength", 200));
+            .WithMessage(localization.GetMessage("Api.Validator.ClientAddress.Create.Complement.MaximumLength", 100));
 
         RuleFor(x => x.Note)
             .MaximumLength(500)

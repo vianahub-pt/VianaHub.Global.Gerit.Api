@@ -82,6 +82,32 @@ public class ClientAddressAppServiceTests
     }
 
     [Fact]
+    public async Task Update_UsesUpdateDomainMethodAndPropagatesResult()
+    {
+        var entity = new ClientAddressesEntity(7, 10, 2, "PT", "Street", "12", null, "N", "City", "District", "1000", null, null, null, false, 17);
+        typeof(ClientAddressesEntity).GetProperty("Id")!.SetValue(entity, 42);
+        _repo.Setup(x => x.GetByIdAsync(10, 42, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
+        _repo.Setup(x => x.ExistsByIdentityAsync(10, 42, It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _domain.Setup(x => x.UpdateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        var result = await _service.UpdateAsync(10, 42, new UpdateClientAddressRequest
+        {
+            AddressTypeId = 2,
+            CountryCode = "PT",
+            Street = "Updated Street",
+            StreetNumber = "13",
+            Neighborhood = "N",
+            City = "City",
+            District = "District",
+            PostalCode = "1000"
+        }, default);
+
+        Assert.False(result);
+        _domain.Verify(x => x.UpdateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Once);
+        _domain.Verify(x => x.ActivateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public void DeactivatePrimary_RemovesPrimary()
     {
         var entity = new ClientAddressesEntity(7, 10, 2, "PT", "Street", null, null, "N", "City", null, "1000", null, null, null, true, 17);
