@@ -58,7 +58,7 @@ Os três NON-UI têm score técnico, mas são contados separadamente dos quatro 
 | 3 | [EquipmentType](#equipmenttype) | Catalog CRUD | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Low | 91→100: 409 consistente, persistência propagada, validators registrados, locale e 74 regressões específicas. | Pronto para Web no escopo local certificado; smoke produtivo após promoção/deploy |
 | 4 | [UserPreferences](#userpreferences) | Identity/Admin | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Medium | 2 — Tenants, Users | Medium | 91→100: ownership de User, horários estritos, flags de email, 409, persistência e locale comprovados por 38 regressões específicas. | Pronto para Web no escopo local certificado; smoke produtivo após promoção/deploy |
 | 5 | [ClientContactPerson](#clientcontactperson) | Child/sub-resource | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 2 — Tenants, Clients | Medium | 91→100: parent scope, email/primary, alias WhatsApp, persistência, BulkUpload e locale certificados. | Pronto para a aba Client → Contact Persons; smoke após deploy |
-| 6 | [ClientAddress](#clientaddress) | Child/sub-resource | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Clients, AddressTypes | High | 92→100: parent scope, mapping completo, identidade de endereço, primary/lifecycle, coordenadas, BulkUpload e locale certificados. | Pronto para a aba Client → Addresses; smoke após deploy |
+| 6 | [ClientAddress](#clientaddress) | Child/sub-resource | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Clients, AddressTypes | High | 92→100 histórico; implementação local atualizada com parent scope, mapping Mapperly, identidade, primary/lifecycle, coordenadas, bulk e locale. Certificação produtiva pendente. | Pronto para validação HTTP local; smoke após deploy |
 | 7 | [Auth](#auth) | Authentication | 97 | 20 | 15 | 10 | 14 | 15 | 10 | 9 | 4 | nenhum | needs product decision | High | 1 — Tenants | Medium | NON-UI: login/register/refresh/logout. Lifecycle de entidade não aplicável. Testes claims/JWT presentes; não é CRUD/página adicional. | Plataforma, não página de negócio |
 | 8 | [Job](#job) | Infrastructure/Job | 95 | 20 | 15 | 10 | 13 | 15 | 10 | 7 | 5 | nenhum | needs product decision | High | 0 — global/contexto auth | Medium | NON-UI: jobs têm efeitos/filas; Execute existe nos seeds. Não executar nem tratar como CRUD independente de negócio. | Plataforma, não página de negócio |
 | 9 | [EmployeeAddress](#employeeaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Employees, AddressTypes | High | Parent scope encaminhado; dados recuperáveis; falta jornada específica de primary/ownership/HTTP. | Início de UI em escopo explícito; fechar gates para100% |
@@ -3426,3 +3426,20 @@ ClientContactPerson API ready for Gerit Web: **YES**, no escopo local e parent-s
 - Valida referências, datas `yyyy-MM-dd`, booleanos, limites, duplicados, fórmula/CSV injection e múltiplos primários antes da persistência.
 - A persistência usa o domínio existente e operação em lote transacional quando suportada pelo provider; nenhum partial success é aceito pelo fluxo.
 - Testes HTTP e smoke local cobrem sucesso, atomicidade lógica e cleanup. Deploy/smoke produtivo ainda não executados; a capability continua `IMPLEMENTED WITH BULK UPLOAD — NOT PRODUCTION CLOSED`.
+
+## ClientAddress — implementação de prontidão local
+
+Na base `develop` `a23e2d9e36cef2049c82ab720001be2cc5fb3e2e`, ClientAddress foi endurecido para consumo pelo Web
+sem alteração de schema: os validadores de rota estão registrados, o parent Client é validado nas mutações, o
+`CountryCode` é normalizado para uppercase, o fluxo Activate usa o domínio correto e respostas falsas de persistência
+não são tratadas como sucesso. O mapeamento de respostas deixou de depender de AutoMapper para esta capability.
+
+O bulk upload valida todas as linhas antes de persistir, rejeita duplicados intra-arquivo e múltiplos primários, e usa
+uma operação de persistência em lote transacional quando o provider é relacional, evitando sucesso parcial. Conflitos
+de unicidade são convertidos em 409 e a leitura multipart é assíncrona. Endpoints, autorização, locale e regras de
+coordenadas existentes foram preservados.
+
+Evidência local desta etapa: suíte .NET `1458 PASS / 0 FAIL / 6 SKIP`, build Release com warnings como erro PASS,
+testes focados de ClientAddress PASS, smoke local do script PASS e `git diff --check` PASS. A validação HTTP em
+produção permanece pendente e não foi executada nesta etapa; portanto a capability não é declarada como fechada em
+produção.

@@ -1,5 +1,6 @@
-using AutoMapper;
 using Moq;
+using Microsoft.AspNetCore.Http;
+using System.Text;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientAddress;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Services.Business;
@@ -17,6 +18,7 @@ public class ClientAddressAppServiceTests
     private readonly Mock<IAddressTypeDataRepository> _addressTypes = new();
     private readonly Mock<IClientAddressDomainService> _domain = new();
     private readonly Mock<INotify> _notify = new();
+    private readonly Mock<IFileValidationService> _fileValidation = new();
     private readonly ClientAddressAppService _service;
 
     public ClientAddressAppServiceTests()
@@ -29,8 +31,8 @@ public class ClientAddressAppServiceTests
         _clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(Client());
         _addressTypes.Setup(x => x.ExistsByIdAsync(2, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _service = new ClientAddressAppService(_repo.Object, _clients.Object, _addressTypes.Object,
-            _domain.Object, Mock.Of<IMapper>(), _notify.Object, localization.Object, current.Object,
-            Mock.Of<IFileValidationService>());
+            _domain.Object, _notify.Object, localization.Object, current.Object,
+            _fileValidation.Object);
     }
 
     private static ClientEntity Client() => new(7, 2, 8, null, null, "Client", null, null, false,
@@ -115,4 +117,71 @@ public class ClientAddressAppServiceTests
         Assert.False(entity.IsActive);
         Assert.False(entity.IsPrimary);
     }
+
+    [Fact]
+    public async Task Activate_UsesActivateDomainMethod()
+    {
+        var entity = new ClientAddressesEntity(7, 10, 2, "PT", "Street", null, null, "N", "City", null, "1000", null, null, null, false, 17);
+        typeof(ClientAddressesEntity).GetProperty("Id")!.SetValue(entity, 42);
+        _repo.Setup(x => x.GetByIdAsync(10, 42, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
+        _domain.Setup(x => x.ActivateAsync(entity, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        var result = await _service.ActivateAsync(10, 42, default);
+
+        Assert.True(result);
+        _domain.Verify(x => x.ActivateAsync(entity, It.IsAny<CancellationToken>()), Times.Once);
+        _domain.Verify(x => x.UpdateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Create_NormalizesCountryCodeBeforePersistence()
+    {
+        _domain.Setup(x => x.CreateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var request = Request(); request.CountryCode = " pt ";
+
+        await _service.CreateAsync(10, request, default);
+
+        _domain.Verify(x => x.CreateAsync(It.Is<ClientAddressesEntity>(a => a.CountryCode == "PT"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_WithInactiveParentDoesNotPersist()
+    {
+        _clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync((ClientEntity?)null);
+
+        var result = await _service.CreateAsync(10, Request(), default);
+
+        Assert.Equal(0, result);
+        _domain.Verify(x => x.CreateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Create_PrimaryWithExistingPrimaryReturnsConflictWithoutPersisting()
+    {
+        _repo.Setup(x => x.ExistsPrimaryAsync(10, null, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var request = Request(); request.IsPrimary = true;
+
+        var result = await _service.CreateAsync(10, request, default);
+
+        Assert.Equal(0, result);
+        _domain.Verify(x => x.CreateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+        _notify.Verify(x => x.Add(It.IsAny<string>(), 409), Times.Once);
+    }
+
+    [Fact]
+    public async Task Bulk_InvalidSecondRowDoesNotPersistFirstRow()
+    {
+        _fileValidationSetup();
+        var csv = "AddressTypeId;CountryCode;Street;City;PostalCode;IsPrimary\n2;pt;Rua 1;Lisboa;1000;false\n2;;Rua 2;Lisboa;1001;false\n";
+        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+        var file = new FormFile(stream, 0, stream.Length, "file", "addresses.csv") { Headers = new HeaderDictionary(), ContentType = "text/csv" };
+
+        var result = await _service.BulkUploadAsync(10, file, default);
+
+        Assert.False(result);
+        _domain.Verify(x => x.CreateManyAsync(It.IsAny<IReadOnlyCollection<ClientAddressesEntity>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private void _fileValidationSetup() =>
+        _fileValidation.Setup(x => x.ValidateFile(It.IsAny<IFormFile?>())).Returns(true);
 }

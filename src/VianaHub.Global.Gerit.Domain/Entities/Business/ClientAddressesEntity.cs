@@ -8,14 +8,14 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         public int ClientId { get; private set; }
         public int AddressTypeId { get; private set; }
 
-        public string? CountryCode { get; private set; } = null!;
-        public string? Street { get; private set; } = null!;
+        public string CountryCode { get; private set; } = string.Empty;
+        public string Street { get; private set; } = string.Empty;
         public string? StreetNumber { get; private set; }
         public string? Complement { get; private set; }
-        public string? Neighborhood { get; private set; } = null!;
-        public string? City { get; private set; } = null!;
+        public string Neighborhood { get; private set; } = string.Empty;
+        public string City { get; private set; } = string.Empty;
         public string? District { get; private set; }
-        public string? PostalCode { get; private set; } = null!;
+        public string PostalCode { get; private set; } = string.Empty;
         public decimal? Latitude { get; private set; }
         public decimal? Longitude { get; private set; }
         public string? Note { get; private set; }
@@ -37,12 +37,12 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             ClientId = clientId;
             AddressTypeId = addressTypeId;
 
-            CountryCode = countryCode;
-            Street = street;
-            Neighborhood = neighborhood;
-            City = city;
+            CountryCode = countryCode ?? string.Empty;
+            Street = street ?? string.Empty;
+            Neighborhood = neighborhood ?? string.Empty;
+            City = city ?? string.Empty;
             District = district;
-            PostalCode = postalCode;
+            PostalCode = postalCode ?? string.Empty;
             StreetNumber = streetNumber;
             Complement = complement;
             Latitude = latitude;
@@ -59,12 +59,12 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         public void Update(int addressTypeId, string? countryCode, string? street, string? streetNumber, string? complement, string? neighborhood, string? city, string? district, string? postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int modifiedBy)
         {
             AddressTypeId = addressTypeId;
-            CountryCode = countryCode;
-            Street = street;
-            Neighborhood = neighborhood;
-            City = city;
+            CountryCode = countryCode ?? string.Empty;
+            Street = street ?? string.Empty;
+            Neighborhood = neighborhood ?? string.Empty;
+            City = city ?? string.Empty;
             District = district;
-            PostalCode = postalCode;
+            PostalCode = postalCode ?? string.Empty;
             StreetNumber = streetNumber;
             Complement = complement;
             Latitude = latitude;

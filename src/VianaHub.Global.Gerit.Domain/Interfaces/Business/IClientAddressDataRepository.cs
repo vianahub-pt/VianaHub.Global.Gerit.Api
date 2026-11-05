@@ -18,6 +18,7 @@ public interface IClientAddressDataRepository
     Task<bool> ExistsPrimaryAsync(int clientId, int? excludeId, CancellationToken ct);
     Task<bool> ExistsByClientAndAddressTypeAsync(int clientId, int addressTypeId, CancellationToken ct);
     Task<bool> CreateAsync(ClientAddressesEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<ClientAddressesEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(ClientAddressesEntity entity, CancellationToken ct);
     Task<bool> DeleteAsync(ClientAddressesEntity entity, CancellationToken ct);
 }
