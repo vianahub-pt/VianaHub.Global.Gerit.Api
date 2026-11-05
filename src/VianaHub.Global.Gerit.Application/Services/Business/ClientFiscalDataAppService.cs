@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -8,6 +7,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientFiscalData;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientFiscalData;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -22,7 +22,6 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
     private readonly IClientFiscalDataDataRepository _repo;
     private readonly IClientRepository _clientRepository;
     private readonly IClientFiscalDataDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -32,7 +31,6 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
         IClientFiscalDataDataRepository repo,
         IClientRepository clientRepository,
         IClientFiscalDataDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -41,7 +39,6 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
         _repo = repo;
         _clientRepository = clientRepository;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -52,7 +49,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
     {
         var entities = await _repo.GetAllAsync(clientId, ct);
 
-        return _mapper.Map<IEnumerable<ClientFiscalDataResponse>>(entities);
+        return entities.Select(ClientFiscalDataMapper.ToResponse);
     }
 
     public async Task<ClientFiscalDataDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
@@ -63,14 +60,14 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
             _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<ClientFiscalDataDetailResponse>(entity);
+        return ClientFiscalDataMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<ClientFiscalDataResponse>> GetPagedAsync(int clientId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(clientId, filter, ct);
-        return _mapper.Map<ListPageResponse<ClientFiscalDataResponse>>(paged);
+        return ClientFiscalDataMapper.ToPaged(paged);
     }
 
     public async Task<bool> ExistsByIdAsync(int clientId, CancellationToken ct = default)
