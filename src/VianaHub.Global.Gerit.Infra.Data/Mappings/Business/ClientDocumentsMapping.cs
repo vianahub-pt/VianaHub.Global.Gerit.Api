@@ -49,11 +49,11 @@ public class ClientDocumentsMapping : IEntityTypeConfiguration<ClientDocumentsEn
             .IsRequired();
 
         builder.Property(x => x.IssuedAt)
-            .HasColumnType("DATETIME2")
+            .HasColumnType("DATE")
             .IsRequired(false);
 
         builder.Property(x => x.ExpiresAt)
-            .HasColumnType("DATETIME2")
+            .HasColumnType("DATE")
             .IsRequired(false);
 
         builder.Property(x => x.IsPrimary)

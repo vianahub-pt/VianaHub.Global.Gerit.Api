@@ -3408,3 +3408,13 @@ Evidência local: **42 testes específicos PASS** (AppService, repository e HTTP
 |20/20|15/15|10/10|15/15|15/15|10/10|10/10|5/5|100/100|
 
 ClientContactPerson API ready for Gerit Web: **YES**, no escopo local e parent-scoped acima. Tier A: Actions, Teams, EquipmentTypes, UserPreferences e ClientContactPerson. Próximo candidato funcional: **ClientAddress**, não iniciado. Sem Web, PartyType, Mapperly, schema, deploy ou production smoke.
+
+## ClientDocuments — IMPLEMENTED — NOT PRODUCTION CLOSED
+
+- Capability HTTP implementada nesta branch, sem migration ou alteração física de schema.
+- Endpoints: `/v1/clients/{clientId}/documents`, detalhe, paginação, Create, Update, Activate, Deactivate e Delete.
+- Usa `ClientDocumentMapper` com Mapperly 4.3.1; não foi criado profile AutoMapper.
+- `DocumentNumber` e `IssuingCountryCode` são obrigatórios; país normalizado para uppercase; datas `DateOnly` mapeadas para SQL `DATE`; `ExpiresAt >= IssuedAt`.
+- Unicidade documental permanece tenant-wide conforme índice SQL existente. O lifecycle limpa `IsPrimary` ao desativar ou eliminar.
+- Testes unitários, integração HTTP e smoke local foram adicionados. Produção ainda não foi executada.
+- Estado máximo desta etapa: `ClientDocuments: IMPLEMENTED — NOT PRODUCTION CLOSED`.
