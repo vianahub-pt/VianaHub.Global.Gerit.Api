@@ -3,11 +3,14 @@ using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientFiscalData;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Services.Business;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientFiscalData;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 using VianaHub.Global.Gerit.Domain.Validators.Business.ClientFiscalData;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace VianaHub.Global.Gerit.Tests.ClientFiscalData;
 
@@ -74,6 +77,30 @@ public class ClientFiscalDataAppServiceTests
         var result = await validator.ValidateForCreateAsync(entity);
 
         Assert.Contains(result.Errors, error => error.ErrorMessage == "VAT_REQUIRED_LOCALIZED");
+    }
+
+    [Fact]
+    public void DetailMapping_ResolvesClientTypeTranslationAndRemainsSafeWithoutNavigation()
+    {
+        var partyType = new PartyTypeEntity("ORG", 17);
+        partyType.Translations.Add(new PartyTypeTranslationsEntity(2, "pt-PT", "Organização", ""));
+        typeof(PartyTypeEntity).GetProperties().Single(p => p.Name == "Id" && p.PropertyType == typeof(byte)).SetValue(partyType, (byte)2);
+        var client = new ClientEntity(7, 2, 8, null, null, "Client", null, null, false, null, null, null, null, null, null, null, null, 1, 1, 17);
+        typeof(ClientEntity).GetProperty("PartyType")!.SetValue(client, partyType);
+        var fiscal = new ClientFiscalDataEntity(7, 10, "PT123", "VAT", "PT", true, "PT50000000000000000000000", "fiscal@example.test", 17);
+        typeof(ClientFiscalDataEntity).GetProperty("Id")!.SetValue(fiscal, 44);
+        typeof(ClientFiscalDataEntity).GetProperty("Client")!.SetValue(fiscal, client);
+
+        var mapper = new MapperConfiguration(c => c.AddProfile<ClientFiscalDataMappingProfile>(), NullLoggerFactory.Instance).CreateMapper();
+        var response = mapper.Map<ClientFiscalDataDetailResponse>(fiscal);
+
+        Assert.Equal(44, response.Id);
+        Assert.Equal(10, response.ClientId);
+        Assert.Equal("Client", response.Client);
+        Assert.Equal(2, response.ClientTypeId);
+        Assert.Equal("Organização", response.ClientType);
+        Assert.Equal("PT123", response.TaxNumber);
+        Assert.Equal("PT", response.FiscalCountry);
     }
 
     private static ClientFiscalDataAppService Create(Mock<IClientRepository> clients, Mock<IClientFiscalDataDomainService> domain, Mock<IClientFiscalDataDataRepository>? repo = null)
