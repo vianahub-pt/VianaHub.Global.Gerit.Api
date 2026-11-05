@@ -5,7 +5,7 @@ using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 namespace VianaHub.Global.Gerit.Api.Validators.Business.ClientAddress;
 
 /// <summary>
-/// Validador de rota para atualização de ClientAddress
+/// Validador de rota para atualizaï¿½ï¿½o de ClientAddress
 /// </summary>
 public class UpdateClientAddressRouteValidator : AbstractValidator<UpdateClientAddressRequest>
 {
@@ -49,7 +49,7 @@ public class UpdateClientAddressRouteValidator : AbstractValidator<UpdateClientA
             .WithMessage(localization.GetMessage("Api.Validator.ClientAddress.Update.StreetNumber.MaximumLength", 20));
 
         RuleFor(x => x.Complement)
-            .MaximumLength(200)
+            .MaximumLength(100)
             .When(x => !string.IsNullOrEmpty(x.Complement))
             .WithMessage(localization.GetMessage("Api.Validator.ClientAddress.Update.Complement.MaximumLength", 200));
 
@@ -63,5 +63,13 @@ public class UpdateClientAddressRouteValidator : AbstractValidator<UpdateClientA
             .WithMessage(localization.GetMessage("Api.Validator.ClientAddress.Update.CountryCode"))
             .Length(2)
             .WithMessage(localization.GetMessage("Api.Validator.ClientAddress.Update.CountryCode.Length"));
+
+        RuleFor(x => x)
+            .Must(x => x.Latitude.HasValue == x.Longitude.HasValue)
+            .WithMessage(localization.GetMessage("Domain.ClientAddress.CoordinatesRequiredTogether"));
+        RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).When(x => x.Latitude.HasValue)
+            .WithMessage(localization.GetMessage("Domain.ClientAddress.LatitudeRange"));
+        RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).When(x => x.Longitude.HasValue)
+            .WithMessage(localization.GetMessage("Domain.ClientAddress.LongitudeRange"));
     }
 }

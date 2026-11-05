@@ -99,6 +99,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         public void Deactivate(int modifiedBy)
         {
             IsActive = false;
+            IsPrimary = false;
             ModifiedBy = modifiedBy;
             ModifiedAt = DateTime.UtcNow;
         }

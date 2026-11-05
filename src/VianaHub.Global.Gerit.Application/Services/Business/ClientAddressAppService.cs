@@ -25,6 +25,8 @@ public class ClientAddressAppService : IClientAddressAppService
     public int TenantId { get; set; }
     public int UserId { get; set; }
     private readonly IClientAddressDataRepository _repo;
+    private readonly IClientRepository _clientRepository;
+    private readonly IAddressTypeDataRepository _addressTypeRepository;
     private readonly IClientAddressDomainService _domain;
     private readonly IMapper _mapper;
     private readonly INotify _notify;
@@ -35,6 +37,7 @@ public class ClientAddressAppService : IClientAddressAppService
     public ClientAddressAppService(
         IClientAddressDataRepository repo,
         IClientRepository clientRepository,
+        IAddressTypeDataRepository addressTypeRepository,
         IClientAddressDomainService domain,
         IMapper mapper,
         INotify notify,
@@ -45,6 +48,8 @@ public class ClientAddressAppService : IClientAddressAppService
         TenantId = currentUser.GetTenantId();
         UserId = currentUser.GetUserId();
         _repo = repo;
+        _clientRepository = clientRepository;
+        _addressTypeRepository = addressTypeRepository;
         _domain = domain;
         _mapper = mapper;
         _notify = notify;
@@ -79,7 +84,13 @@ public class ClientAddressAppService : IClientAddressAppService
 
     public async Task<int> CreateAsync(int clientId, CreateClientAddressRequest request, CancellationToken ct)
     {
-        var exists = await _repo.ExistsByClientIdAsync(clientId, request.CountryCode, request.Street, request.StreetNumber, request.Neighborhood, request.City, request.District, request.PostalCode, ct);
+        if (!await HasActiveClientAsync(clientId, ct) || !await _addressTypeRepository.ExistsByIdAsync(request.AddressTypeId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.GetById.ResourceNotFound"), 410);
+            return 0;
+        }
+
+        var exists = await _repo.ExistsByIdentityAsync(clientId, null, request.CountryCode, request.Street, request.StreetNumber, request.Neighborhood, request.City, request.District, request.PostalCode, ct);
         if (exists)
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Create.ResourceAlreadyExists"), 409);
@@ -92,17 +103,23 @@ public class ClientAddressAppService : IClientAddressAppService
             request.AddressTypeId,
             request.CountryCode,
             request.Street,
+            request.StreetNumber,
+            request.Complement,
             request.Neighborhood,
             request.City,
             request.District,
             request.PostalCode,
-            request.StreetNumber,
-            request.Complement,
             request.Latitude,
             request.Longitude,
             request.Note,
             request.IsPrimary,
             UserId);
+
+        if (request.IsPrimary && await _repo.ExistsPrimaryAsync(clientId, null, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Create.ResourceAlreadyExists"), 409);
+            return 0;
+        }
 
         var success = await _domain.CreateAsync(clientAddress, ct);
         return success ? clientAddress.Id : 0;
@@ -117,9 +134,27 @@ public class ClientAddressAppService : IClientAddressAppService
             return false;
         }
 
+        if (!await HasActiveClientAsync(clientId, ct) || !await _addressTypeRepository.ExistsByIdAsync(request.AddressTypeId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Update.ResourceNotFound"), 410);
+            return false;
+        }
+
+        if (await _repo.ExistsByIdentityAsync(clientId, id, request.CountryCode, request.Street, request.StreetNumber, request.Neighborhood, request.City, request.District, request.PostalCode, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Update.ResourceAlreadyExists"), 409);
+            return false;
+        }
+
+        if (request.IsPrimary && await _repo.ExistsPrimaryAsync(clientId, id, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Update.ResourceAlreadyExists"), 409);
+            return false;
+        }
+
         clientAddress.Update(request.AddressTypeId, request.CountryCode, request.Street, request.StreetNumber, request.Complement, request.Neighborhood, request.City, request.District, request.PostalCode, request.Latitude, request.Longitude, request.Note, request.IsPrimary, UserId);
 
-        return await _domain.UpdateAsync(clientAddress, ct);
+        return await _domain.ActivateAsync(clientAddress, ct);
     }
 
     public async Task<bool> ActivateAsync(int clientId, int id, CancellationToken ct)
@@ -145,7 +180,7 @@ public class ClientAddressAppService : IClientAddressAppService
         }
 
         clientAddress.Deactivate(UserId);
-        return await _domain.UpdateAsync(clientAddress, ct);
+        return await _domain.DeactivateAsync(clientAddress, ct);
     }
 
     public async Task<bool> DeleteAsync(int clientId, int id, CancellationToken ct)
@@ -153,7 +188,7 @@ public class ClientAddressAppService : IClientAddressAppService
         var clientAddress = await _repo.GetByIdAsync(clientId, id, ct);
         if (clientAddress == null || clientAddress.IsDeleted)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Deactivate.ResourceNotFound"), 410);
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Delete.ResourceNotFound"), 410);
             return false;
         }
 
@@ -163,6 +198,12 @@ public class ClientAddressAppService : IClientAddressAppService
 
     public async Task<bool> BulkUploadAsync(int clientId, IFormFile? file, CancellationToken ct)
     {
+        if (!await HasActiveClientAsync(clientId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.GetById.ResourceNotFound"), 410);
+            return false;
+        }
+
         if (!_fileValidation.ValidateFile(file))
             return false;
 
@@ -279,7 +320,21 @@ public class ClientAddressAppService : IClientAddressAppService
                 continue;
             }
 
-            var exists = await _repo.ExistsByClientAndAddressTypeAsync(clientId, item.AddressTypeId, ct);
+            if (!await _addressTypeRepository.ExistsByIdAsync(item.AddressTypeId, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.GetById.ResourceNotFound"), 410);
+                hasErrors = true;
+                continue;
+            }
+
+            if (item.IsPrimary && await _repo.ExistsPrimaryAsync(clientId, null, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Create.ResourceAlreadyExists"), 409);
+                hasErrors = true;
+                continue;
+            }
+
+            var exists = await _repo.ExistsByIdentityAsync(clientId, null, item.CountryCode, item.Street, item.StreetNumber, item.Neighborhood, item.City, item.District, item.PostalCode, ct);
             if (exists)
             {
                 _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.ProcessBulkItems.ExistsByClientAndType", clientId, item.AddressTypeId), 400);
@@ -293,12 +348,12 @@ public class ClientAddressAppService : IClientAddressAppService
                 item.AddressTypeId,
                 item.CountryCode,
                 item.Street,
+                item.StreetNumber,
+                item.Complement,
                 item.Neighborhood,
                 item.City,
                 item.District,
                 item.PostalCode,
-                item.StreetNumber,
-                item.Complement,
                 item.Latitude,
                 item.Longitude,
                 item.Note,
@@ -315,6 +370,12 @@ public class ClientAddressAppService : IClientAddressAppService
         }
 
         return !hasErrors;
+    }
+
+    private async Task<bool> HasActiveClientAsync(int clientId, CancellationToken ct)
+    {
+        var client = await _clientRepository.GetByIdAsync(clientId, ct);
+        return client is not null && client.IsActive && !client.IsDeleted;
     }
 
     private bool ValidateBulkItem(int clientId, BulkUploadClientAddressItem item)
