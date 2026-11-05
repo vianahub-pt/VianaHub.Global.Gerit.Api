@@ -3418,3 +3418,11 @@ ClientContactPerson API ready for Gerit Web: **YES**, no escopo local e parent-s
 - Unicidade documental permanece tenant-wide conforme índice SQL existente. O lifecycle limpa `IsPrimary` ao desativar ou eliminar.
 - Testes unitários, integração HTTP e smoke local foram adicionados. Produção ainda não foi executada.
 - Estado máximo desta etapa: `ClientDocuments: IMPLEMENTED — NOT PRODUCTION CLOSED`.
+
+### Bulk upload CSV
+
+- Endpoint: `POST /v1/clients/{clientId}/documents/bulk-upload`.
+- CSV UTF-8 com cabeçalho `DocumentTypeId,DocumentNumber,IssuingCountryCode,IssuedAt,ExpiresAt,IsPrimary`.
+- Valida referências, datas `yyyy-MM-dd`, booleanos, limites, duplicados, fórmula/CSV injection e múltiplos primários antes da persistência.
+- A persistência usa o domínio existente e operação em lote transacional quando suportada pelo provider; nenhum partial success é aceito pelo fluxo.
+- Testes HTTP e smoke local cobrem sucesso, atomicidade lógica e cleanup. Deploy/smoke produtivo ainda não executados; a capability continua `IMPLEMENTED WITH BULK UPLOAD — NOT PRODUCTION CLOSED`.

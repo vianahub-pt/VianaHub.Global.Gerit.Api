@@ -2797,5 +2797,20 @@
   "Application.Service.ClientDocument.Update.ResourceNotFound": "Document not found",
   "Application.Service.ClientDocument.Activate.ResourceNotFound": "Document not found",
   "Application.Service.ClientDocument.Deactivate.ResourceNotFound": "Document not found",
-  "Application.Service.ClientDocument.Delete.ResourceNotFound": "Document not found"
+  "Application.Service.ClientDocument.Delete.ResourceNotFound": "Document not found",
+  "Application.Service.ClientDocument.BulkUpload.ClientNotFound": "Client does not exist or is inactive",
+  "Application.Service.ClientDocument.BulkUpload.EmptyFile": "The file contains no documents",
+  "Application.Service.ClientDocument.BulkUpload.InvalidCsv": "Invalid CSV at line {0}",
+  "Application.Service.ClientDocument.BulkUpload.MissingHeader": "Required CSV header is missing",
+  "Application.Service.ClientDocument.BulkUpload.MaxRows": "The file exceeds the limit of {0} rows",
+  "Application.Service.ClientDocument.BulkUpload.InvalidDocumentTypeId": "Invalid document type at line {0}",
+  "Application.Service.ClientDocument.BulkUpload.InvalidDocumentNumber": "Invalid document number at line {0}",
+  "Application.Service.ClientDocument.BulkUpload.InvalidCountry": "Invalid issuing country at line {0}",
+  "Application.Service.ClientDocument.BulkUpload.InvalidDate": "Invalid date at line {0}; use yyyy-MM-dd",
+  "Application.Service.ClientDocument.BulkUpload.ExpiryBeforeIssue": "Expiry cannot be before issue at line {0}",
+  "Application.Service.ClientDocument.BulkUpload.InvalidBoolean": "IsPrimary must be true or false at line {0}",
+  "Application.Service.ClientDocument.BulkUpload.DuplicateInFile": "Duplicate document in CSV at line {0}",
+  "Application.Service.ClientDocument.BulkUpload.DuplicateExisting": "A document with the same data already exists",
+  "Application.Service.ClientDocument.BulkUpload.DocumentTypeNotFound": "Document type does not exist",
+  "Application.Service.ClientDocument.BulkUpload.DocumentTypeInactive": "Document type is inactive"
 }
