@@ -410,7 +410,15 @@ public sealed class ClientAddressHttpIntegrationTests
         public Task<bool> ExistsPrimaryAsync(int clientId, int? excludeId, CancellationToken ct) => Task.FromResult(_items.Any(x => Visible(x) && x.ClientId == clientId && (!excludeId.HasValue || x.Id != excludeId) && x.IsPrimary && x.IsActive && !x.IsDeleted));
         public Task<bool> ExistsByClientAndAddressTypeAsync(int clientId, int addressTypeId, CancellationToken ct) => Task.FromResult(_items.Any(x => Visible(x) && x.ClientId == clientId && x.AddressTypeId == addressTypeId && !x.IsDeleted));
         public Task<bool> CreateAsync(ClientAddressesEntity entity, CancellationToken ct) { typeof(ClientAddressesEntity).GetProperty(nameof(ClientAddressesEntity.Id))!.SetValue(entity, _nextId++); _items.Add(entity); return Task.FromResult(true); }
-        public Task<bool> CreateManyAsync(IReadOnlyCollection<ClientAddressesEntity> entities, CancellationToken ct) { foreach (var entity in entities) CreateAsync(entity, ct); return Task.FromResult(true); }
+        public Task<bool> CreateManyAsync(IReadOnlyCollection<ClientAddressesEntity> entities, CancellationToken ct)
+        {
+            foreach (var entity in entities)
+            {
+                CreateAsync(entity, ct);
+            }
+
+            return Task.FromResult(true);
+        }
         public Task<bool> UpdateAsync(ClientAddressesEntity entity, CancellationToken ct) => Task.FromResult(_items.Contains(entity));
         public Task<bool> DeleteAsync(ClientAddressesEntity entity, CancellationToken ct) => Task.FromResult(_items.Contains(entity));
         private bool FindIdentity(int clientId, int? excludeId, string? countryCode, string? street, string? streetNumber, string? neighborhood, string? city, string? district, string? postalCode) => _items.Any(x => Visible(x) && x.ClientId == clientId && (!excludeId.HasValue || x.Id != excludeId) && Eq(x.CountryCode, countryCode, true) && Eq(x.Street, street) && Eq(x.StreetNumber, streetNumber) && Eq(x.Neighborhood, neighborhood) && Eq(x.City, city) && Eq(x.District, district) && Eq(x.PostalCode, postalCode) && !x.IsDeleted);

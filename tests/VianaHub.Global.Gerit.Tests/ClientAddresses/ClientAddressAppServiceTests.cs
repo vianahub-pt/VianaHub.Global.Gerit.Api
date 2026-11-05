@@ -147,7 +147,7 @@ public class ClientAddressAppServiceTests
     [Fact]
     public async Task Create_WithInactiveParentDoesNotPersist()
     {
-        _clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync((ClientEntity?)null);
+        _clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).Returns(Task.FromResult<ClientEntity?>(null));
 
         var result = await _service.CreateAsync(10, Request(), default);
 
