@@ -1,4 +1,6 @@
 using AutoMapper;
+using System.Globalization;
+using VianaHub.Global.Gerit.Domain.Services;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientFiscalData;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
@@ -14,9 +16,20 @@ public class ClientFiscalDataMappingProfile : Profile
 
         CreateMap<ClientFiscalDataEntity, ClientFiscalDataDetailResponse>()
             .ForMember(dest => dest.ClientTypeId, opt => opt.MapFrom(src => (int)src.Client.PartyTypeId))
-            .ForMember(dest => dest.ClientType, opt => opt.MapFrom(src => src.Client.PartyTypeId.ToString()))
+            .ForMember(dest => dest.ClientType, opt => opt.MapFrom<ClientFiscalDataClientTypeResolver>())
             .ForMember(dest => dest.Client, opt => opt.MapFrom(src => src.Client == null ? null : src.Client.Name));
 
         CreateMap<ListPage<ClientFiscalDataEntity>, ListPageResponse<ClientFiscalDataResponse>>();
+    }
+}
+
+internal sealed class ClientFiscalDataClientTypeResolver : IValueResolver<ClientFiscalDataEntity, ClientFiscalDataDetailResponse, string?>
+{
+    public string? Resolve(ClientFiscalDataEntity source, ClientFiscalDataDetailResponse destination, string? destMember, ResolutionContext context)
+    {
+        var translations = source.Client?.PartyType?.Translations;
+        return translations == null
+            ? null
+            : TranslationResolver.Resolve(translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name);
     }
 }

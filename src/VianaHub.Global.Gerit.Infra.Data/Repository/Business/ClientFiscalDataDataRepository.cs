@@ -45,6 +45,9 @@ public class ClientFiscalDataDataRepository : IClientFiscalDataDataRepository
             .Include(x => x.Client)
             .Where(x => x.ClientId == clientId && !x.IsDeleted);
 
+        if (filter.IsActive.HasValue)
+            query = query.Where(x => x.IsActive == filter.IsActive.Value);
+
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var search = filter.Search.Trim().ToLower();
@@ -85,11 +88,11 @@ public class ClientFiscalDataDataRepository : IClientFiscalDataDataRepository
             .AnyAsync(x => x.ClientId == clientId && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByTaxNumberAsync(int clientId, string taxNumber, CancellationToken ct = default)
+    public async Task<bool> ExistsByTaxIdentityAsync(int tenantId, string fiscalCountry, string taxNumber, int? excludeId, CancellationToken ct = default)
     {
         return await _context.ClientFiscalData
             .AsNoTracking()
-            .AnyAsync(x => x.ClientId == clientId && x.TaxNumber == taxNumber && !x.IsDeleted, ct);
+            .AnyAsync(x => x.TenantId == tenantId && x.FiscalCountry == fiscalCountry && x.TaxNumber == taxNumber && !x.IsDeleted && (!excludeId.HasValue || x.Id != excludeId.Value), ct);
     }
 
     public async Task<bool> CreateAsync(ClientFiscalDataEntity entity, CancellationToken ct = default)
