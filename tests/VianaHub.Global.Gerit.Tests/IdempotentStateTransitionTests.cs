@@ -2,6 +2,8 @@ using System.Reflection;
 using FluentValidation.Results;
 using Moq;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
+using VianaHub.Global.Gerit.Domain.Interfaces.Business;
+using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 using Apps = VianaHub.Global.Gerit.Application.Services;
 using Domains = VianaHub.Global.Gerit.Domain.Services;
@@ -330,6 +332,13 @@ public class IdempotentStateTransitionTests
             _services[typeof(ILocalizationService)] = localization.Object;
             _services[typeof(ICurrentUserService)] = user.Object;
             _services[typeof(INotify)] = Notify.Object;
+            if (resource.Name == "ClientAddresses")
+            {
+                var clients = new Mock<IClientRepository>();
+                clients.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(new ClientEntity(1, 1, 1, null, null, "Client", null, null, false, null, null, null, null, null, null, null, null, 1, 1, 1));
+                _services[typeof(IClientRepository)] = clients.Object;
+            }
             Mutate("Activate");
         }
 

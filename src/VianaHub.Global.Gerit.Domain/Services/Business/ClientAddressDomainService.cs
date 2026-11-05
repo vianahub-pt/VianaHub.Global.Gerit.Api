@@ -4,6 +4,8 @@ using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 using VianaHub.Global.Gerit.Domain.Tools.Pagination;
+using VianaHub.Global.Gerit.Domain.Exceptions;
+using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
 namespace VianaHub.Global.Gerit.Domain.Services.Business;
 
@@ -15,15 +17,17 @@ public class ClientAddressDomainService : IClientAddressDomainService
     private readonly IClientAddressDataRepository _repo;
     private readonly IEntityDomainValidator<ClientAddressesEntity> _validator;
     private readonly INotify _notify;
+    private readonly ILocalizationService _localization;
 
     public ClientAddressDomainService(
         IClientAddressDataRepository repo,
         IEntityDomainValidator<ClientAddressesEntity> validator,
-        INotify notify)
+        INotify notify, ILocalizationService localization)
     {
         _repo = repo;
         _validator = validator;
         _notify = notify;
+        _localization = localization;
     }
 
     public async Task<ClientAddressesEntity?> GetByIdAsync(int clientId, int id, CancellationToken ct)
@@ -62,7 +66,32 @@ public class ClientAddressDomainService : IClientAddressDomainService
             return false;
         }
 
-        return await _repo.CreateAsync(entity, ct);
+        try { return await _repo.CreateAsync(entity, ct); }
+        catch (ClientAddressConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Create.ResourceAlreadyExists"), 409);
+            return false;
+        }
+    }
+    public async Task<bool> CreateManyAsync(IReadOnlyCollection<ClientAddressesEntity> entities, CancellationToken ct)
+    {
+        foreach (var entity in entities)
+        {
+            var validationResult = await _validator.ValidateForCreateAsync(entity);
+            if (!validationResult.IsValid)
+            {
+                foreach (var error in validationResult.Errors)
+                    _notify.Add(error.ErrorMessage, 400);
+                return false;
+            }
+        }
+
+        try { return await _repo.CreateManyAsync(entities, ct); }
+        catch (ClientAddressConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Create.ResourceAlreadyExists"), 409);
+            return false;
+        }
     }
     public async Task<bool> UpdateAsync(ClientAddressesEntity entity, CancellationToken ct)
     {
@@ -76,7 +105,12 @@ public class ClientAddressDomainService : IClientAddressDomainService
             return false;
         }
 
-        return await _repo.UpdateAsync(entity, ct);
+        try { return await _repo.UpdateAsync(entity, ct); }
+        catch (ClientAddressConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Update.ResourceAlreadyExists"), 409);
+            return false;
+        }
     }
     public async Task<bool> ActivateAsync(ClientAddressesEntity entity, CancellationToken ct)
     {
@@ -90,7 +124,12 @@ public class ClientAddressDomainService : IClientAddressDomainService
             return false;
         }
 
-        return await _repo.UpdateAsync(entity, ct);
+        try { return await _repo.UpdateAsync(entity, ct); }
+        catch (ClientAddressConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Update.ResourceAlreadyExists"), 409);
+            return false;
+        }
     }
     public async Task<bool> DeactivateAsync(ClientAddressesEntity entity, CancellationToken ct)
     {
@@ -104,7 +143,12 @@ public class ClientAddressDomainService : IClientAddressDomainService
             return false;
         }
 
-        return await _repo.UpdateAsync(entity, ct);
+        try { return await _repo.UpdateAsync(entity, ct); }
+        catch (ClientAddressConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Update.ResourceAlreadyExists"), 409);
+            return false;
+        }
     }
     public async Task<bool> DeleteAsync(ClientAddressesEntity entity, CancellationToken ct)
     {
@@ -118,6 +162,11 @@ public class ClientAddressDomainService : IClientAddressDomainService
             return false;
         }
 
-        return await _repo.UpdateAsync(entity, ct);
+        try { return await _repo.UpdateAsync(entity, ct); }
+        catch (ClientAddressConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Delete.ResourceAlreadyExists"), 409);
+            return false;
+        }
     }
 }
