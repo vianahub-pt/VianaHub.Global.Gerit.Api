@@ -17,7 +17,7 @@ public class ClientFiscalDataAppServiceTests
     public async Task Create_RejectsInactiveParentBeforePersistence()
     {
         var clients = new Mock<IClientRepository>();
-        clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(null as ClientEntity);
+        clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).Returns(Task.FromResult<ClientEntity?>(null));
         var domain = new Mock<IClientFiscalDataDomainService>();
         var service = Create(clients, domain);
 
