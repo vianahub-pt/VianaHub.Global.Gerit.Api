@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.ReadModels;
@@ -57,6 +58,35 @@ public class ClientDocumentDataRepository : IClientDocumentDataRepository
         _context.ClientDocuments.Add(entity);
         try { return await _context.SaveChangesAsync(ct) > 0; }
         catch (DbUpdateException ex) { throw new ClientDocumentConflictException(ex); }
+    }
+
+    public async Task<bool> CreateManyAsync(IReadOnlyCollection<ClientDocumentsEntity> entities, CancellationToken ct)
+    {
+        if (entities.Count == 0) return false;
+        IDbContextTransaction? transaction = null;
+        try
+        {
+            if (_context.Database.IsRelational()) transaction = await _context.Database.BeginTransactionAsync(ct);
+            var primary = entities.SingleOrDefault(x => x.IsPrimary);
+            if (primary is not null)
+            {
+                var current = await GetPrimaryAsync(primary.TenantId, primary.ClientId, null, ct);
+                current?.SetPrimary(false, primary.CreatedBy);
+            }
+            _context.ClientDocuments.AddRange(entities);
+            var saved = await _context.SaveChangesAsync(ct) > 0;
+            if (transaction is not null) await transaction.CommitAsync(ct);
+            return saved;
+        }
+        catch (DbUpdateException ex)
+        {
+            if (transaction is not null) await transaction.RollbackAsync(ct);
+            throw new ClientDocumentConflictException(ex);
+        }
+        finally
+        {
+            if (transaction is not null) await transaction.DisposeAsync();
+        }
     }
 
     public async Task<bool> UpdateAsync(ClientDocumentsEntity entity, CancellationToken ct)

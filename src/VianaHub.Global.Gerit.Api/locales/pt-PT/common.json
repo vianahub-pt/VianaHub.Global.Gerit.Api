@@ -2796,5 +2796,20 @@
   "Application.Service.ClientDocument.Update.ResourceNotFound": "Documento não encontrado",
   "Application.Service.ClientDocument.Activate.ResourceNotFound": "Documento não encontrado",
   "Application.Service.ClientDocument.Deactivate.ResourceNotFound": "Documento não encontrado",
-  "Application.Service.ClientDocument.Delete.ResourceNotFound": "Documento não encontrado"
+  "Application.Service.ClientDocument.Delete.ResourceNotFound": "Documento não encontrado",
+  "Application.Service.ClientDocument.BulkUpload.ClientNotFound": "O cliente não existe ou está inativo",
+  "Application.Service.ClientDocument.BulkUpload.EmptyFile": "O ficheiro não contém documentos",
+  "Application.Service.ClientDocument.BulkUpload.InvalidCsv": "CSV inválido na linha {0}",
+  "Application.Service.ClientDocument.BulkUpload.MissingHeader": "O cabeçalho CSV obrigatório está em falta",
+  "Application.Service.ClientDocument.BulkUpload.MaxRows": "O ficheiro excede o limite de {0} linhas",
+  "Application.Service.ClientDocument.BulkUpload.InvalidDocumentTypeId": "Tipo de documento inválido na linha {0}",
+  "Application.Service.ClientDocument.BulkUpload.InvalidDocumentNumber": "Número de documento inválido na linha {0}",
+  "Application.Service.ClientDocument.BulkUpload.InvalidCountry": "País emissor inválido na linha {0}",
+  "Application.Service.ClientDocument.BulkUpload.InvalidDate": "Data inválida na linha {0}; use yyyy-MM-dd",
+  "Application.Service.ClientDocument.BulkUpload.ExpiryBeforeIssue": "A validade não pode ser anterior à emissão na linha {0}",
+  "Application.Service.ClientDocument.BulkUpload.InvalidBoolean": "IsPrimary deve ser true ou false na linha {0}",
+  "Application.Service.ClientDocument.BulkUpload.DuplicateInFile": "Documento duplicado no CSV na linha {0}",
+  "Application.Service.ClientDocument.BulkUpload.DuplicateExisting": "Já existe um documento com os mesmos dados",
+  "Application.Service.ClientDocument.BulkUpload.DocumentTypeNotFound": "O tipo de documento não existe",
+  "Application.Service.ClientDocument.BulkUpload.DocumentTypeInactive": "O tipo de documento está inativo"
 }

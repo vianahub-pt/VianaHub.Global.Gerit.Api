@@ -21,7 +21,9 @@ using VianaHub.Global.Gerit.Api.Helpers;
 using VianaHub.Global.Gerit.Api.Middleware;
 using VianaHub.Global.Gerit.Api.Services;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
+using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Services.Business;
+using VianaHub.Global.Gerit.Application.Services.Common;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
@@ -66,6 +68,46 @@ public sealed class ClientDocumentHttpIntegrationTests
         Assert.Equal(HttpStatusCode.Gone, (await client.GetAsync($"/v1/clients/10/documents/{id}")).StatusCode);
     }
 
+    [Fact]
+    public async Task BulkUploadPersistsRowsAndRejectsInvalidBatchAtomically()
+    {
+        await using var host = await Host.StartAsync();
+        using var client = host.Client();
+        var csv = "DocumentTypeId,DocumentNumber,IssuingCountryCode,IssuedAt,ExpiresAt,IsPrimary\n1,DOC-BULK-1,pt,2026-01-01,2027-01-01,false\n1,DOC-BULK-2,PT,2026-01-01,,false\n";
+        using var valid = new MultipartFormDataContent();
+        valid.Add(new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(csv)), "file", "documents.csv");
+        using var validResponse = await client.PostAsync("/v1/clients/10/documents/bulk-upload", valid);
+        var validBody = await validResponse.Content.ReadAsStringAsync();
+        Assert.True(validResponse.StatusCode == HttpStatusCode.OK, $"HTTP {(int)validResponse.StatusCode}: {validBody}");
+        var list = await client.GetFromJsonAsync<JsonElement[]>("/v1/clients/10/documents");
+        Assert.Equal(2, list!.Length);
+        Assert.Contains(list, x => x.GetProperty("documentNumber").GetString() == "DOC-BULK-1");
+
+        var invalid = "DocumentTypeId,DocumentNumber,IssuingCountryCode,IssuedAt,ExpiresAt,IsPrimary\n1,DOC-BULK-3,PT,2026-01-01,2025-01-01,false\n";
+        using var bad = new MultipartFormDataContent();
+        bad.Add(new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(invalid)), "file", "documents.csv");
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync("/v1/clients/10/documents/bulk-upload", bad)).StatusCode);
+        var after = await client.GetFromJsonAsync<JsonElement[]>("/v1/clients/10/documents");
+        Assert.DoesNotContain(after!, x => x.GetProperty("documentNumber").GetString() == "DOC-BULK-3");
+    }
+
+    [Fact]
+    public async Task BulkUploadRejectsDuplicateRowsAndMultiplePrimaryRows()
+    {
+        await using var host = await Host.StartAsync();
+        using var client = host.Client();
+        var duplicate = "DocumentTypeId,DocumentNumber,IssuingCountryCode,IssuedAt,ExpiresAt,IsPrimary\n1,DOC-DUP,PT,2026-01-01,,false\n1,DOC-DUP,PT,2026-01-01,,false\n";
+        using var duplicateForm = new MultipartFormDataContent();
+        duplicateForm.Add(new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(duplicate)), "file", "documents.csv");
+        Assert.Equal(HttpStatusCode.Conflict, (await client.PostAsync("/v1/clients/10/documents/bulk-upload", duplicateForm)).StatusCode);
+
+        var primary = "DocumentTypeId,DocumentNumber,IssuingCountryCode,IssuedAt,ExpiresAt,IsPrimary\n1,DOC-PRIMARY-1,PT,2026-01-01,,true\n1,DOC-PRIMARY-2,PT,2026-01-01,,true\n";
+        using var primaryForm = new MultipartFormDataContent();
+        primaryForm.Add(new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(primary)), "file", "documents.csv");
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync("/v1/clients/10/documents/bulk-upload", primaryForm)).StatusCode);
+        Assert.Empty(await client.GetFromJsonAsync<JsonElement[]>("/v1/clients/10/documents") ?? []);
+    }
+
     private sealed class Host : IAsyncDisposable
     {
         private readonly WebApplication _app;
@@ -95,6 +137,7 @@ public sealed class ClientDocumentHttpIntegrationTests
             builder.Services.AddScoped<IEntityDomainValidator<ClientDocumentsEntity>, ClientDocumentValidator>();
             builder.Services.AddScoped<IClientDocumentDomainService, ClientDocumentDomainService>();
             builder.Services.AddScoped<IClientDocumentAppService, ClientDocumentAppService>();
+            builder.Services.AddScoped<IFileValidationService, FileValidationService>();
             builder.Services.AddScoped(_ => Mock.Of<IClientRepository>(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>()) == Task.FromResult<ClientEntity?>(SeedClient())));
             builder.Services.AddScoped(_ => Mock.Of<IDocumentTypeDataRepository>(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()) == Task.FromResult<DocumentTypeEntity?>(DocumentType())));
             builder.Services.AddRouteValidatorSetup();
@@ -114,7 +157,7 @@ public sealed class ClientDocumentHttpIntegrationTests
         public HttpClient Client()
         {
             var client = new HttpClient { BaseAddress = _address }; client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("pt-PT");
-            var claims = new[] { new Claim(ClaimTypes.NameIdentifier, "17"), new Claim(ClaimTypes.Role, "BackOffice"), new Claim("tenant_id", "7"), new Claim("permissions", JsonSerializer.Serialize(new Dictionary<string, string[]> { ["ClientDocuments"] = ["GetAll", "GetBy", "GetPaged", "Create", "Update", "Activate", "Deactivate", "Delete"] }), JsonClaimValueTypes.Json) };
+            var claims = new[] { new Claim(ClaimTypes.NameIdentifier, "17"), new Claim(ClaimTypes.Role, "BackOffice"), new Claim("tenant_id", "7"), new Claim("permissions", JsonSerializer.Serialize(new Dictionary<string, string[]> { ["ClientDocuments"] = ["GetAll", "GetBy", "GetPaged", "Create", "Update", "Activate", "Deactivate", "Delete", "BulkUpload"] }), JsonClaimValueTypes.Json) };
             var token = new JwtSecurityToken("client-doc-tests", "client-doc-tests", claims, expires: DateTime.UtcNow.AddMinutes(5), signingCredentials: new SigningCredentials(_key, SecurityAlgorithms.HmacSha256));
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", new JwtSecurityTokenHandler().WriteToken(token)); return client;
         }

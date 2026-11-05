@@ -17,7 +17,7 @@ export async function createAuthenticatedSmokeClient({
   let token;
   let usable = true;
   const cleanup = [];
-  async function request(method, path, { body, locale: language = locale } = {}) {
+  async function request(method, path, { body, formData, locale: language = locale } = {}) {
     if (!usable) throw new SmokeError('Smoke client closed');
     if (!locales.has(language)) throw new SmokeError('Unsupported locale');
     if (typeof path !== 'string' || !path.startsWith('/v1/') || /[\\#\r\n]/.test(path)) {
@@ -34,9 +34,9 @@ export async function createAuthenticatedSmokeClient({
         headers: {
           'Accept-Language': language,
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+          ...(body === undefined && formData === undefined ? {} : formData === undefined ? { 'Content-Type': 'application/json' } : {}),
         },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: formData === undefined ? (body === undefined ? undefined : JSON.stringify(body)) : formData,
       });
     } catch {
       // Não propagar erros do transporte, que podem conter headers ou payloads.
@@ -65,6 +65,7 @@ export async function createAuthenticatedSmokeClient({
   const client = {
     get: (path, options) => request('GET', path, options),
     post: (path, body, options) => request('POST', path, { ...options, body }),
+    postMultipart: (path, formData, options) => request('POST', path, { ...options, formData }),
     put: (path, body, options) => request('PUT', path, { ...options, body }),
     patch: (path, body, options) => request('PATCH', path, { ...options, body }),
     delete: (path, options) => request('DELETE', path, options),
