@@ -23,7 +23,7 @@ public class ClientFiscalDataMappingProfile : Profile
     }
 }
 
-internal sealed class ClientFiscalDataClientTypeResolver : IValueResolver<ClientFiscalDataEntity, ClientFiscalDataDetailResponse, string?>
+public sealed class ClientFiscalDataClientTypeResolver : IValueResolver<ClientFiscalDataEntity, ClientFiscalDataDetailResponse, string?>
 {
     public string? Resolve(ClientFiscalDataEntity source, ClientFiscalDataDetailResponse destination, string? destMember, ResolutionContext context)
     {
