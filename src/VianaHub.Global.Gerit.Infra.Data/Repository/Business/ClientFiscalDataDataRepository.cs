@@ -33,6 +33,8 @@ public class ClientFiscalDataDataRepository : IClientFiscalDataDataRepository
             .AsNoTracking()
             .AsSplitQuery()
             .Include(x => x.Client)
+                .ThenInclude(x => x.PartyType)
+                    .ThenInclude(x => x.Translations)
             .Where(x => x.ClientId == clientId && x.Id == id && !x.IsDeleted)
             .FirstOrDefaultAsync(ct);
     }

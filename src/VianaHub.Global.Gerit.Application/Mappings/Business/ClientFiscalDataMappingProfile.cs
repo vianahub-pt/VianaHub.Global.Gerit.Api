@@ -15,7 +15,7 @@ public class ClientFiscalDataMappingProfile : Profile
         CreateMap<ClientFiscalDataEntity, ClientFiscalDataResponse>();
 
         CreateMap<ClientFiscalDataEntity, ClientFiscalDataDetailResponse>()
-            .ForMember(dest => dest.ClientTypeId, opt => opt.MapFrom(src => (int)src.Client.PartyTypeId))
+            .ForMember(dest => dest.ClientTypeId, opt => opt.MapFrom(src => src.Client == null ? 0 : (int)src.Client.PartyTypeId))
             .ForMember(dest => dest.ClientType, opt => opt.MapFrom<ClientFiscalDataClientTypeResolver>())
             .ForMember(dest => dest.Client, opt => opt.MapFrom(src => src.Client == null ? null : src.Client.Name));
 
