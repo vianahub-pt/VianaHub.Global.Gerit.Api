@@ -1,16 +1,14 @@
-using AutoMapper;
 using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientFiscalData;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Services.Business;
 using VianaHub.Global.Gerit.Application.Mappings.Business;
-using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientFiscalData;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
+using VianaHub.Global.Gerit.Domain.Tools.Pagination;
 using VianaHub.Global.Gerit.Domain.Validators.Business.ClientFiscalData;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace VianaHub.Global.Gerit.Tests.ClientFiscalData;
 
@@ -91,10 +89,7 @@ public class ClientFiscalDataAppServiceTests
         typeof(ClientFiscalDataEntity).GetProperty("Id")!.SetValue(fiscal, 44);
         typeof(ClientFiscalDataEntity).GetProperty("Client")!.SetValue(fiscal, client);
 
-        var configuration = new MapperConfiguration(c => c.AddProfile<ClientFiscalDataMappingProfile>(), NullLoggerFactory.Instance);
-        configuration.AssertConfigurationIsValid();
-        var mapper = configuration.CreateMapper();
-        var response = mapper.Map<ClientFiscalDataDetailResponse>(fiscal);
+        var response = ClientFiscalDataMapper.ToDetail(fiscal);
 
         Assert.Equal(44, response.Id);
         Assert.Equal(10, response.ClientId);
@@ -105,6 +100,26 @@ public class ClientFiscalDataAppServiceTests
         Assert.Equal("PT", response.FiscalCountry);
     }
 
+    [Fact]
+    public void Mapperly_MapsSimpleResponseAndPaginationMetadata()
+    {
+        var entity = new ClientFiscalDataEntity(7, 10, "PT123", null, "PT", false, null, null, 17);
+        typeof(ClientFiscalDataEntity).GetProperty("Id")!.SetValue(entity, 44);
+        var page = new ListPage<ClientFiscalDataEntity>(new[] { entity }, 2, 1, 3, 3);
+
+        var response = ClientFiscalDataMapper.ToResponse(entity);
+        var paged = ClientFiscalDataMapper.ToPaged(page);
+
+        Assert.Equal(44, response.Id);
+        Assert.Equal("PT123", response.TaxNumber);
+        Assert.True(response.IsActive);
+        Assert.Equal(2, paged.PageNumber);
+        Assert.Equal(1, paged.PageSize);
+        Assert.Equal(3, paged.TotalItems);
+        Assert.Equal(3, paged.TotalPages);
+        Assert.Single(paged.Items);
+    }
+
     private static ClientFiscalDataAppService Create(Mock<IClientRepository> clients, Mock<IClientFiscalDataDomainService> domain, Mock<IClientFiscalDataDataRepository>? repo = null)
     {
         var localization = new Mock<ILocalizationService>();
@@ -112,6 +127,6 @@ public class ClientFiscalDataAppServiceTests
         var current = new Mock<ICurrentUserService>();
         current.Setup(x => x.GetTenantId()).Returns(7);
         current.Setup(x => x.GetUserId()).Returns(17);
-        return new ClientFiscalDataAppService(repo?.Object ?? Mock.Of<IClientFiscalDataDataRepository>(), clients.Object, domain.Object, Mock.Of<IMapper>(), Mock.Of<INotify>(), localization.Object, current.Object, Mock.Of<IFileValidationService>());
+        return new ClientFiscalDataAppService(repo?.Object ?? Mock.Of<IClientFiscalDataDataRepository>(), clients.Object, domain.Object, Mock.Of<INotify>(), localization.Object, current.Object, Mock.Of<IFileValidationService>());
     }
 }
