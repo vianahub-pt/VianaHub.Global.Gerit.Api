@@ -22,6 +22,27 @@ export async function runClientDocumentsSmoke(client, { clientId, now = Date.now
     for (const operation of ['deactivate', 'deactivate', 'activate', 'activate']) {
       if ((await c.patch(`/v1/clients/${clientId}/documents/${id}/${operation}`)).status !== 200) throw new SmokeError('Document lifecycle failed');
     }
+    const bulkSuffix = `${suffix}-bulk`;
+    const csv = [
+      'DocumentTypeId,DocumentNumber,IssuingCountryCode,IssuedAt,ExpiresAt,IsPrimary',
+      `1,${bulkSuffix}-1,PT,2026-01-01,2027-01-01,false`,
+      `1,${bulkSuffix}-2,PT,2026-01-01,,false`,
+    ].join('\n');
+    const form = new FormData();
+    form.append('file', new Blob([csv], { type: 'text/csv' }), 'documents.csv');
+    const bulk = await c.postMultipart(`/v1/clients/${clientId}/documents/bulk-upload`, form);
+    if (bulk.status !== 200) throw new SmokeError('Document bulk upload failed');
+    const listed = await c.get(`/v1/clients/${clientId}/documents`);
+    if (listed.status !== 200 || !Array.isArray(listed.data)) throw new SmokeError('Bulk list verification failed');
+    const bulkIds = listed.data.filter(item => [`${bulkSuffix}-1`, `${bulkSuffix}-2`].includes(item.documentNumber)).map(item => item.id);
+    if (bulkIds.length !== 2) throw new SmokeError('Bulk records verification failed');
+    for (const bulkId of bulkIds) {
+      c.deferCleanup(async () => {
+        const deleted = await c.delete(`/v1/clients/${clientId}/documents/${bulkId}`);
+        if (![200, 410].includes(deleted.status)) throw new SmokeError('Bulk document cleanup failed');
+        if ((await c.get(`/v1/clients/${clientId}/documents/${bulkId}`)).status !== 410) throw new SmokeError('Bulk cleanup verification failed');
+      });
+    }
     if ((await c.delete(`/v1/clients/${clientId}/documents/${id}`)).status !== 200) throw new SmokeError('Document delete failed');
     if ((await c.get(`/v1/clients/${clientId}/documents/${id}`)).status !== 410) throw new SmokeError('Document delete verification failed');
     return { id };

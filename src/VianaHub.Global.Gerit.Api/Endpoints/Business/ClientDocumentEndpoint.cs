@@ -5,6 +5,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientDocument;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientDocument;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
+using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
 namespace VianaHub.Global.Gerit.Api.Endpoints.Business;
@@ -18,6 +19,30 @@ public static class ClientDocumentEndpoint
         group.MapGet("/{clientId}/documents", async (int clientId, [FromServices] IClientDocumentAppService service, [FromServices] INotify notify, CancellationToken ct) => notify.CustomResponse(await service.GetAllAsync(clientId, ct), 200)).CustomAuthorize("Admin,BackOffice,Manager", "ClientDocuments", "GetAll").Produces<IEnumerable<ClientDocumentResponse>>(200);
         group.MapGet("/{clientId}/documents/{id}", async (int clientId, int id, [FromServices] IClientDocumentAppService service, [FromServices] INotify notify, CancellationToken ct) => notify.CustomResponse(await service.GetByIdAsync(clientId, id, ct), 200)).CustomAuthorize("Admin,BackOffice,Manager", "ClientDocuments", "GetBy").Produces<ClientDocumentDetailResponse>(200).Produces<ErrorResponse>(410);
         group.MapGet("/{clientId}/documents/paged", async (int clientId, [AsParameters] PagedFilterRequest request, [FromServices] IClientDocumentAppService service, [FromServices] INotify notify, CancellationToken ct) => notify.CustomResponse(await service.GetPagedAsync(clientId, request, ct), 200)).CustomAuthorize("Admin,BackOffice,Manager", "ClientDocuments", "GetPaged").Produces<ListPageResponse<ClientDocumentResponse>>(200);
+        group.MapPost("/{clientId}/documents/bulk-upload", async (int clientId, HttpRequest request, [FromServices] IClientDocumentAppService service, [FromServices] INotify notify, [FromServices] ILocalizationService localization, CancellationToken ct) =>
+        {
+            if (!request.HasFormContentType)
+            {
+                notify.Add(localization.GetMessage("Api.Upload.NoFileProvided"), 400);
+                return notify.CustomResponse();
+            }
+            try
+            {
+                var form = await request.ReadFormAsync(ct);
+                if (form.Files.Count == 0)
+                {
+                    notify.Add(localization.GetMessage("Api.Upload.NoFileProvided"), 400);
+                    return notify.CustomResponse();
+                }
+                var success = await service.BulkUploadAsync(clientId, form.Files[0], ct);
+                return notify.CustomResponse(success, success ? 200 : 400);
+            }
+            catch (InvalidDataException)
+            {
+                notify.Add(localization.GetMessage("Api.Upload.NoFileProvided"), 400);
+                return notify.CustomResponse();
+            }
+        }).CustomAuthorize("Admin,BackOffice,Manager", "ClientDocuments", "BulkUpload").WithName("BulkUploadClientDocuments").DisableAntiforgery().Accepts<IFormFile>("multipart/form-data").Produces<bool>(200).Produces<ErrorResponse>(400);
         group.MapPost("/{clientId}/documents", async (int clientId, CreateClientDocumentRequest request, [FromServices] IClientDocumentAppService service, [FromServices] INotify notify, CancellationToken ct) => notify.CustomResponse(new GenericResponse { Id = await service.CreateAsync(clientId, request, ct) }, 201)).CustomAuthorize("Admin,BackOffice,Manager", "ClientDocuments", "Create").WithValidation<CreateClientDocumentRequest>().Produces<GenericResponse>(201);
         group.MapPut("/{clientId}/documents/{id}", async (int clientId, int id, UpdateClientDocumentRequest request, [FromServices] IClientDocumentAppService service, [FromServices] INotify notify, CancellationToken ct) => notify.CustomResponse(await service.UpdateAsync(clientId, id, request, ct), 200)).CustomAuthorize("Admin,BackOffice,Manager", "ClientDocuments", "Update").WithValidation<UpdateClientDocumentRequest>().Produces<bool>(200);
         group.MapPatch("/{clientId}/documents/{id}/activate", async (int clientId, int id, [FromServices] IClientDocumentAppService service, [FromServices] INotify notify, CancellationToken ct) => { await service.ActivateAsync(clientId, id, ct); return notify.CustomResponse(); }).CustomAuthorize("Admin,BackOffice,Manager", "ClientDocuments", "Activate");

@@ -1,6 +1,6 @@
 # Fila atual — ClientFiscalData certificado localmente
 
-ClientFiscalData **87→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#clientfiscaldata). ClientDocuments está implementado na API, mas permanece **NOT PRODUCTION CLOSED** até deploy e smoke produtivo. Não iniciar outra capability antes da validação de produção.
+ClientFiscalData **87→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#clientfiscaldata). ClientDocuments está implementado na API, com bulk upload CSV, mas permanece **NOT PRODUCTION CLOSED** até novo deploy e smoke produtivo. Não iniciar outra capability antes da validação de produção.
 
 Certificação parent-scoped cobre identidade por email, primary, alias WhatsApp, propagação de persistência e BulkUpload real. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
 

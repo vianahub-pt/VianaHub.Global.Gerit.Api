@@ -23,6 +23,28 @@ public class ClientDocumentDomainService : IClientDocumentDomainService
     }
 
     public Task<bool> CreateAsync(ClientDocumentsEntity entity, CancellationToken ct) => PersistAsync(entity, _validator.ValidateForCreateAsync, _repo.CreateAsync, ct);
+    public async Task<bool> CreateManyAsync(IReadOnlyCollection<ClientDocumentsEntity> entities, CancellationToken ct)
+    {
+        foreach (var entity in entities)
+        {
+            var result = await _validator.ValidateForCreateAsync(entity);
+            if (!result.IsValid)
+            {
+                foreach (var error in result.Errors) _notify.Add(error.ErrorMessage, 400);
+                return false;
+            }
+        }
+
+        try
+        {
+            return await _repo.CreateManyAsync(entities, ct);
+        }
+        catch (ClientDocumentConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientDocument.BulkUpload.DuplicateExisting"), 409);
+            return false;
+        }
+    }
     public Task<bool> UpdateAsync(ClientDocumentsEntity entity, CancellationToken ct) => PersistAsync(entity, _validator.ValidateForUpdateAsync, _repo.UpdateAsync, ct);
     public Task<bool> ActivateAsync(ClientDocumentsEntity entity, CancellationToken ct) => PersistAsync(entity, _validator.ValidateForActivateAsync, _repo.UpdateAsync, ct);
     public Task<bool> DeactivateAsync(ClientDocumentsEntity entity, CancellationToken ct) => PersistAsync(entity, _validator.ValidateForDeactivateAsync, _repo.UpdateAsync, ct);

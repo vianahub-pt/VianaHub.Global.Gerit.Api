@@ -12,5 +12,6 @@ public interface IClientDocumentDataRepository
     Task<bool> ExistsDuplicateAsync(int tenantId, int documentTypeId, string issuingCountryCode, string documentNumber, int? excludeId, CancellationToken ct);
     Task<ClientDocumentsEntity?> GetPrimaryAsync(int tenantId, int clientId, int? excludeId, CancellationToken ct);
     Task<bool> CreateAsync(ClientDocumentsEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<ClientDocumentsEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(ClientDocumentsEntity entity, CancellationToken ct);
 }
