@@ -1,6 +1,6 @@
-# Fila atual — ClientAddress certificado localmente
+# Fila atual — ClientFiscalData certificado localmente
 
-ClientAddress **92→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#clientaddress). Tier A: **Actions, Teams, EquipmentTypes, UserPreferences, ClientContactPerson, ClientAddress**. Próximo capability do aggregate Client: **ClientFiscalData**.
+ClientFiscalData **87→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#clientfiscaldata). Tier A: **Actions, Teams, EquipmentTypes, UserPreferences, ClientContactPerson, ClientAddress, ClientFiscalData**. Próximo capability do aggregate Client: **ClientDocuments**.
 
 Certificação parent-scoped cobre identidade por email, primary, alias WhatsApp, propagação de persistência e BulkUpload real. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
 

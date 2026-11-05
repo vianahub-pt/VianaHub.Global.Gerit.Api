@@ -11,7 +11,6 @@ public interface IClientFiscalDataAppService
     Task<ClientFiscalDataDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct);
     Task<ListPageResponse<ClientFiscalDataResponse>> GetPagedAsync(int clientId, PagedFilterRequest request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int clientId, CancellationToken ct = default);
-    Task<bool> ExistsByTaxNumberAsync(int clientId, string taxNumber, CancellationToken ct = default);
     Task<int> CreateAsync(int clientId, CreateClientFiscalDataRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int clientId, int id, UpdateClientFiscalDataRequest request, CancellationToken ct);
     Task<bool> ActivateAsync(int clientId, int id, CancellationToken ct);
