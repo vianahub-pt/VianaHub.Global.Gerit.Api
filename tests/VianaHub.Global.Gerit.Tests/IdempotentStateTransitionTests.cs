@@ -236,13 +236,13 @@ public class IdempotentStateTransitionTests
     [Theory]
     [InlineData("Activate")]
     [InlineData("Deactivate")]
-    public async Task ClientAddress_StateChangeRetainsAddressValidation(string operation)
+    public async Task ClientAddress_StateChangeUsesOperationValidator(string operation)
     {
         var fixture = new TransitionFixture(Find("ClientAddresses"));
-        fixture.SetProperty("Street", "");
+        fixture.SetProperty("Id", 0);
         Assert.False(await fixture.CallApp(operation));
         Assert.Empty(fixture.WriteInvocations);
-        fixture.Notify.Verify(notify => notify.Add("Domain.ClientAddress.StreetRequired", 400), Times.Once);
+        fixture.Notify.Verify(notify => notify.Add("Domain.ClientAddress.IdRequired", 400), Times.Once);
     }
 
     [Fact]

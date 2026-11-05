@@ -14,6 +14,8 @@ public interface IClientAddressDataRepository
     Task<ListPage<ClientAddressesEntity>> GetPagedAsync(int clientId, PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
     Task<bool> ExistsByClientIdAsync(int clientId, string? countryCode, string? street, string? streetNumber, string? neighborhood, string? city, string? district, string? postalCode, CancellationToken ct);
+    Task<bool> ExistsByIdentityAsync(int clientId, int? excludeId, string? countryCode, string? street, string? streetNumber, string? neighborhood, string? city, string? district, string? postalCode, CancellationToken ct);
+    Task<bool> ExistsPrimaryAsync(int clientId, int? excludeId, CancellationToken ct);
     Task<bool> ExistsByClientAndAddressTypeAsync(int clientId, int addressTypeId, CancellationToken ct);
     Task<bool> CreateAsync(ClientAddressesEntity entity, CancellationToken ct);
     Task<bool> UpdateAsync(ClientAddressesEntity entity, CancellationToken ct);
