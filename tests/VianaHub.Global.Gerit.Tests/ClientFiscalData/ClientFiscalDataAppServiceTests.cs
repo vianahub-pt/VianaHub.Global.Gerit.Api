@@ -7,6 +7,7 @@ using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
+using VianaHub.Global.Gerit.Domain.Validators.Business.ClientFiscalData;
 
 namespace VianaHub.Global.Gerit.Tests.ClientFiscalData;
 
@@ -16,7 +17,7 @@ public class ClientFiscalDataAppServiceTests
     public async Task Create_RejectsInactiveParentBeforePersistence()
     {
         var clients = new Mock<IClientRepository>();
-        clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync((ClientEntity?)null);
+        clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(null as ClientEntity);
         var domain = new Mock<IClientFiscalDataDomainService>();
         var service = Create(clients, domain);
 
@@ -42,6 +43,37 @@ public class ClientFiscalDataAppServiceTests
 
         Assert.Equal(44, result);
         domain.Verify(x => x.CreateAsync(It.Is<ClientFiscalDataEntity>(e => e.TaxNumber == "PT123" && e.VatNumber == "VAT" && e.FiscalCountry == "PT" && e.IsVatRegistered), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_RejectsTaxIdentityConflictBeforePersistence()
+    {
+        var clients = new Mock<IClientRepository>();
+        clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(new ClientEntity(7, 2, 8, null, null, "Client", null, null, false, null, null, null, null, null, null, null, null, 1, 1, 17));
+        var repo = new Mock<IClientFiscalDataDataRepository>();
+        repo.Setup(x => x.ExistsByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        repo.Setup(x => x.ExistsByTaxIdentityAsync(7, "PT", "PT123", null, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var domain = new Mock<IClientFiscalDataDomainService>();
+        var service = Create(clients, domain, repo);
+
+        var result = await service.CreateAsync(10, new CreateClientFiscalDataRequest { TaxNumber = "PT123", FiscalCountry = "PT" }, default);
+
+        Assert.Equal(0, result);
+        domain.Verify(x => x.CreateAsync(It.IsAny<ClientFiscalDataEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DomainValidator_UsesLocalizedVatRequiredMessage()
+    {
+        var localization = new Mock<ILocalizationService>();
+        localization.Setup(x => x.GetMessage(It.IsAny<string>())).Returns((string key) => key == "VatNumber_Required" ? "VAT_REQUIRED_LOCALIZED" : key);
+        localization.Setup(x => x.GetMessage(It.IsAny<string>(), It.IsAny<object[]>())).Returns((string key, object[] _) => key == "VatNumber_Required" ? "VAT_REQUIRED_LOCALIZED" : key);
+        var validator = new ClientFiscalDataValidator(localization.Object);
+        var entity = new ClientFiscalDataEntity(7, 10, "PT123", null, "PT", true, null, null, 17);
+
+        var result = await validator.ValidateForCreateAsync(entity);
+
+        Assert.Contains(result.Errors, error => error.ErrorMessage == "VAT_REQUIRED_LOCALIZED");
     }
 
     private static ClientFiscalDataAppService Create(Mock<IClientRepository> clients, Mock<IClientFiscalDataDomainService> domain, Mock<IClientFiscalDataDataRepository>? repo = null)

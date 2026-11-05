@@ -78,11 +78,6 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
         return await _repo.ExistsByIdAsync(clientId, ct);
     }
 
-    public async Task<bool> ExistsByTaxNumberAsync(int clientId, string taxNumber, CancellationToken ct = default)
-    {
-        return await _repo.ExistsByTaxIdentityAsync(_currentUser.GetTenantId(), string.Empty, taxNumber, null, ct);
-    }
-
     public async Task<int> CreateAsync(int clientId, CreateClientFiscalDataRequest request, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
@@ -185,9 +180,41 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
         }
         if (!_fileValidation.ValidateFile(file)) return false;
         using var reader = file!.OpenReadStream().CreateUtf8StreamReader();
-        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true, Delimiter = ";", MissingFieldFound = null, HeaderValidated = null, TrimOptions = TrimOptions.Trim });
-        var items = csv.GetRecords<BulkUploadClientFiscalDataItem>().ToList();
-        if (items.Count == 0) return false;
+        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true, Delimiter = ";", MissingFieldFound = null, HeaderValidated = null, TrimOptions = TrimOptions.Trim, BadDataFound = null });
+        var items = new List<BulkUploadClientFiscalDataItem>();
+        csv.Read();
+        csv.ReadHeader();
+        var maxRows = DomainExtensions.GetMaxCsvRows();
+        var row = 0;
+        while (csv.Read())
+        {
+            if (++row > maxRows)
+            {
+                _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.BulkUpload.MaxRows", maxRows), 400);
+                return false;
+            }
+            try
+            {
+                var item = csv.GetRecord<BulkUploadClientFiscalDataItem>();
+                if (item == null) continue;
+                item.TaxNumber = item.TaxNumber?.SanitizeCsvInput().NormalizeUtf8();
+                item.VatNumber = item.VatNumber?.SanitizeCsvInput().NormalizeUtf8();
+                item.FiscalCountry = item.FiscalCountry?.SanitizeCsvInput().NormalizeUtf8();
+                item.IBAN = item.IBAN?.SanitizeCsvInput().NormalizeUtf8();
+                item.FiscalEmail = item.FiscalEmail?.SanitizeCsvInput().NormalizeUtf8();
+                items.Add(item);
+            }
+            catch (CsvHelperException)
+            {
+                _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.BulkUpload.MalformedRow", row + 1), 400);
+                return false;
+            }
+        }
+        if (items.Count == 0)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.BulkUpload.EmptyFile"), 400);
+            return false;
+        }
         var ok = true;
         foreach (var item in items)
         {

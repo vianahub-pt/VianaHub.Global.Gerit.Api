@@ -18,6 +18,11 @@ export async function runClientFiscalDataSmoke(client, { clientId, now = Date.no
     });
     const detail = await c.get(`/v1/clients/${clientId}/fiscal-data/${id}`);
     if (detail.status !== 200 || detail.data?.clientId !== clientId || detail.data?.taxNumber !== payload.taxNumber) throw new SmokeError('Fiscal data detail failed');
+    const updated = await c.put(`/v1/clients/${clientId}/fiscal-data/${id}`, { ...payload, fiscalEmail: 'updated-smoke@example.invalid' });
+    if (updated.status !== 200) throw new SmokeError('Fiscal data update failed');
+    for (const operation of ['deactivate', 'deactivate', 'activate', 'activate']) {
+      if ((await c.patch(`/v1/clients/${clientId}/fiscal-data/${id}/${operation}`)).status !== 200) throw new SmokeError('Fiscal data lifecycle failed');
+    }
     return { id };
   });
 }
