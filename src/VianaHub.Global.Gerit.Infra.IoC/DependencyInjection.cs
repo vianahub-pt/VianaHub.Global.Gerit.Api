@@ -186,6 +186,7 @@ public static class DependencyInjection
         services.AddScoped<IClientAddressAppService, ClientAddressAppService>();
         services.AddScoped<IClientContactPersonAppService, ClientContactPersonAppService>();
         services.AddScoped<IClientFiscalDataAppService, ClientFiscalDataAppService>();
+        services.AddScoped<IClientDocumentAppService, ClientDocumentAppService>();
         services.AddScoped<IEmployeeFiscalDataAppService, EmployeeFiscalDataAppService>();
         services.AddScoped<IEmployeeAddressAppService, EmployeeAddressAppService>();
         services.AddScoped<IEmployeeContactPersonAppService, EmployeeContactPersonAppService>();
@@ -245,6 +246,7 @@ public static class DependencyInjection
         services.AddScoped<IVisitTeamEquipmentDomainService, VisitTeamEquipmentDomainService>();
         services.AddScoped<IVisitAttachmentDomainService, VisitAttachmentDomainService>();
         services.AddScoped<IClientFiscalDataDomainService, ClientFiscalDataDomainService>();
+        services.AddScoped<IClientDocumentDomainService, ClientDocumentDomainService>();
         services.AddScoped<IEmployeeFiscalDataDomainService, EmployeeFiscalDataDomainService>();
         services.AddScoped<IPartyTypeDomainService, PartyTypeDomainService>();
         services.AddScoped<IStatusDomainDomainService, StatusDomainDomainService>();
@@ -268,6 +270,7 @@ public static class DependencyInjection
         services.AddScoped<IClientContactPersonDataRepository, ClientContactPersonRepository>();
         services.AddScoped<IClientAddressDataRepository, ClientAddressRepository>();
         services.AddScoped<IClientFiscalDataDataRepository, ClientFiscalDataDataRepository>();
+        services.AddScoped<IClientDocumentDataRepository, ClientDocumentDataRepository>();
         services.AddScoped<IEmployeeFiscalDataDataRepository, EmployeeFiscalDataDataRepository>();
         services.AddScoped<IVisitContactDataRepository, VisitContactPersonDataRepository>();
         services.AddScoped<IVisitAddressDataRepository, VisitAddressDataRepository>();

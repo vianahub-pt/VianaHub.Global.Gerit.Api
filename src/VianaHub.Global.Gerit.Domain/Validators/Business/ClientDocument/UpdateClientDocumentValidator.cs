@@ -34,13 +34,14 @@ public class UpdateClientDocumentValidator : AbstractValidator<ClientDocumentsEn
             .WithMessage(localization.GetMessage("Domain.ClientDocument.DocumentNumberMaxLength", 100));
 
         RuleFor(x => x.IssuingCountryCode)
+            .NotEmpty()
+            .WithMessage(localization.GetMessage("Domain.ClientDocument.IssuingCountryCodeRequired"))
             .Length(2)
-            .WithMessage(localization.GetMessage("Domain.ClientDocument.IssuingCountryCodeLength"))
-            .When(x => !string.IsNullOrWhiteSpace(x.IssuingCountryCode));
+            .WithMessage(localization.GetMessage("Domain.ClientDocument.IssuingCountryCodeLength"));
 
-        // CK_ClientDocuments_Dates: ExpiresAt must be after IssuedAt when both are present
+        // CK_ClientDocuments_Dates: ExpiresAt must be equal to or after IssuedAt when both are present
         RuleFor(x => x.ExpiresAt)
-            .GreaterThan(x => x.IssuedAt)
+            .GreaterThanOrEqualTo(x => x.IssuedAt)
             .WithMessage(localization.GetMessage("Domain.ClientDocument.ExpiresAtMustBeAfterIssuedAt"))
             .When(x => x.IssuedAt.HasValue && x.ExpiresAt.HasValue);
 
