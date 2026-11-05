@@ -91,7 +91,9 @@ public class ClientFiscalDataAppServiceTests
         typeof(ClientFiscalDataEntity).GetProperty("Id")!.SetValue(fiscal, 44);
         typeof(ClientFiscalDataEntity).GetProperty("Client")!.SetValue(fiscal, client);
 
-        var mapper = new MapperConfiguration(c => c.AddProfile<ClientFiscalDataMappingProfile>(), NullLoggerFactory.Instance).CreateMapper();
+        var configuration = new MapperConfiguration(c => c.AddProfile<ClientFiscalDataMappingProfile>(), NullLoggerFactory.Instance);
+        configuration.AssertConfigurationIsValid();
+        var mapper = configuration.CreateMapper();
         var response = mapper.Map<ClientFiscalDataDetailResponse>(fiscal);
 
         Assert.Equal(44, response.Id);
