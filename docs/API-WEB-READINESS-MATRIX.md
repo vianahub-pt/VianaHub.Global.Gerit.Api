@@ -67,7 +67,7 @@ Os três NON-UI têm score técnico, mas são contados separadamente dos quatro 
 | 12 | [VisitAddress](#visitaddress) | Child/sub-resource | 91 | 20 | 15 | 10 | 12 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 3 — Tenants, Visits, AddressTypes | High | Campos e pai expostos; faltam regressões de primary/ownership/HTTP; aba de visita. | Início de UI em escopo explícito; fechar gates para100% |
 | 13 | [User](#user) | Identity/Admin | 90 | 18 | 15 | 10 | 11 | 15 | 9 | 7 | 5 | nenhum | needs product decision | High | 1 — Tenants | Medium | Create/senha/edição são operações diferentes; não retornar password. GetById sem guard410 explícito; jornada credenciais/grants requer evidência própria. | Início de UI em escopo explícito; fechar gates para100% |
 | 14 | [VisitTeam](#visitteam) | Aggregate CRUD | 88 | 20 | 14 | 9 | 11 | 15 | 10 | 4 | 5 | nenhum | needs product decision | High | 2 — Visits, Teams | Medium | VisitId/TeamId expostos; Update sobrescreve tempos com UtcNow/null e domínio ignora bool; associação temporal exige UX própria. | Correções necessárias antes de priorizar |
-| 15 | [ClientFiscalData](#clientfiscaldata) | Child/sub-resource | 87 | 20 | 15 | 10 | 11 | 15 | 10 | 4 | 2 | nenhum | needs product decision | Medium | 2 — Tenants, Clients | Medium | Validators emitem TaxNumber_Required e outros marcadores ausentes dos quatro dicionários; dados recuperáveis, mensagens inconsistentes. | Correções necessárias antes de priorizar |
+| 15 | [ClientFiscalData](#clientfiscaldata) | Child/sub-resource | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Medium | 2 — Tenants, Clients | High | Parent scope, uniqueness by tenant/country/tax number, VAT validation, lifecycle persistence, mapping and bulk upload certified. | Pronto para a aba Client → Fiscal Data; smoke preparado |
 | 16 | [EmployeeFiscalData](#employeefiscaldata) | Child/sub-resource | 87 | 20 | 15 | 10 | 11 | 15 | 10 | 4 | 2 | nenhum | needs product decision | Medium | 2 — Tenants, Employees | Medium | Validators fiscais usam marcadores literais ausentes dos dicionários; falta regressão específica. | Correções necessárias antes de priorizar |
 | 17 | [VisitTeamFunction](#visitteamfunction) | Catalog CRUD | 86 | 17 | 14 | 10 | 11 | 15 | 10 | 4 | 5 | nenhum | needs product decision | Medium | 1 — Tenants | Medium | Rota aninhada recebe visitTeamId, mas tabela é catálogo por tenant sem FK VisitTeam. Serviço ignora pai; definir semântica, não inventar propriedade. | Correções necessárias antes de priorizar |
 | 18 | [AcquisitionSourceType](#acquisitionsourcetype) | Catalog CRUD | 84 | 17 | 13 | 9 | 12 | 15 | 8 | 7 | 3 | nenhum | needs product decision | Low | 0 — global/contexto auth | High | Create multilíngue e detail localizado; PUT pt-PT; sem mutation por translationId, logo sem cap automático por ID não exigido. Domínio ignora bool de persistência. | Correções necessárias antes de priorizar |
@@ -1112,7 +1112,7 @@ Schema SQL (sem execução):
 
 <a id="clientfiscaldata"></a>
 
-### ClientFiscalData — 87% (C)
+### ClientFiscalData — 100% (A)
 
 Validators emitem TaxNumber_Required e outros marcadores ausentes dos quatro dicionários; dados recuperáveis, mensagens inconsistentes.
 
@@ -1128,8 +1128,8 @@ Validators emitem TaxNumber_Required e outros marcadores ausentes dos quatro dic
 - Route validators: [CreateClientFiscalDataRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Business/ClientFiscalData/CreateClientFiscalDataRouteValidator.cs); [UpdateClientFiscalDataRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Business/ClientFiscalData/UpdateClientFiscalDataRouteValidator.cs). WithValidation no módulo=2; conferir registro DI.
 - Domain validators: [ActivateClientFiscalDataValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Business/ClientFiscalData/ActivateClientFiscalDataValidator.cs); [ClientFiscalDataValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Business/ClientFiscalData/ClientFiscalDataValidator.cs); [CreateClientFiscalDataValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Business/ClientFiscalData/CreateClientFiscalDataValidator.cs); [DeactivateClientFiscalDataValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Business/ClientFiscalData/DeactivateClientFiscalDataValidator.cs); [DeleteClientFiscalDataValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Business/ClientFiscalData/DeleteClientFiscalDataValidator.cs); [UpdateClientFiscalDataValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Business/ClientFiscalData/UpdateClientFiscalDataValidator.cs).
 - Tests: [IdempotentStateTransitionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentStateTransitionTests.cs).
-- Mapping: AutoMapper sim; complexidade Medium; culture-sensitive/resolver não identificado. [ClientFiscalDataMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Business/ClientFiscalDataMappingProfile.cs).
-- Locale: 22 literais auditados; ausentes por locale: pt-PT=13, en-US=13, pt-BR=13, es-ES=13. Ausentes: `TaxNumber_Required, TaxNumber_MaxLength, ClientFiscalData_Deleted, ModifiedBy_Required, VatNumber_MaxLength, FiscalCountry_Required, FiscalCountry_Length, IBAN_MaxLength, FiscalEmail_MaxLength, FiscalEmail_Invalid, TenantId_Required, ClientId_Required, CreatedBy_Required`.
+- Mapping: AutoMapper com resolução localizada de ClientType; complexidade Medium. [ClientFiscalDataMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Business/ClientFiscalDataMappingProfile.cs).
+- Locale: mensagens de validação e fallback adicionados aos quatro dicionários; sem chaves ausentes para os fluxos certificados.
 
 <details>
 <summary>Operações, DTOs, grants e constraints</summary>
@@ -1144,7 +1144,7 @@ Validators emitem TaxNumber_Required e outros marcadores ausentes dos quatro dic
 | PATCH | /{clientId}/fiscal-data/{id}/activate | ActivateClientFiscalData; ActivateAsync | 401, 403, 200, 410, 500 |
 | PATCH | /{clientId}/fiscal-data/{id}/deactivate | DeactivateClientFiscalData; DeactivateAsync | 401, 403, 200, 410, 500 |
 | DELETE | /{clientId}/fiscal-data/{id} | DeleteClientFiscalData; DeleteAsync | 401, 403, 200, 410, 500 |
-| POST | /{clientId}/fiscal-data/bulk-upload | BulkUploadClientFiscalData; BulkUploadAsync | 501, 401, 403, 200, 400, 500 |
+| POST | /{clientId}/fiscal-data/bulk-upload | BulkUploadClientFiscalData; BulkUploadAsync | 401, 403, 200, 400, 500 |
 
 DTOs:
 

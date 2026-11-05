@@ -14,7 +14,9 @@ public class ClientFiscalDataValidator : AbstractValidator<ClientFiscalDataEntit
             .MaximumLength(20).WithMessage("TaxNumber_MaxLength");
 
         RuleFor(x => x.VatNumber)
-            .MaximumLength(20).WithMessage("VatNumber_MaxLength");
+            .MaximumLength(20).WithMessage("VatNumber_MaxLength")
+            .NotEmpty().WithMessage("VatNumber_Required")
+            .When(x => x.IsVatRegistered);
 
         RuleFor(x => x.FiscalCountry)
             .NotEmpty().WithMessage("FiscalCountry_Required")

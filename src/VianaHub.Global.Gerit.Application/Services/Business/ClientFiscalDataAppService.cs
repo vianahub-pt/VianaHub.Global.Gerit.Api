@@ -1,10 +1,15 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using CsvHelper;
+using CsvHelper.Configuration;
+using System.Globalization;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientFiscalData;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientFiscalData;
+using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
+using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.ReadModels;
@@ -15,26 +20,32 @@ namespace VianaHub.Global.Gerit.Application.Services.Business;
 public class ClientFiscalDataAppService : IClientFiscalDataAppService
 {
     private readonly IClientFiscalDataDataRepository _repo;
+    private readonly IClientRepository _clientRepository;
     private readonly IClientFiscalDataDomainService _domain;
     private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
+    private readonly IFileValidationService _fileValidation;
 
     public ClientFiscalDataAppService(
         IClientFiscalDataDataRepository repo,
+        IClientRepository clientRepository,
         IClientFiscalDataDomainService domain,
         IMapper mapper,
         INotify notify,
         ILocalizationService localization,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        IFileValidationService fileValidation)
     {
         _repo = repo;
+        _clientRepository = clientRepository;
         _domain = domain;
         _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
+        _fileValidation = fileValidation;
     }
 
     public async Task<IEnumerable<ClientFiscalDataResponse>> GetAllAsync(int clientId, CancellationToken ct)
@@ -69,12 +80,17 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
 
     public async Task<bool> ExistsByTaxNumberAsync(int clientId, string taxNumber, CancellationToken ct = default)
     {
-        return await _repo.ExistsByTaxNumberAsync(clientId, taxNumber, ct);
+        return await _repo.ExistsByTaxIdentityAsync(_currentUser.GetTenantId(), string.Empty, taxNumber, null, ct);
     }
 
     public async Task<int> CreateAsync(int clientId, CreateClientFiscalDataRequest request, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
+        if (!await HasActiveClientAsync(clientId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.GetById.ResourceNotFound"), 410);
+            return 0;
+        }
         var exists = await _repo.ExistsByIdAsync(clientId, ct);
         if (exists)
         {
@@ -84,7 +100,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
 
         if (!string.IsNullOrWhiteSpace(request.TaxNumber))
         {
-            var taxNumberExists = await _repo.ExistsByTaxNumberAsync(clientId, request.TaxNumber, ct);
+            var taxNumberExists = await _repo.ExistsByTaxIdentityAsync(tenantId, request.FiscalCountry?.Trim() ?? string.Empty, request.TaxNumber.Trim(), null, ct);
             if (taxNumberExists)
             {
                 _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.Create.TaxNumberAlreadyExists"), 409);
@@ -108,7 +124,7 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
 
         if (!string.IsNullOrWhiteSpace(request.TaxNumber))
         {
-            var taxNumberExists = await _repo.ExistsByTaxNumberAsync(clientId, request.TaxNumber, ct);
+            var taxNumberExists = await _repo.ExistsByTaxIdentityAsync(_currentUser.GetTenantId(), request.FiscalCountry?.Trim() ?? string.Empty, request.TaxNumber.Trim(), id, ct);
             if (taxNumberExists)
             {
                 _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.Update.TaxNumberAlreadyExists"), 409);
@@ -162,7 +178,28 @@ public class ClientFiscalDataAppService : IClientFiscalDataAppService
 
     public async Task<bool> BulkUploadAsync(int clientId, IFormFile? file, CancellationToken ct)
     {
-        _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.BulkUpload.NotImplemented"), 501);
-        return false;
+        if (!await HasActiveClientAsync(clientId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientFiscalData.GetById.ResourceNotFound"), 410);
+            return false;
+        }
+        if (!_fileValidation.ValidateFile(file)) return false;
+        using var reader = file!.OpenReadStream().CreateUtf8StreamReader();
+        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = true, Delimiter = ";", MissingFieldFound = null, HeaderValidated = null, TrimOptions = TrimOptions.Trim });
+        var items = csv.GetRecords<BulkUploadClientFiscalDataItem>().ToList();
+        if (items.Count == 0) return false;
+        var ok = true;
+        foreach (var item in items)
+        {
+            var request = new CreateClientFiscalDataRequest { TaxNumber = item.TaxNumber, VatNumber = item.VatNumber, FiscalCountry = item.FiscalCountry, IsVatRegistered = item.IsVatRegistered, IBAN = item.IBAN, FiscalEmail = item.FiscalEmail };
+            if (await CreateAsync(clientId, request, ct) == 0) ok = false;
+        }
+        return ok;
+    }
+
+    private async Task<bool> HasActiveClientAsync(int clientId, CancellationToken ct)
+    {
+        var client = await _clientRepository.GetByIdAsync(clientId, ct);
+        return client is not null && client.IsActive && !client.IsDeleted;
     }
 }
