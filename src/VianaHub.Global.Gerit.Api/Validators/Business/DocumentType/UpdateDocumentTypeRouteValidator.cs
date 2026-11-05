@@ -11,10 +11,5 @@ public class UpdateDocumentTypeRouteValidator : AbstractValidator<UpdateDocument
 {
     public UpdateDocumentTypeRouteValidator(ILocalizationService localization)
     {
-        RuleFor(x => x.Code)
-            .NotEmpty()
-            .WithMessage(localization.GetMessage("Api.Validator.DocumentType.Update.Code"))
-            .MaximumLength(50)
-            .WithMessage(localization.GetMessage("Api.Validator.DocumentType.Update.Code.MaximumLength", 50));
     }
 }

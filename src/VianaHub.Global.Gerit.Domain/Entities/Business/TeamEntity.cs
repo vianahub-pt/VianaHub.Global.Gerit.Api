@@ -12,15 +12,15 @@ public class TeamEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Property
-    public TenantEntity Tenant { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
 
     // Construtor protegido para o EF Core
     protected TeamEntity() { }
 
     /// <summary>
-    /// Construtor para criação de um novo Team
+    /// Construtor para criaÃ§Ã£o de um novo Team
     /// </summary>
-    public TeamEntity(int tenantId, string name, string description, int createdBy)
+    public TeamEntity(int tenantId, string? name, string? description, int createdBy)
     {
         TenantId = tenantId;
         Name = name;
@@ -31,7 +31,7 @@ public class TeamEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string name, string description, int modifiedBy)
+    public void Update(string? name, string? description, int modifiedBy)
     {
         Name = name;
         Description = description;

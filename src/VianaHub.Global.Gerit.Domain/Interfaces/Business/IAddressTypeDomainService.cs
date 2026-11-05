@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 
 public interface IAddressTypeDomainService
 {
-    Task<AddressTypeEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<AddressTypeEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<AddressTypeEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<AddressTypeEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

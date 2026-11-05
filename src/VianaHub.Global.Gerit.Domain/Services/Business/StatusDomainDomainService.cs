@@ -23,7 +23,7 @@ public class StatusDomainDomainService : IStatusDomainDomainService
         _notify = notify;
     }
 
-    public async Task<StatusDomainEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<StatusDomainEntity?> GetByIdAsync(int id, CancellationToken ct)
         => await _repo.GetByIdAsync(id, ct);
 
     public async Task<IEnumerable<StatusDomainEntity>> GetAllAsync(CancellationToken ct)

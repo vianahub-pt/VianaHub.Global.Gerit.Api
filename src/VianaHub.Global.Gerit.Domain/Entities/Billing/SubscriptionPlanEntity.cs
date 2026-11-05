@@ -36,7 +36,7 @@ public class SubscriptionPlanEntity : Entity
     /// Name e Description são armazenados separadamente na tabela de traduções.
     /// </summary>
     public SubscriptionPlanEntity(
-        string code,
+        string? code,
         decimal? pricePerHour,
         decimal? pricePerDay,
         decimal? pricePerMonth,
@@ -60,7 +60,6 @@ public class SubscriptionPlanEntity : Entity
     }
 
     public void Update(
-        string code,
         decimal? pricePerHour,
         decimal? pricePerDay,
         decimal? pricePerMonth,
@@ -70,7 +69,7 @@ public class SubscriptionPlanEntity : Entity
         int maxPhotosPerVisit,
         int modifiedBy)
     {
-        Code = code;
+
         PricePerHour = pricePerHour;
         PricePerDay = pricePerDay;
         PricePerMonth = pricePerMonth;

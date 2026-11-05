@@ -10,7 +10,7 @@ public interface IUserRoleAppService
     Task<IList<UserRoleResponse>> GetByUserAsync(int userId, CancellationToken ct);
     Task<IList<UserRoleResponse>> GetByRoleAsync(int roleId, CancellationToken ct);
     Task<IList<UserRoleResponse>> GetAllAsync(CancellationToken ct);
-    Task<UserRoleResponse> CreateAsync(CreateUserRoleRequest request, CancellationToken ct);
+    Task<UserRoleResponse?> CreateAsync(CreateUserRoleRequest request, CancellationToken ct);
     Task DeleteAsync(int userId, int roleId, CancellationToken ct);
-    Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct);
+    Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct);
 }

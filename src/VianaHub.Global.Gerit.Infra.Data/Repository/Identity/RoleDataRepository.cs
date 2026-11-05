@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Microsoft.EntityFrameworkCore;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Pagination;
@@ -21,7 +22,7 @@ public class RoleDataRepository : IRoleDataRepository
         _logger = logger;
     }
 
-    public async Task<RoleEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<RoleEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<RoleEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
@@ -45,8 +46,8 @@ public class RoleDataRepository : IRoleDataRepository
             var search = request.Search.Trim().ToLower();
 
             query = query.Where(x =>
-                EF.Functions.Like(x.Name.ToLower(), $"%{search}%")
-                || EF.Functions.Like(x.Description.ToLower(), $"%{search}%")
+                (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%"))
+                || (x.Description != null && EF.Functions.Like(x.Description.ToLower(), $"%{search}%"))
             );
         }
 
@@ -82,7 +83,7 @@ public class RoleDataRepository : IRoleDataRepository
         return await _context.Set<RoleEntity>().AsNoTracking().AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByNameAsync(int tenantId, string name, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(int tenantId, string? name, CancellationToken ct)
     {
         return await _context.Set<RoleEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Name == name && !x.IsDeleted, ct);
     }
@@ -99,7 +100,7 @@ public class RoleDataRepository : IRoleDataRepository
         return await _context.SaveChangesAsync(ct) > 0;
     }
 
-    // Diagnostic helper: lê o SESSION_CONTEXT na conexão atual e registra no logger.
+    // Diagnostic helper: lÃª o SESSION_CONTEXT na conexÃ£o atual e registra no logger.
     public async Task LogSessionContextAsync(CancellationToken ct)
     {
         try
@@ -125,7 +126,7 @@ public class RoleDataRepository : IRoleDataRepository
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[RLS][Diagnostic] Failed to read SESSION_CONTEXT");
+            _logger.LogWarning("[RLS][Diagnostic] Failed to read SESSION_CONTEXT | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
         }
     }
 }

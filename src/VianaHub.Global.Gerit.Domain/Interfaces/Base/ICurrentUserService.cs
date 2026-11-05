@@ -1,4 +1,4 @@
-﻿using VianaHub.Global.Gerit.Domain.ReadModels;
+using VianaHub.Global.Gerit.Domain.ReadModels;
 
 namespace VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
@@ -41,6 +41,11 @@ public interface ICurrentUserService
     /// </summary>
     /// <returns>True se houver usuário autenticado, false caso contrário</returns>
     bool IsAuthenticated();
+
+    /// <summary>
+    /// Verifica se o usuário autenticado pertence ao perfil informado.
+    /// </summary>
+    bool IsInRole(string role);
 
     /// <summary>
     /// Obtém o identificador do usuário para usar em campos de auditoria (CreatedBy/ModifiedBy).

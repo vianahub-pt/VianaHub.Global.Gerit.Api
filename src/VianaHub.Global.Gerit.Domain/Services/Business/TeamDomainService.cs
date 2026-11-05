@@ -24,7 +24,7 @@ public class TeamDomainService : ITeamDomainService
         _notify = notify;
     }
 
-    public async Task<TeamEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<TeamEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }

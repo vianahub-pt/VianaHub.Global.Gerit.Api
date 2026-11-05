@@ -15,8 +15,5 @@ public class DeleteClientContactValidator : AbstractValidator<ClientContactPerso
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.ClientContactPerson.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.ClientContactPerson.AlreadyDeleted"));
     }
 }

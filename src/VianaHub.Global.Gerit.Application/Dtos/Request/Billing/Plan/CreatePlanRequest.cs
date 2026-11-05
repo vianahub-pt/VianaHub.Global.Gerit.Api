@@ -2,9 +2,8 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Billing.Plan;
 
 public class CreatePlanRequest
 {
-    public string? Code { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
+    [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
+    public List<CreatePlanTranslationRequest>? Translations { get; set; }
     public decimal? PricePerHour { get; set; }
     public decimal? PricePerDay { get; set; }
     public decimal? PricePerMonth { get; set; }

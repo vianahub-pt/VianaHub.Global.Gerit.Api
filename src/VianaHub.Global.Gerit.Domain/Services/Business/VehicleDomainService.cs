@@ -23,7 +23,7 @@ public class VehicleDomainService : IVehicleDomainService
         _notify = notify;
     }
 
-    public async Task<VehicleEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VehicleEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }

@@ -82,14 +82,14 @@ public class SubscriptionPlanFileRulesMapping : IEntityTypeConfiguration<Subscri
             .HasDatabaseName("UQ_SubscriptionPlanFileRules_Plan_FileType");
 
         // Check constraint: MaxFileSizeMB deve ser maior que zero
-        builder.HasCheckConstraint(
+        builder.ToTable(table => table.HasCheckConstraint(
             "CK_SubscriptionPlanFileRules_MaxFileSizeMB",
-            "[MaxFileSizeMB] > 0");
+            "[MaxFileSizeMB] > 0"));
 
         // Check constraint: não pode estar ativo e deletado ao mesmo tempo
-        builder.HasCheckConstraint(
+        builder.ToTable(table => table.HasCheckConstraint(
             "CK_SubscriptionPlanFileRules_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
 
         // Indice nao clusterizado: busca por SubscriptionPlan
         builder.HasIndex(x => x.SubscriptionPlanId)

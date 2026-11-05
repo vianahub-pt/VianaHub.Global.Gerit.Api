@@ -13,7 +13,7 @@ public interface ISubscriptionAppService
     Task<ListPageResponse<SubscriptionResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct);
     Task<IEnumerable<SubscriptionResponse>> GetActiveSubscriptionsAsync(CancellationToken ct);
     Task<IEnumerable<SubscriptionResponse>> GetExpiringSubscriptionsAsync(int daysBeforeExpiration, CancellationToken ct);
-    
+
     Task<int> CreateAsync(CreateSubscriptionRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int id, UpdateSubscriptionRequest request, CancellationToken ct);
     Task<bool> ActivateAsync(int id, CancellationToken ct);
@@ -21,5 +21,5 @@ public interface ISubscriptionAppService
     Task<bool> DeleteAsync(int id, CancellationToken ct);
     Task<bool> CancelAsync(int id, CancelSubscriptionRequest request, CancellationToken ct);
     Task<bool> RenewAsync(int id, RenewSubscriptionRequest request, CancellationToken ct);
-    Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct);
+    Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct);
 }

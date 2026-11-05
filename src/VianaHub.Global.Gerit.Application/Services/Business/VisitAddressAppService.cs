@@ -57,7 +57,7 @@ public class VisitAddressAppService : IVisitAddressAppService
         return _mapper.Map<IEnumerable<VisitAddressResponse>>(entities);
     }
 
-    public async Task<VisitAddressDetailResponse> GetByIdAsync(int visitId, int id, CancellationToken ct)
+    public async Task<VisitAddressDetailResponse?> GetByIdAsync(int visitId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(visitId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -173,7 +173,7 @@ public class VisitAddressAppService : IVisitAddressAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int visitId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int visitId, IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -191,7 +191,7 @@ public class VisitAddressAppService : IVisitAddressAppService
         return await ProcessBulkItemsAsync(visitId, items, ct);
     }
 
-    private List<BulkUploadVisitAddressItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadVisitAddressItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

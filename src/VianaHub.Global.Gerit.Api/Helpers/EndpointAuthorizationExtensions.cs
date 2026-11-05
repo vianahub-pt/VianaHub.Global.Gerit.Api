@@ -1,4 +1,4 @@
-﻿using VianaHub.Global.Gerit.Api.Filters;
+using VianaHub.Global.Gerit.Api.Filters;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
 namespace VianaHub.Global.Gerit.Api.Helpers;
@@ -26,8 +26,8 @@ public static class EndpointAuthorizationExtensions
     public static RouteHandlerBuilder CustomAuthorize(
         this RouteHandlerBuilder builder,
         string allowedRoles,
-        string resource,
-        string action)
+        string? resource,
+        string? action)
     {
         return builder.AddEndpointFilter(async (context, next) =>
         {

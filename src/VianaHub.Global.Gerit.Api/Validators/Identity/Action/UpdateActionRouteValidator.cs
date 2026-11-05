@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Action;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
@@ -11,9 +11,6 @@ public class UpdateActionRouteValidator : AbstractValidator<UpdateActionRequest>
     public UpdateActionRouteValidator(ILocalizationService localization)
     {
         _localization = localization;
-
-        RuleFor(x => x.Name)
-            .MaximumLength(200).WithMessage(_localization.GetMessage("Api.Validator.Action.Update.Name.MaximumLength", 200));
 
         RuleFor(x => x.Description)
             .MaximumLength(255).WithMessage(_localization.GetMessage("Api.Validator.Action.Update.Description.MaximumLength", 255));

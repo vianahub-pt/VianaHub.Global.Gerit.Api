@@ -14,7 +14,7 @@ public class PartyTypeEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public ICollection<PartyTypeTranslationsEntity> Translations { get; private set; }
+    public ICollection<PartyTypeTranslationsEntity> Translations { get; private set; } = new List<PartyTypeTranslationsEntity>();
 
     // Construtor protegido para o EF Core
     protected PartyTypeEntity() { }
@@ -22,7 +22,7 @@ public class PartyTypeEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo PartyType
     /// </summary>
-    public PartyTypeEntity(string code, int createdBy)
+    public PartyTypeEntity(string? code, int createdBy)
     {
         Code = code;
         IsActive = true;
@@ -32,9 +32,8 @@ public class PartyTypeEntity : Entity
         Translations = new List<PartyTypeTranslationsEntity>();
     }
 
-    public void UpdateCode(string code, int modifiedBy)
+    public void MarkModified(int modifiedBy)
     {
-        Code = code;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

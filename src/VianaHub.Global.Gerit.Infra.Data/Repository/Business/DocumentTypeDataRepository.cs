@@ -11,6 +11,10 @@ public class DocumentTypeDataRepository : IDocumentTypeDataRepository
 {
     private readonly GeritDbContext _context;
 
+    // Consulta a tradução diretamente: o índice único também reserva nomes de pais removidos.
+    public Task<bool> ExistsByTranslationAsync(string? languageCode, string? name, CancellationToken ct) =>
+        _context.Set<DocumentTypeTranslationsEntity>().AnyAsync(x => x.LanguageCode == languageCode && x.Name == name, ct);
+
     public DocumentTypeDataRepository(GeritDbContext context)
     {
         _context = context;
@@ -26,7 +30,7 @@ public class DocumentTypeDataRepository : IDocumentTypeDataRepository
             .ToListAsync(ct);
     }
 
-    public async Task<DocumentTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<DocumentTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<DocumentTypeEntity>()
             .AsNoTracking()
@@ -45,7 +49,7 @@ public class DocumentTypeDataRepository : IDocumentTypeDataRepository
         {
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
-                EF.Functions.Like(x.Code.ToLower(), $"%{search}%"));
+                (x.Code != null && EF.Functions.Like(x.Code.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -80,7 +84,7 @@ public class DocumentTypeDataRepository : IDocumentTypeDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByCodeAsync(string code, CancellationToken ct)
+    public async Task<bool> ExistsByCodeAsync(string? code, CancellationToken ct)
     {
         return await _context.Set<DocumentTypeEntity>()
             .AsNoTracking()

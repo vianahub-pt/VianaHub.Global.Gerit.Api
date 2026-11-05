@@ -1,8 +1,9 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Billing.Plan;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Billing.Plan;
 
 public class BulkUploadPlanItem
 {
-    public string? Code { get; set; }
+    public string? EnglishName { get; set; }
+    public string? EnglishDescription { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
     public decimal? PricePerHour { get; set; }

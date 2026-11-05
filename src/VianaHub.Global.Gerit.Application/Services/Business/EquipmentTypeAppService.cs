@@ -51,7 +51,7 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
         return _mapper.Map<IEnumerable<EquipmentTypeResponse>>(entities);
     }
 
-    public async Task<EquipmentTypeDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<EquipmentTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -75,7 +75,7 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
         var exists = await _repo.ExistsByNameAsync(tenantId, request.Name, ct);
         if (exists)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
@@ -90,6 +90,12 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
         if (entity == null)
         {
             _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.Update.ResourceNotFound"), 410);
+            return false;
+        }
+
+        if (await _repo.ExistsByNameExceptIdAsync(_currentUser.GetTenantId(), request.Name, id, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.Create.ResourceAlreadyExists"), 409);
             return false;
         }
 
@@ -137,7 +143,7 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -158,7 +164,7 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadEquipmentTypeItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadEquipmentTypeItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -212,7 +218,7 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
                     }
                     rowCount++;
                 }
-                catch (CsvHelperException ex)
+                catch (CsvHelperException)
                 {
                     // Log linha com erro mas continua processamento
                     _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
@@ -229,7 +235,7 @@ public class EquipmentTypeAppService : IEquipmentTypeAppService
 
             return records;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _notify.Add(_localization.GetMessage("Application.Service.EquipmentType.ReadCsvFile.Exception"), 400);
             return null;

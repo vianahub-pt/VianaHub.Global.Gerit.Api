@@ -15,8 +15,5 @@ public class DeleteClientAddressValidator : AbstractValidator<ClientAddressesEnt
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.ClientAddress.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.ClientAddress.AlreadyDeleted"));
     }
 }

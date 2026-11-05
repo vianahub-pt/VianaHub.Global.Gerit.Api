@@ -10,7 +10,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Business;
 public interface IStatusDomainAppService
 {
     Task<IEnumerable<StatusDomainResponse>> GetAllAsync(CancellationToken ct);
-    Task<StatusDomainDetailResponse> GetByIdAsync(int id, CancellationToken ct);
+    Task<StatusDomainDetailResponse?> GetByIdAsync(int id, CancellationToken ct);
     Task<ListPageResponse<StatusDomainResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct);
     Task<int> CreateAsync(CreateStatusDomainRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int id, UpdateStatusDomainRequest request, CancellationToken ct);

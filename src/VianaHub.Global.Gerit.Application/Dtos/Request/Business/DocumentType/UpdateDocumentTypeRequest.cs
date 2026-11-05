@@ -5,5 +5,4 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.DocumentType;
 /// </summary>
 public class UpdateDocumentTypeRequest
 {
-    public string? Code { get; set; }
 }

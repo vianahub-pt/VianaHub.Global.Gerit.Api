@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
 using Hangfire.Dashboard;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
@@ -6,7 +7,7 @@ using System.Text;
 namespace VianaHub.Global.Gerit.Api.Security;
 
 /// <summary>
-/// ConfiguraÁ„o do dashboard do Hangfire.
+/// Configura√ß√£o do dashboard do Hangfire.
 /// </summary>
 public class HangfireDashboardSettings
 {
@@ -16,8 +17,8 @@ public class HangfireDashboardSettings
     public bool Enabled { get; set; } = true;
 
     /// <summary>
-    /// Habilita autenticaÁ„o Basic Auth no dashboard.
-    /// Quando false e o ambiente n„o È Development, o acesso È bloqueado.
+    /// Habilita autentica√ß√£o Basic Auth no dashboard.
+    /// Quando false e o ambiente n√£o √© Development, o acesso √© bloqueado.
     /// </summary>
     public bool RequireBasicAuth { get; set; } = true;
 
@@ -29,7 +30,7 @@ public class HangfireDashboardSettings
     /// <summary>
     /// Password para Basic Auth.
     /// </summary>
-    public string? Password { get; set; } = "changeme";
+    public string? Password { get; set; }
 }
 
 /// <summary>
@@ -37,11 +38,11 @@ public class HangfireDashboardSettings
 /// 
 /// Comportamento por ambiente:
 /// - Development (com debugger): acesso livre para facilitar testes locais.
-/// - Outros ambientes: requer Basic Auth configurada via appsettings (secÁ„o "HangfireDashboard").
+/// - Outros ambientes: requer Basic Auth configurada via appsettings (sec√ß√£o "HangfireDashboard").
 /// 
-/// O uso de Basic Auth È necess·rio porque o browser nunca envia o header
-/// "Authorization: Bearer ..." em navegaÁ„o normal ó tornando a validaÁ„o
-/// de JWT in˙til para proteger o dashboard.
+/// O uso de Basic Auth √© necess√°rio porque o browser nunca envia o header
+/// "Authorization: Bearer ..." em navega√ß√£o normal ‚Äî tornando a valida√ß√£o
+/// de JWT in√∫til para proteger o dashboard.
 /// </summary>
 public class HangfireDashboardAuthorizationFilter : IDashboardAuthorizationFilter
 {
@@ -62,17 +63,25 @@ public class HangfireDashboardAuthorizationFilter : IDashboardAuthorizationFilte
         var env = httpContext.RequestServices.GetService<IWebHostEnvironment>();
         var isDebugDevelopment = env != null && env.IsDevelopment() && System.Diagnostics.Debugger.IsAttached;
 
-        // Em Development com debugger anexado, libera sem autenticaÁ„o (apenas local)
+        // Em Development com debugger anexado, libera sem autentica√ß√£o (apenas local)
         if (isDebugDevelopment)
         {
             _logger.LogDebug("[Hangfire] Acesso ao dashboard liberado: ambiente Development com debugger.");
             return true;
         }
 
-        // Se Basic Auth n„o est· configurado, bloqueia por seguranÁa
+        // Se Basic Auth n√£o est√° configurado, bloqueia por seguran√ßa
         if (!_settings.RequireBasicAuth)
         {
             _logger.LogWarning("[Hangfire] Acesso ao dashboard bloqueado: RequireBasicAuth=false fora de Development. Configure HangfireDashboard:RequireBasicAuth=true.");
+            return false;
+        }
+
+        // Falha fechada quando os segredos obrigat√≥rios n√£o foram provisionados.
+        if (string.IsNullOrWhiteSpace(_settings.Username) || string.IsNullOrWhiteSpace(_settings.Password))
+        {
+            _logger.LogWarning("[Hangfire] Dashboard credentials are not configured.");
+            ChallengeBasicAuth(httpContext);
             return false;
         }
 
@@ -104,15 +113,15 @@ public class HangfireDashboardAuthorizationFilter : IDashboardAuthorizationFilte
 
             if (!valid)
             {
-                _logger.LogWarning("[Hangfire] Tentativa de acesso ao dashboard com credenciais inv·lidas. Username: {Username} | IP: {IP}",
-                    username,
+                _logger.LogWarning("[Hangfire] Tentativa de acesso ao dashboard com credenciais inv√°lidas. Username: {Username} | IP: {IP}",
+                    LogValueSanitizer.Sanitize(username),
                     httpContext.Connection.RemoteIpAddress);
                 ChallengeBasicAuth(httpContext);
                 return false;
             }
 
             _logger.LogInformation("[Hangfire] Acesso ao dashboard autorizado. Username: {Username} | IP: {IP}",
-                username,
+                LogValueSanitizer.Sanitize(username),
                 httpContext.Connection.RemoteIpAddress);
             return true;
         }

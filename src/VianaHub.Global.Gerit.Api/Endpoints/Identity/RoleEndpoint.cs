@@ -25,6 +25,7 @@ public static class RoleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "GetAll")
         .WithName("GetAllRoles")
         .WithSummary("Swagger.Endpoint.Role.GetAll.Summary")
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<IEnumerable<RoleResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -37,7 +38,9 @@ public static class RoleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "GetBy")
         .WithName("GetRoleById")
         .WithSummary("Swagger.Endpoint.Role.GetById.Summary")
-        .Produces<RoleResponse>(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<RoleDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -49,6 +52,7 @@ public static class RoleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "GetPaged")
         .WithName("GetPagedRoles")
         .WithSummary("Swagger.Endpoint.Role.GetPaged.Summary")
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ListPageResponse<RoleResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
@@ -62,6 +66,9 @@ public static class RoleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "Create")
         .WithName("CreateRole")
         .WithSummary("Swagger.Endpoint.Role.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -75,7 +82,10 @@ public static class RoleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "Update")
         .WithName("UpdateRole")
         .WithSummary("Swagger.Endpoint.Role.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateRoleRequest>();
@@ -88,7 +98,10 @@ public static class RoleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "Activate")
         .WithName("ActivateRole")
         .WithSummary("Swagger.Endpoint.Role.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -100,7 +113,10 @@ public static class RoleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "Deactivate")
         .WithName("DeactivateRole")
         .WithSummary("Swagger.Endpoint.Role.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -112,7 +128,10 @@ public static class RoleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Roles", "Delete")
         .WithName("DeleteRole")
         .WithSummary("Swagger.Endpoint.Role.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -134,7 +153,10 @@ public static class RoleEndpoint
         .WithSummary("Swagger.Endpoint.Role.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

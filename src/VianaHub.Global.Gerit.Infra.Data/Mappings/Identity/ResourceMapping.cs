@@ -23,11 +23,6 @@ public class ResourceMapping : IEntityTypeConfiguration<ResourceEntity>
             .IsRequired();
 
         // Propriedades
-        builder.Property(r => r.Code)
-            .HasColumnType("NVARCHAR(50)")
-            .HasMaxLength(50)
-            .IsRequired();
-
         builder.Property(r => r.Name)
             .HasColumnType("NVARCHAR(100)")
             .HasMaxLength(100)
@@ -62,9 +57,10 @@ public class ResourceMapping : IEntityTypeConfiguration<ResourceEntity>
             .IsRequired(false);
 
         // Constraints �nicos
-        builder.HasIndex(r => r.Code)
+        builder.HasIndex(x => x.Name)
             .IsUnique()
-            .HasDatabaseName("UQ_Resources_Code");
+            .HasDatabaseName("UX_Resources_Name")
+            .HasFilter("[IsDeleted] = 0");
 
         // Relacionamentos
         builder.HasMany(r => r.RolePermissions)

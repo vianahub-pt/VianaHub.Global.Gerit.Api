@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 
@@ -14,7 +14,7 @@ public class EmployeeTeamMapping : IEntityTypeConfiguration<EmployeeTeamEntity>
         builder.HasKey(x => x.Id).HasName("PK_EmployeeTeam");
 
         builder.Property(x => x.Id)
-            .UseIdentityColumn(1,1)
+            .UseIdentityColumn(1, 1)
             .IsRequired();
 
         builder.Property(x => x.TenantId)
@@ -85,11 +85,11 @@ public class EmployeeTeamMapping : IEntityTypeConfiguration<EmployeeTeamEntity>
             .OnDelete(DeleteBehavior.NoAction);
 
         // Constraints
-        builder.HasCheckConstraint("CK_EmployeeTeam_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+        builder.ToTable(table => table.HasCheckConstraint("CK_EmployeeTeam_Active_Deleted",
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
 
-        builder.HasCheckConstraint("CK_EmployeeTeam_EndDateTime",
-            "[EndDateTime] IS NULL OR [EndDateTime] >= [StartDateTime]");
+        builder.ToTable(table => table.HasCheckConstraint("CK_EmployeeTeam_EndDateTime",
+            "[EndDateTime] IS NULL OR [EndDateTime] >= [StartDateTime]"));
 
         // Índice filtrado: apenas uma associação ativa por (Team, Employee)
         builder.HasIndex(x => new { x.TenantId, x.TeamId, x.EmployeeId })

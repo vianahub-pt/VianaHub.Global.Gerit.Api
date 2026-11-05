@@ -23,7 +23,7 @@ public class SubscriptionMappingProfile : Profile
                 TranslationResolver.Resolve(src.SubscriptionPlan?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)
                 ?? string.Empty))
             .ForMember(dest => dest.StatusDomainName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.StatusDomain?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.StatusDomain?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
 
         // Mapeia SubscriptionEntity -> SubscriptionDetailResponse (com audit fields)
@@ -36,10 +36,10 @@ public class SubscriptionMappingProfile : Profile
                 ?? string.Empty))
             .ForMember(dest => dest.StatusDefinitionId, opt => opt.MapFrom(src => src.StatusDefinitionId))
             .ForMember(dest => dest.StatusDefinitionName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.StatusDomainId, opt => opt.MapFrom(src => src.StatusDomainId))
             .ForMember(dest => dest.StatusDomainName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.StatusDomain?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.StatusDomain?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.AgreedAmount, opt => opt.MapFrom(src => src.AgreedAmount))
             .ForMember(dest => dest.BillingInterval, opt => opt.MapFrom(src => src.BillingInterval))
             .ForMember(dest => dest.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))

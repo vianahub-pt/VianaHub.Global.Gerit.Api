@@ -8,8 +8,8 @@ using VianaHub.Global.Gerit.Domain.Tools.Pagination;
 namespace VianaHub.Global.Gerit.Domain.Services.Identity;
 
 /// <summary>
-/// Serviço de domínio para operações relacionadas a usuários
-/// Centraliza validações e regras de negócio
+/// ServiÃ§o de domÃ­nio para operaÃ§Ãµes relacionadas a usuÃ¡rios
+/// Centraliza validaÃ§Ãµes e regras de negÃ³cio
 /// </summary>
 public class UserDomainService : IUserDomainService
 {
@@ -27,7 +27,7 @@ public class UserDomainService : IUserDomainService
         _validator = validator;
     }
 
-    public async Task<UserEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<UserEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }

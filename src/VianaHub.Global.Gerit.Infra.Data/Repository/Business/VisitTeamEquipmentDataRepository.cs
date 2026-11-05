@@ -17,13 +17,13 @@ public class VisitTeamEquipmentDataRepository : IVisitTeamEquipmentDataRepositor
         _context = context;
     }
 
-    public async Task<VisitTeamEquipmentEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<VisitTeamEquipmentEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<VisitTeamEquipmentEntity>()
             .AsNoTracking()
             .Include(x => x.Equipment)
             .Include(x => x.VisitTeam)
-            .Include(x => x.VisitTeam.Visit)
+            .Include($"{nameof(VisitTeamEquipmentEntity.VisitTeam)}.{nameof(VisitTeamEntity.Visit)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -33,7 +33,7 @@ public class VisitTeamEquipmentDataRepository : IVisitTeamEquipmentDataRepositor
             .AsNoTracking()
             .Include(x => x.Equipment)
             .Include(x => x.VisitTeam)
-            .Include(x => x.VisitTeam.Visit)
+            .Include($"{nameof(VisitTeamEquipmentEntity.VisitTeam)}.{nameof(VisitTeamEntity.Visit)}")
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.Id)
             .ToListAsync(ct);
@@ -45,15 +45,15 @@ public class VisitTeamEquipmentDataRepository : IVisitTeamEquipmentDataRepositor
             .AsNoTracking()
             .Include(x => x.Equipment)
             .Include(x => x.VisitTeam)
-            .Include(x => x.VisitTeam.Visit)
+            .Include($"{nameof(VisitTeamEquipmentEntity.VisitTeam)}.{nameof(VisitTeamEntity.Visit)}")
             .Where(x => !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
-            query = query.Where(x => 
-                EF.Functions.Like(x.Equipment.Name.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.VisitTeam.Visit.Title.ToLower(), $"%{search}%"));
+            query = query.Where(x =>
+                (x.Equipment != null && x.Equipment.Name != null && EF.Functions.Like(x.Equipment.Name.ToLower(), $"%{search}%")) ||
+                (x.VisitTeam != null && x.VisitTeam.Visit != null && x.VisitTeam.Visit.Title != null && EF.Functions.Like(x.VisitTeam.Visit.Title.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -82,7 +82,7 @@ public class VisitTeamEquipmentDataRepository : IVisitTeamEquipmentDataRepositor
     {
         return await _context.Set<VisitTeamEquipmentEntity>()
             .AsNoTracking()
-            .AnyAsync(x => x.TenantId == tenantId && x.VisitTeamId == interventionTeamId && x.EquipmentId == equipmentId &&  !x.IsDeleted, ct);
+            .AnyAsync(x => x.TenantId == tenantId && x.VisitTeamId == interventionTeamId && x.EquipmentId == equipmentId && !x.IsDeleted, ct);
     }
 
     public async Task<bool> AddAsync(VisitTeamEquipmentEntity entity, CancellationToken ct)

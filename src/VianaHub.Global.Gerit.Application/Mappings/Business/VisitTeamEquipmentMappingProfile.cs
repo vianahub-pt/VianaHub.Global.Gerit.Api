@@ -11,11 +11,11 @@ public class VisitTeamEquipmentMappingProfile : Profile
     public VisitTeamEquipmentMappingProfile()
     {
         CreateMap<VisitTeamEquipmentEntity, VisitTeamEquipmentResponse>()
-            .ForMember(dest => dest.VisitTeam, opt => opt.MapFrom(src => src.VisitTeam.Visit.Title))
-            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment.Name));
+            .ForMember(dest => dest.VisitTeam, opt => opt.MapFrom(src => src.VisitTeam == null || src.VisitTeam.Visit == null ? null : src.VisitTeam.Visit.Title))
+            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment == null ? null : src.Equipment.Name));
         CreateMap<VisitTeamEquipmentEntity, VisitTeamEquipmentDetailResponse>()
-            .ForMember(dest => dest.VisitTeam, opt => opt.MapFrom(src => src.VisitTeam.Visit.Title))
-            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment.Name));
+            .ForMember(dest => dest.VisitTeam, opt => opt.MapFrom(src => src.VisitTeam == null || src.VisitTeam.Visit == null ? null : src.VisitTeam.Visit.Title))
+            .ForMember(dest => dest.Equipment, opt => opt.MapFrom(src => src.Equipment == null ? null : src.Equipment.Name));
         CreateMap<ListPage<VisitTeamEquipmentEntity>, ListPageResponse<VisitTeamEquipmentResponse>>();
     }
 }

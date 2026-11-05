@@ -12,13 +12,13 @@ public class ClientFiscalDataMapping : IEntityTypeConfiguration<ClientFiscalData
         builder.ToTable("ClientFiscalData", "dbo");
 
         builder.HasKey(x => x.Id);
-        
+
         builder.Property(x => x.Id)
             .IsRequired();
 
         builder.Property(x => x.TenantId)
             .IsRequired();
-        
+
         builder.Property(x => x.ClientId)
             .IsRequired();
 
@@ -41,7 +41,7 @@ public class ClientFiscalDataMapping : IEntityTypeConfiguration<ClientFiscalData
             .HasColumnType("NVARCHAR(20)")
             .HasMaxLength(20)
             .IsRequired();
-        
+
         builder.Property(x => x.VatNumber)
             .HasColumnType("NVARCHAR(20)")
             .HasMaxLength(20);
@@ -54,11 +54,11 @@ public class ClientFiscalDataMapping : IEntityTypeConfiguration<ClientFiscalData
 
         builder.Property(x => x.IsVatRegistered)
             .HasDefaultValue(false);
-        
+
         builder.Property(x => x.IBAN)
             .HasColumnType("NVARCHAR(34)")
             .HasMaxLength(34);
-        
+
         builder.Property(x => x.FiscalEmail)
             .HasColumnType("NVARCHAR(255)")
             .HasMaxLength(255);
@@ -105,9 +105,9 @@ public class ClientFiscalDataMapping : IEntityTypeConfiguration<ClientFiscalData
             .HasDatabaseName("UX_ClientFiscalData_Active");
 
         // Check constraint
-        builder.HasCheckConstraint(
+        builder.ToTable(table => table.HasCheckConstraint(
             "CK_ClientFiscalData_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
     }
 }
 

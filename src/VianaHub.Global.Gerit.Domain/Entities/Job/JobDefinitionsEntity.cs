@@ -32,19 +32,19 @@ public class JobDefinitionsEntity : Entity, IAggregateRoot
 
     // F�brica de cria��o com valores padr�o conforme regras de neg�cio
     public JobDefinitionsEntity(
-        string jobCategory,
-        string jobName,
-        string jobType,
+        string? jobCategory,
+        string? jobName,
+        string? jobType,
         int createdBy,
         string? description = null,
         string? jobPurpose = null,
-        string jobMethod = "Execute",
+        string? jobMethod = "Execute",
         string? cronExpression = null,
-        string timeZoneId = "GMT Standard Time",
+        string? timeZoneId = "GMT Standard Time",
         bool executeOnlyOnce = false,
         int timeoutMinutes = 5,
         int priority = 5,
-        string queue = "default",
+        string? queue = "default",
         int maxRetries = 3,
         string? jobConfiguration = null,
         bool isSystemJob = false)
@@ -77,10 +77,10 @@ public class JobDefinitionsEntity : Entity, IAggregateRoot
         string? description,
         string? jobPurpose,
         string? cronExpression,
-        string timeZoneId,
+        string? timeZoneId,
         int timeoutMinutes,
         int priority,
-        string queue,
+        string? queue,
         int maxRetries,
         string? jobConfiguration,
         bool isActive,
@@ -126,7 +126,7 @@ public class JobDefinitionsEntity : Entity, IAggregateRoot
         ModifiedAt = DateTime.UtcNow;
     }
 
-    public void SetHangfireRegistration(string hangfireJobId)
+    public void SetHangfireRegistration(string? hangfireJobId)
     {
         HangfireJobId = hangfireJobId;
         LastRegisteredAt = DateTime.UtcNow;

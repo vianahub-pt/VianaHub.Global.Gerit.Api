@@ -16,14 +16,14 @@ public class JobDefinitionDataRepository : IJobDefinitionDataRepository
         _context = context;
     }
 
-    public async Task<JobDefinitionsEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<JobDefinitionsEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<JobDefinitionsEntity>()
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<JobDefinitionsEntity> GetByNameAsync(string jobName, CancellationToken ct)
+    public async Task<JobDefinitionsEntity?> GetByNameAsync(string jobName, CancellationToken ct)
     {
         var normalized = jobName?.Trim();
         return await _context.Set<JobDefinitionsEntity>()
@@ -45,7 +45,7 @@ public class JobDefinitionDataRepository : IJobDefinitionDataRepository
     public async Task<ListPage<JobDefinitionsEntity>> GetPagedAsync(PagedFilter filter, CancellationToken ct)
     {
         // Accept JobPagedFilter or fallback to PagedFilter
-        var jobFilter = filter as JobPagedFilter ?? new JobPagedFilter(filter?.Search, filter.IsActive, filter?.PageNumber, filter?.PageSize, filter?.SortBy, filter?.SortDirection);
+        var jobFilter = filter as JobPagedFilter ?? new JobPagedFilter(filter.Search, filter.IsActive, filter?.PageNumber, filter?.PageSize, filter?.SortBy, filter?.SortDirection);
 
         var query = _context.Set<JobDefinitionsEntity>()
             .AsNoTracking()
@@ -54,7 +54,7 @@ public class JobDefinitionDataRepository : IJobDefinitionDataRepository
         if (!string.IsNullOrWhiteSpace(jobFilter.Search))
         {
             var search = jobFilter.Search.Trim().ToLower();
-            query = query.Where(x => EF.Functions.Like(x.JobName.ToLower(), $"%{search}%"));
+            query = query.Where(x => (x.JobName != null && EF.Functions.Like(x.JobName.ToLower(), $"%{search}%")));
         }
 
         if (!string.IsNullOrWhiteSpace(jobFilter.Category))
@@ -90,7 +90,7 @@ public class JobDefinitionDataRepository : IJobDefinitionDataRepository
         };
     }
 
-    public async Task<bool> ExistsByNameAsync(string jobName, CancellationToken ct)
+    public async Task<bool> ExistsByNameAsync(string? jobName, CancellationToken ct)
     {
         var normalized = jobName?.Trim();
         return await _context.Set<JobDefinitionsEntity>()

@@ -8,7 +8,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Billing;
 public interface ITenantAddressesAppService
 {
     Task<IEnumerable<TenantAddressResponse>> GetByTenantIdAsync(int tenantId, CancellationToken ct);
-    Task<TenantAddressDetailResponse> GetByIdAsync(int tenantId, int id, CancellationToken ct);
+    Task<TenantAddressDetailResponse?> GetByIdAsync(int tenantId, int id, CancellationToken ct);
     Task<ListPageResponse<TenantAddressResponse>> GetPagedAsync(int tenantId, PagedFilterRequest request, CancellationToken ct);
     Task<int> CreateAsync(int tenantId, CreateTenantAddressRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(int tenantId, int id, UpdateTenantAddressRequest request, CancellationToken ct);

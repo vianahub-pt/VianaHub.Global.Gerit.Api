@@ -13,7 +13,7 @@ public class DocumentTypeEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public ICollection<DocumentTypeTranslationsEntity> Translations { get; private set; }
+    public ICollection<DocumentTypeTranslationsEntity> Translations { get; private set; } = new List<DocumentTypeTranslationsEntity>();
 
     // Construtor protegido para o EF Core
     protected DocumentTypeEntity() { }
@@ -21,7 +21,7 @@ public class DocumentTypeEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Tipo de Documento
     /// </summary>
-    public DocumentTypeEntity(string code, int createdBy)
+    public DocumentTypeEntity(string? code, int createdBy)
     {
         Code = code;
         IsActive = true;
@@ -31,9 +31,8 @@ public class DocumentTypeEntity : Entity
         Translations = new List<DocumentTypeTranslationsEntity>();
     }
 
-    public void UpdateCode(string code, int modifiedBy)
+    public void MarkModified(int modifiedBy)
     {
-        Code = code;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

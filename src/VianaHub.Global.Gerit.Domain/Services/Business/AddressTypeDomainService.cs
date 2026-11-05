@@ -24,7 +24,7 @@ public class AddressTypeDomainService : IAddressTypeDomainService
         _notify = notify;
     }
 
-    public async Task<AddressTypeEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<AddressTypeEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }

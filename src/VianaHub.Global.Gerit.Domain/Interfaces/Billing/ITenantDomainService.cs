@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Billing;
 
 public interface ITenantDomainService
 {
-    Task<TenantEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<TenantEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<TenantEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<TenantEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

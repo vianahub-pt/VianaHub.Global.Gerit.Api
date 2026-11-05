@@ -23,7 +23,7 @@ public class StatusDefinitionTranslationsEntity
     /// <summary>
     /// Construtor para criação de uma nova tradução de StatusDefinition
     /// </summary>
-    public StatusDefinitionTranslationsEntity(int tenantId, int statusDomainId, int statusDefinitionId, string languageCode, string name, string? description)
+    public StatusDefinitionTranslationsEntity(int tenantId, int statusDomainId, int statusDefinitionId, string? languageCode, string? name, string? description)
     {
         TenantId = tenantId;
         StatusDomainId = statusDomainId;
@@ -33,7 +33,7 @@ public class StatusDefinitionTranslationsEntity
         Description = description;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string? name, string? description)
     {
         Name = name;
         Description = description;

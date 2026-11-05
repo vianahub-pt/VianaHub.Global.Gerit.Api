@@ -1,4 +1,4 @@
-﻿using VianaHub.Global.Gerit.Domain.Base;
+using VianaHub.Global.Gerit.Domain.Base;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.ReadModels;
@@ -23,7 +23,7 @@ public class ActionDomainService : IActionDomainService
         _notify = notify;
     }
 
-    public async Task<ActionEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<ActionEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
@@ -55,7 +55,7 @@ public class ActionDomainService : IActionDomainService
             }
             return false;
         }
-        
+
         return await _repo.AddAsync(entity, ct);
     }
     public async Task<bool> UpdateAsync(ActionEntity entity, CancellationToken ct)
@@ -69,7 +69,7 @@ public class ActionDomainService : IActionDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(ActionEntity entity, CancellationToken ct)
@@ -83,7 +83,7 @@ public class ActionDomainService : IActionDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> DeactivateAsync(ActionEntity entity, CancellationToken ct)
@@ -97,7 +97,7 @@ public class ActionDomainService : IActionDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> DeleteAsync(ActionEntity entity, CancellationToken ct)
@@ -111,7 +111,7 @@ public class ActionDomainService : IActionDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
 }

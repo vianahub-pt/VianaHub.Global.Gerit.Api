@@ -22,8 +22,8 @@ public class VisitContactPersonsEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public VisitEntity Visit { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public VisitEntity? Visit { get; private set; }
 
     // Construtor protegido para o EF Core
     protected VisitContactPersonsEntity() { }
@@ -31,7 +31,7 @@ public class VisitContactPersonsEntity : Entity
     /// <summary>
     /// Construtor para cria��o de um novo contato da Interven��o
     /// </summary>
-    public VisitContactPersonsEntity(int tenantId, int interventionId, string name, string email, string? phone,
+    public VisitContactPersonsEntity(int tenantId, int interventionId, string? name, string? email, string? phone,
         string? jobTitle, string? department, string? cellPhoneNumber, bool isCellPhoneWhatsapp,
         bool isPrimary, int createdBy)
     {
@@ -51,7 +51,7 @@ public class VisitContactPersonsEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string name, string email, string? phone,
+    public void Update(string? name, string? email, string? phone,
         string? jobTitle, string? department, string? cellPhoneNumber, bool isCellPhoneWhatsapp,
         bool isPrimary, int modifiedBy)
     {

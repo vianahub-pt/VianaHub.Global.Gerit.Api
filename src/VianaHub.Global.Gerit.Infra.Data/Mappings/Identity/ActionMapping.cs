@@ -23,11 +23,6 @@ public class ActionMapping : IEntityTypeConfiguration<ActionEntity>
             .IsRequired();
 
         // Propriedades
-        builder.Property(x => x.Code)
-            .HasColumnType("NVARCHAR(50)")
-            .HasMaxLength(50)
-            .IsRequired();
-
         builder.Property(x => x.Name)
             .HasColumnType("NVARCHAR(50)")
             .HasMaxLength(50)
@@ -62,9 +57,10 @@ public class ActionMapping : IEntityTypeConfiguration<ActionEntity>
             .IsRequired(false);
 
         // Constraints �nicos
-        builder.HasIndex(x => x.Code)
+        builder.HasIndex(x => x.Name)
             .IsUnique()
-            .HasDatabaseName("UQ_Actions_Code");
+            .HasDatabaseName("UX_Actions_Name")
+            .HasFilter("[IsDeleted] = 0");
 
         // Relacionamentos
         builder.HasMany(x => x.RolePermissions)

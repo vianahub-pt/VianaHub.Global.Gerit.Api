@@ -19,9 +19,10 @@ public class PartyTypeMapping : IEntityTypeConfiguration<PartyTypeEntity>
         builder.HasKey(x => x.Id)
             .HasName("PK_PartyTypes");
 
-        // Id TINYINT (seed determinístico: 1=Individual, 2=Organization).
-        // Sem identity — valores atribuídos via seed.
+        // Id TINYINT IDENTITY: o SQL Server gera os IDs das novas criações.
+        // IDs históricos dos seeds preservados: 1=Individual, 2=Organization.
         builder.Property(x => x.Id)
+            .UseIdentityColumn(1, 1)
             .HasColumnType("TINYINT")
             .IsRequired();
 

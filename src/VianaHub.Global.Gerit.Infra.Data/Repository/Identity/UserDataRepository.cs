@@ -16,7 +16,7 @@ public class UserDataRepository : IUserDataRepository
         _context = context;
     }
 
-    public async Task<UserEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<UserEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<UserEntity>()
             .AsNoTracking()
@@ -26,7 +26,7 @@ public class UserDataRepository : IUserDataRepository
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<UserEntity> GetByEmailAsync(string email, CancellationToken ct)
+    public async Task<UserEntity?> GetByEmailAsync(string? email, CancellationToken ct)
     {
         var normalizedEmail = email?.ToUpperInvariant();
         return await _context.Set<UserEntity>()
@@ -64,8 +64,8 @@ public class UserDataRepository : IUserDataRepository
             var search = request.Search.Trim().ToLower();
 
             query = query.Where(x =>
-                EF.Functions.Like(x.Name.ToLower(), $"%{search}%")
-                || EF.Functions.Like(x.Email.ToLower(), $"%{search}%")
+                (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%"))
+                || (x.Email != null && EF.Functions.Like(x.Email.ToLower(), $"%{search}%"))
             );
         }
 
@@ -103,7 +103,7 @@ public class UserDataRepository : IUserDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByEmailAsync(string email, CancellationToken ct)
+    public async Task<bool> ExistsByEmailAsync(string? email, CancellationToken ct)
     {
         var normalizedEmail = email?.ToUpperInvariant();
         return await _context.Set<UserEntity>()
@@ -111,7 +111,7 @@ public class UserDataRepository : IUserDataRepository
             .AnyAsync(x => x.NormalizedEmail == normalizedEmail && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByEmailAsync(string email, int excludeId, CancellationToken ct)
+    public async Task<bool> ExistsByEmailAsync(string? email, int excludeId, CancellationToken ct)
     {
         var normalizedEmail = email?.ToUpperInvariant();
         return await _context.Set<UserEntity>()

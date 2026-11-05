@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType;
@@ -7,6 +8,7 @@ using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
+using VianaHub.Global.Gerit.Infra.Data.Context;
 using Xunit;
 
 namespace VianaHub.Global.Gerit.Tests.Application.Services.Business;
@@ -35,7 +37,7 @@ public class PartyTypeAppServiceTests
         var (service, repoMock, _, notifyMock, localizationMock, _, _) = CreateService();
 
         repoMock.Setup(r => r.GetByIdAsync((byte)1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((PartyTypeEntity)null);
+            .ReturnsAsync((PartyTypeEntity?)null);
         localizationMock.Setup(l => l.GetMessage("Application.Service.PartyType.GetById.ResourceNotFound"))
             .Returns("not found");
 
@@ -45,41 +47,32 @@ public class PartyTypeAppServiceTests
         notifyMock.Verify(n => n.Add("not found", 410), Times.Once);
     }
 
-    [Fact(DisplayName = "PartyTypeAppService - CreateAsync cria entidade e tradução pt-PT")]
+    [Fact(DisplayName = "PartyTypeAppService - CreateAsync delega agregado sem ID para a persistência do domínio")]
     [Trait("Application", "PartyType")]
-    public async Task CreateAsync_ShouldCreateEntityWithTranslation_WhenValidRequest()
+    public async Task CreateAsync_DelegatesUnassignedAggregateWithTranslationsToDomain()
     {
         var (service, repoMock, domainMock, _, _, currentUserMock, _) = CreateService();
 
         currentUserMock.Setup(x => x.GetUserId()).Returns(5);
 
-        PartyTypeEntity capturedEntity = null;
+        PartyTypeEntity? capturedEntity = null;
         domainMock.Setup(d => d.CreateAsync(It.IsAny<PartyTypeEntity>(), It.IsAny<CancellationToken>()))
             .Callback<PartyTypeEntity, CancellationToken>((entity, _) =>
             {
                 capturedEntity = entity;
-                // Simula o EF Core atribuindo o Id após persistência
-                // PartyTypeEntity declara 'new byte Id' que esconde o 'int Id' da base Entity,
-                // por isso usamos DeclaredOnly para resolver a ambiguidade.
-                typeof(PartyTypeEntity)
-                    .GetProperty("Id", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly)?
-                    .SetValue(entity, (byte)42);
+                // Sem persistência real não há ID gerado; a integração SQL cobre o sucesso com IDENTITY.
+                Assert.Equal((byte)0, entity.Id);
             })
-            .ReturnsAsync(true);
+            .ReturnsAsync(false);
 
-        var request = new CreatePartyTypeRequest
-        {
-            Code = "PF",
-            Name = "Pessoa Física",
-            Description = "Pessoa singular"
-        };
+        var request = new CreatePartyTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Pessoa Física", Description = "Pessoa singular" }, new() { LanguageCode = "en-US", Name = "Individual", Description = "Pessoa singular" }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 
-        Assert.Equal((byte)42, result);
+        Assert.Equal((byte)0, result);
         Assert.NotNull(capturedEntity);
-        Assert.Equal("PF", capturedEntity.Code);
-        Assert.Single(capturedEntity.Translations);
+        Assert.Equal("INDIVIDUAL", capturedEntity.Code);
+        Assert.Equal(2, capturedEntity.Translations.Count);
         Assert.Equal("pt-PT", capturedEntity.Translations.First().LanguageCode);
         Assert.Equal("Pessoa Física", capturedEntity.Translations.First().Name);
         Assert.Equal("Pessoa singular", capturedEntity.Translations.First().Description);
@@ -91,11 +84,11 @@ public class PartyTypeAppServiceTests
     {
         var (service, repoMock, _, notifyMock, localizationMock, _, _) = CreateService();
 
-        repoMock.Setup(r => r.ExistsByCodeAsync("PF", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        repoMock.Setup(r => r.ExistsByCodeAsync("INDIVIDUAL", It.IsAny<CancellationToken>())).ReturnsAsync(true);
         localizationMock.Setup(l => l.GetMessage("Application.Service.PartyType.Create.CodeAlreadyExists"))
             .Returns("already exists");
 
-        var request = new CreatePartyTypeRequest { Code = "PF", Name = "Pessoa Física", Description = "Desc" };
+        var request = new CreatePartyTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Pessoa Física", Description = "Desc" }, new() { LanguageCode = "en-US", Name = "Individual", Description = "Desc" }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 
@@ -113,18 +106,19 @@ public class PartyTypeAppServiceTests
 
         var entity = new PartyTypeEntity("PF", 1);
         entity.Translations.Add(new PartyTypeTranslationsEntity(0, "pt-PT", "Old Name", "Old Desc"));
-        typeof(PartyTypeEntity)
-            .GetProperty("Id", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly)?
-            .SetValue(entity, (byte)10);
+        using var context = new GeritDbContext(new DbContextOptionsBuilder<GeritDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        context.Entry(entity).Property(p => p.Id).CurrentValue = (byte)10;
 
         repoMock.Setup(r => r.GetByIdAsync((byte)10, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
         domainMock.Setup(d => d.UpdateAsync(It.IsAny<PartyTypeEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var request = new UpdatePartyTypeRequest { Code = "PF", Name = "New Name", Description = "New Desc" };
+        var request = new UpdatePartyTypeRequest { Name = "New Name", Description = "New Desc" };
 
         var result = await service.UpdateAsync(10, request, CancellationToken.None);
 
         Assert.True(result);
+        Assert.Equal("PF", entity.Code);
         var translation = entity.Translations.First();
         Assert.Equal("New Name", translation.Name);
         Assert.Equal("New Desc", translation.Description);
@@ -150,11 +144,11 @@ public class PartyTypeAppServiceTests
         var (service, repoMock, _, notifyMock, localizationMock, _, _) = CreateService();
 
         repoMock.Setup(r => r.GetByIdAsync((byte)99, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((PartyTypeEntity)null);
+            .ReturnsAsync((PartyTypeEntity?)null);
         localizationMock.Setup(l => l.GetMessage("Application.Service.PartyType.Update.ResourceNotFound"))
             .Returns("not found");
 
-        var request = new UpdatePartyTypeRequest { Code = "X", Name = "Name", Description = "Desc" };
+        var request = new UpdatePartyTypeRequest { Name = "Name", Description = "Desc" };
         var result = await service.UpdateAsync(99, request, CancellationToken.None);
 
         Assert.False(result);

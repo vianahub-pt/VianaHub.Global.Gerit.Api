@@ -5,6 +5,6 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.DocumentType;
 /// </summary>
 public class CreateDocumentTypeRequest
 {
-    public string? Code { get; set; }
+    [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
     public List<CreateDocumentTypeTranslationRequest>? Translations { get; set; }
 }

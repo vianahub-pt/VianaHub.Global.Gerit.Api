@@ -10,7 +10,7 @@ namespace VianaHub.Global.Gerit.Application.Interfaces.Business;
 public interface IPartyTypeAppService
 {
     Task<IEnumerable<PartyTypeResponse>> GetAllAsync(CancellationToken ct);
-    Task<PartyTypeDetailResponse> GetByIdAsync(byte id, CancellationToken ct);
+    Task<PartyTypeDetailResponse?> GetByIdAsync(byte id, CancellationToken ct);
     Task<ListPageResponse<PartyTypeResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct);
     Task<byte> CreateAsync(CreatePartyTypeRequest request, CancellationToken ct);
     Task<bool> UpdateAsync(byte id, UpdatePartyTypeRequest request, CancellationToken ct);

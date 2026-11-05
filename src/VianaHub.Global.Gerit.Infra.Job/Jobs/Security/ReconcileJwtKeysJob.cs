@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
+using Microsoft.Extensions.Logging;
+using VianaHub.Global.Gerit.Domain.Interfaces.Job;
+using Microsoft.Extensions.DependencyInjection;
+using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Infra.Job.Interfaces;
 
@@ -7,14 +9,13 @@ namespace VianaHub.Global.Gerit.Infra.Job.Jobs.Security;
 
 /// <summary>
 /// Job de reconciliação de chaves JWT para aplicações legadas.
-/// Garante que todas as combinações Tenant + Application ativas tenham pelo menos uma chave JWT ativa.
+/// Garante que cada tenant ativo tenha pelo menos uma chave JWT válida para assinatura.
 /// Executa uma única vez na inicialização ou sob demanda.
 /// </summary>
 public class ReconcileJwtKeysJob : IJob
 {
-    private readonly IJwtKeyDomainService _jwtKeyDomain;
-    private readonly ITenantDataRepository _tenantRepo;
-    private readonly IJwtKeyDataRepository _jwtKeyRepo;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IJwtSystemJobTenantDiscovery _tenantDiscovery;
     private readonly ILogger<ReconcileJwtKeysJob> _logger;
 
     /// <summary>
@@ -23,14 +24,12 @@ public class ReconcileJwtKeysJob : IJob
     private static readonly int SystemUserId = 0;
 
     public ReconcileJwtKeysJob(
-        IJwtKeyDomainService jwtKeyDomain,
-        ITenantDataRepository tenantRepo,
-        IJwtKeyDataRepository jwtKeyRepo,
+        IServiceScopeFactory scopeFactory,
+        IJwtSystemJobTenantDiscovery tenantDiscovery,
         ILogger<ReconcileJwtKeysJob> logger)
     {
-        _jwtKeyDomain = jwtKeyDomain;
-        _tenantRepo = tenantRepo;
-        _jwtKeyRepo = jwtKeyRepo;
+        _scopeFactory = scopeFactory;
+        _tenantDiscovery = tenantDiscovery;
         _logger = logger;
     }
 
@@ -45,7 +44,7 @@ public class ReconcileJwtKeysJob : IJob
         var totalErrors = 0;
 
         // 1. Buscar todos os tenants ativos
-        var tenants = await _tenantRepo.GetAllAsync(cancellationToken);
+        var tenants = await _tenantDiscovery.GetAllAsync(cancellationToken);
         var activeTenants = tenants.Where(t => t.IsActive && !t.IsDeleted).ToList();
 
         _logger.LogInformation("?? [ReconcileJwtKeysJob] Encontrados {TenantCount} tenants ativos para processar", activeTenants.Count);
@@ -53,6 +52,7 @@ public class ReconcileJwtKeysJob : IJob
         // 2. Processar tenants ativos
         foreach (var tenant in activeTenants)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var result = await ProcessTenantAsync(tenant.Id, cancellationToken);
 
             totalProcessed += result.Processed;
@@ -70,54 +70,62 @@ public class ReconcileJwtKeysJob : IJob
     }
 
     /// <summary>
-    /// Processa todas as aplicações de um tenant específico
+    /// Processa somente o tenant recebido em uma sessão isolada.
     /// </summary>
     private async Task<ProcessingTenantResult> ProcessTenantAsync(int tenantId, CancellationToken cancellationToken)
     {
-        var result = new ProcessingTenantResult();
-
-        var allTenants = await _tenantRepo.GetAllAsync(cancellationToken);
-
-        foreach (var tenant in allTenants)
+        var result = new ProcessingTenantResult { Processed = 1 };
+        using var scope = _scopeFactory.CreateScope();
+        var tenantContext = scope.ServiceProvider.GetRequiredService<IRequestTenantContext>();
+        var previousTenantId = tenantContext.TenantId;
+        tenantContext.SetTenantId(tenantId);
+        try
         {
-            result.Processed++;
-
+            var jwtKeyRepo = scope.ServiceProvider.GetRequiredService<IJwtKeyDataRepository>();
+            var jwtKeyDomain = scope.ServiceProvider.GetRequiredService<IJwtKeyDomainService>();
             // Verificar se já existe chave ativa
-            var existingKey = await _jwtKeyRepo.GetActiveKeyAsync(tenant.Id, cancellationToken);
+            var existingKey = await jwtKeyRepo.GetActiveKeyAsync(tenantId, cancellationToken);
 
             if (existingKey != null)
             {
+                _logger.LogInformation("[ReconcileJwtKeysJob] Tenant {TenantId} processed. SigningKeyId={SigningKeyId}, Created={Created}",
+                    tenantId, existingKey.KeyId, false);
                 _logger.LogDebug(
-                    "??  [ReconcileJwtKeysJob] Tenant {TenantId}, Application {ApplicationId} ({ApplicationName}): " +
-                    "Chave JWT ativa já existe (KeyId: {KeyId}), pulando",
-                    tenantId, tenant.Id, tenant.Name, existingKey.KeyId);
+                    "[ReconcileJwtKeysJob] Tenant {TenantId}: chave JWT ativa já existe (KeyId: {KeyId}), pulando",
+                    tenantId, existingKey.KeyId);
                 result.Skipped++;
-                continue;
+                return result;
             }
 
             // Criar chave JWT automaticamente
             _logger.LogInformation(
-                "?? [ReconcileJwtKeysJob] Tenant {TenantId}, Application {ApplicationId} ({ApplicationName}): " +
-                "Nenhuma chave JWT encontrada, criando automaticamente",
-                tenantId, tenant.Id, tenant.Name);
+                "[ReconcileJwtKeysJob] Tenant {TenantId}: nenhuma chave JWT encontrada, criando automaticamente",
+                tenantId);
 
-            var newKey = await _jwtKeyDomain.EnsureKeyExistsAsync(tenant.Id, SystemUserId, cancellationToken);
+            var newKey = await jwtKeyDomain.EnsureKeyExistsAsync(tenantId, SystemUserId, cancellationToken);
 
             if (newKey != null)
             {
+                _logger.LogInformation("[ReconcileJwtKeysJob] Tenant {TenantId} processed. SigningKeyId={SigningKeyId}, Created={Created}",
+                    tenantId, newKey.KeyId, true);
                 _logger.LogInformation(
-                    "? [ReconcileJwtKeysJob] Tenant {TenantId}, Application {ApplicationId} ({ApplicationName}): " +
-                    "Chave JWT criada com sucesso (Id: {KeyId})", tenantId, tenant.Id, tenant.Name, newKey.KeyId);
+                    "[ReconcileJwtKeysJob] Tenant {TenantId}: chave JWT criada com sucesso (Id: {KeyId})", tenantId, newKey.KeyId);
                 result.Created++;
             }
             else
             {
                 _logger.LogWarning(
-                    "??  [ReconcileJwtKeysJob] Tenant {TenantId}, Application {ApplicationId} ({ApplicationName}): " +
-                    "Falha ao criar chave JWT (nenhum erro lançado, mas resultado nulo)",
-                    tenantId, tenant.Id, tenant.Name);
+                    "[ReconcileJwtKeysJob] Tenant {TenantId}: falha ao criar chave JWT (resultado nulo)",
+                    tenantId);
                 result.Errors++;
             }
+        }
+        finally
+        {
+            if (previousTenantId.HasValue)
+                tenantContext.SetTenantId(previousTenantId.Value);
+            else
+                tenantContext.Clear();
         }
 
         return result;

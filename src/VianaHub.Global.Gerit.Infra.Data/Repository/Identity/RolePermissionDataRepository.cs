@@ -24,7 +24,7 @@ public class RolePermissionDataRepository : IRolePermissionDataRepository
             .Where(x => x.TenantId == tenantId)
             .ToListAsync(ct);
     }
-    public async Task<RolePermissionsEntity> GetByIdAsync(int tenantId, int roleId, int resourceId, int actionId, CancellationToken ct)
+    public async Task<RolePermissionsEntity?> GetByIdAsync(int tenantId, int roleId, int resourceId, int actionId, CancellationToken ct)
     {
         return await _context.RolePermissions
             .AsNoTracking()
@@ -77,6 +77,7 @@ public class RolePermissionDataRepository : IRolePermissionDataRepository
                                       x.ResourceId == resourceId &&
                                       x.ActionId == actionId, ct);
 
+        if (entity is null) return false;
         _context.RolePermissions.Remove(entity);
         return await _context.SaveChangesAsync(ct) > 0;
     }

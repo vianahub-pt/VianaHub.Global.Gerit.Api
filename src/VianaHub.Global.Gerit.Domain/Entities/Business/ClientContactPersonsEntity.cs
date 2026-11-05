@@ -26,36 +26,36 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         // Construtor protegido para EF Core
         protected ClientContactPersonsEntity() { }
 
-        public ClientContactPersonsEntity(int tenantId, int clientId, string name, string phoneNumber, string cellPhoneNumber, bool isWhatsapp, string email, bool isPrimary, int createdBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
+        public ClientContactPersonsEntity(int tenantId, int clientId, string? name, string? phoneNumber, string? cellPhoneNumber, bool isWhatsapp, string? email, bool isPrimary, int createdBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
         {
             TenantId = tenantId;
             ClientId = clientId;
             Name = name;
             PhoneNumber = phoneNumber;
             CellPhoneNumber = cellPhoneNumber;
-            IsWhatsapp = isWhatsapp;
+            IsWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             Email = email;
             IsPrimary = isPrimary;
             JobTitle = jobTitle;
             Department = department;
-            IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
+            IsCellPhoneWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             IsActive = true;
             IsDeleted = false;
             CreatedBy = createdBy;
             CreatedAt = DateTime.UtcNow;
         }
 
-        public void Update(string name, string phoneNumber, string cellPhoneNumber, bool isWhatsapp, string email, bool isPrimary, int modifiedBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
+        public void Update(string? name, string? phoneNumber, string? cellPhoneNumber, bool isWhatsapp, string? email, bool isPrimary, int modifiedBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
         {
             Name = name;
             PhoneNumber = phoneNumber;
             CellPhoneNumber = cellPhoneNumber;
-            IsWhatsapp = isWhatsapp;
+            IsWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             Email = email;
             IsPrimary = isPrimary;
             JobTitle = jobTitle;
             Department = department;
-            IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
+            IsCellPhoneWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             ModifiedBy = modifiedBy;
             ModifiedAt = DateTime.UtcNow;
         }
@@ -83,6 +83,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
 
         public void Deactivate(int modifiedBy)
         {
+            IsPrimary = false;
             IsActive = false;
             ModifiedBy = modifiedBy;
             ModifiedAt = DateTime.UtcNow;
@@ -97,7 +98,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             IsActive = false;
             IsDeleted = true;
             ModifiedBy = modifiedBy;
-                ModifiedAt = DateTime.UtcNow;
+            ModifiedAt = DateTime.UtcNow;
         }
     }
 }

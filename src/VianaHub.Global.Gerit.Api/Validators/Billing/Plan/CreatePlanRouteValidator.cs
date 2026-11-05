@@ -10,14 +10,24 @@ public class CreatePlanRouteValidator : AbstractValidator<CreatePlanRequest>
 
     public CreatePlanRouteValidator(ILocalizationService localization)
     {
+        RuleFor(x => x.Translations)
+            .Must(translations => !string.IsNullOrEmpty(VianaHub.Global.Gerit.Domain.Helpers.CatalogCodeGenerator.FromCanonicalTranslation(translations, t => t.LanguageCode, t => t.Name)))
+            .WithMessage(localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"));
+        RuleFor(x => x.Translations)
+            .Must(translations => translations != null && translations.All(t => t != null) && translations.Select(t => t.LanguageCode).Distinct(StringComparer.OrdinalIgnoreCase).Count() == translations.Count)
+            .WithMessage(localization.GetMessage("Application.Catalog.TranslationLanguageInvalid"));
+        RuleForEach(x => x.Translations).ChildRules(translation =>
+        {
+            translation.RuleFor(t => t.LanguageCode).NotEmpty().WithMessage(localization.GetMessage("Application.Catalog.TranslationLanguageInvalid")).MaximumLength(10)
+                .WithMessage(localization.GetMessage("Application.Catalog.TranslationLanguageInvalid"));
+            translation.RuleFor(t => t.Name).NotEmpty().WithMessage(localization.GetMessage("Application.Catalog.TranslationNameInvalid", 100)).MaximumLength(100)
+                .WithMessage(localization.GetMessage("Application.Catalog.TranslationNameInvalid", 100));
+            translation.RuleFor(t => t.Description).MaximumLength(500)
+                .WithMessage(localization.GetMessage("Application.Catalog.TranslationDescriptionInvalid", 500));
+        }).When(x => x.Translations != null && x.Translations.All(t => t != null));
         _localization = localization;
 
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage(_localization.GetMessage("Api.Validator.Plan.Create.Name"))
-            .MaximumLength(100).WithMessage(_localization.GetMessage("Api.Validator.Plan.Create.Name.MaximumLength", 100));
 
-        RuleFor(x => x.Description)
-            .MaximumLength(500).WithMessage(_localization.GetMessage("Api.Validator.Plan.Create.Description.MaximumLength", 500));
 
         RuleFor(x => x.Currency)
             .NotEmpty().WithMessage(_localization.GetMessage("Api.Validator.Plan.Create.Currency"))

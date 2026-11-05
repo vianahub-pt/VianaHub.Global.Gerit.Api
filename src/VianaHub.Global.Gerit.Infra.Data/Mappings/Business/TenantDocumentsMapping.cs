@@ -105,13 +105,13 @@ public class TenantDocumentsMapping : IEntityTypeConfiguration<TenantDocumentsEn
             .HasDatabaseName("UX_TenantDocuments_Primary");
 
         // Check constraint: ExpiresAt >= IssuedAt quando ambos preenchidos
-        builder.HasCheckConstraint(
+        builder.ToTable(table => table.HasCheckConstraint(
             "CK_TenantDocuments_ExpiresAt_Gte_IssuedAt",
-            "[IssuedAt] IS NULL OR [ExpiresAt] IS NULL OR [ExpiresAt] >= [IssuedAt]");
+            "[IssuedAt] IS NULL OR [ExpiresAt] IS NULL OR [ExpiresAt] >= [IssuedAt]"));
 
         // Check constraint: não pode estar ativo e deletado ao mesmo tempo
-        builder.HasCheckConstraint(
+        builder.ToTable(table => table.HasCheckConstraint(
             "CK_TenantDocuments_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
     }
 }

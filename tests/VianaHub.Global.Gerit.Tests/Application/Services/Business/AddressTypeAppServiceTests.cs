@@ -30,7 +30,7 @@ public class AddressTypeAppServiceTests
         currentUserMock.Setup(x => x.GetTenantId()).Returns(1);
         currentUserMock.Setup(x => x.GetUserId()).Returns(5);
 
-        AddressTypeEntity capturedEntity = null;
+        AddressTypeEntity? capturedEntity = null;
         domainMock.Setup(d => d.CreateAsync(It.IsAny<AddressTypeEntity>(), It.IsAny<CancellationToken>()))
             .Callback<AddressTypeEntity, CancellationToken>((entity, _) =>
             {
@@ -43,17 +43,13 @@ public class AddressTypeAppServiceTests
 
         var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
-        var request = new CreateAddressTypeRequest
-        {
-            Name = "Residencial",
-            Description = "Endereço residencial"
-        };
+        var request = new CreateAddressTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Residencial", Description = "Endereço residencial" }, new() { LanguageCode = "en-US", Name = "Residential", Description = "Endereço residencial" }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 
         Assert.Equal(42, result);
         Assert.NotNull(capturedEntity);
-        Assert.Single(capturedEntity.Translations);
+        Assert.Equal(2, capturedEntity.Translations.Count);
         Assert.Equal("pt-PT", capturedEntity.Translations.First().LanguageCode);
         Assert.Equal("Residencial", capturedEntity.Translations.First().Name);
         Assert.Equal("Endereço residencial", capturedEntity.Translations.First().Description);
@@ -73,12 +69,12 @@ public class AddressTypeAppServiceTests
         var loggerMock = new Mock<ILogger<AddressTypeAppService>>();
 
         currentUserMock.Setup(x => x.GetTenantId()).Returns(1);
-        repoMock.Setup(r => r.ExistsByNameAsync("Residencial", It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        localizationMock.Setup(l => l.GetMessage("Application.Service.AddressType.Create.ResourceAlreadyExists")).Returns("exists");
+        repoMock.Setup(r => r.ExistsByTranslationAsync("pt-PT", "Residencial", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        localizationMock.Setup(l => l.GetMessage("Application.Catalog.TranslationAlreadyExists")).Returns("exists");
 
         var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
-        var request = new CreateAddressTypeRequest { Name = "Residencial", Description = "Desc" };
+        var request = new CreateAddressTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Residencial", Description = "Desc" }, new() { LanguageCode = "en-US", Name = "Residential", Description = "Desc" }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 

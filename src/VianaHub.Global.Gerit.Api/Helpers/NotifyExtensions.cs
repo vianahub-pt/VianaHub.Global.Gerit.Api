@@ -1,4 +1,4 @@
-﻿using VianaHub.Global.Gerit.Application.Dtos.Base;
+using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
@@ -177,7 +177,7 @@ public static class NotifyExtensions
         return localization?.GetMessage("Api.Helpers.NotifyExtensions.Common.Error") ?? "Api.Helpers.NotifyExtensions.Common.Error";
     }
 
-    private static ILocalizationService GetLocalizationService()
+    private static ILocalizationService? GetLocalizationService()
     {
         // Tenta obter o serviço do contexto HTTP atual via IHttpContextAccessor
         var httpContextAccessor = ServiceProviderHolder.ServiceProvider?.GetService(typeof(IHttpContextAccessor)) as IHttpContextAccessor;

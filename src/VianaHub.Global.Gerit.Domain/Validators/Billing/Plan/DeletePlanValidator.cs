@@ -12,8 +12,5 @@ public class DeletePlanValidator : AbstractValidator<SubscriptionPlanEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Plan.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Plan.AlreadyDeleted"));
     }
 }

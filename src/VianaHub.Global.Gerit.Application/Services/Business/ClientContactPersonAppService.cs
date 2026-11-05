@@ -54,7 +54,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
         return _mapper.Map<IEnumerable<ClientContactPersonResponse>>(entities);
     }
 
-    public async Task<ClientContactPersonDetailResponse> GetByIdAsync(int clientId, int id, CancellationToken ct)
+    public async Task<ClientContactPersonDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -74,10 +74,15 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
 
     public async Task<int> CreateAsync(int clientId, CreateClientContactRequest request, CancellationToken ct)
     {
-        var exists = await _repo.ExistsByClientAndEmailAsync(clientId, request.Name, request.Email, ct);
+        var exists = await _repo.ExistsActiveByClientAndEmailAsync(clientId, request.Email, null, ct);
         if (exists)
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.Create.ResourceAlreadyExists"), 409);
+            return 0;
+        }
+        if (request.IsPrimary && await _repo.ExistsActivePrimaryAsync(clientId, null, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.PrimaryAlreadyExists"), 409);
             return 0;
         }
 
@@ -109,9 +114,22 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
             return false;
         }
 
+        if (clientContact.IsActive &&
+            await _repo.ExistsActiveByClientAndEmailAsync(clientId, request.Email, id, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.Update.ResourceAlreadyExists"), 409);
+            return false;
+        }
+        if (clientContact.IsActive && request.IsPrimary &&
+            await _repo.ExistsActivePrimaryAsync(clientId, id, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.PrimaryAlreadyExists"), 409);
+            return false;
+        }
+
         clientContact.Update(request.Name, request.PhoneNumber, request.CellPhoneNumber, request.IsWhatsapp, request.Email, request.IsPrimary, UserId, request.JobTitle, request.Department, request.IsCellPhoneWhatsapp);
 
-        return await _repo.UpdateAsync(clientContact, ct);
+        return await _domain.UpdateAsync(clientContact, ct);
     }
 
     public async Task<bool> ActivateAsync(int clientId, int id, CancellationToken ct)
@@ -123,6 +141,12 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
             return false;
         }
 
+        if (!clientContact.IsActive && !string.IsNullOrWhiteSpace(clientContact.Email) &&
+            await _repo.ExistsActiveByClientAndEmailAsync(clientId, clientContact.Email, id, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.Create.ResourceAlreadyExists"), 409);
+            return false;
+        }
         clientContact.Activate(UserId);
 
         return await _repo.UpdateAsync(clientContact, ct);
@@ -156,7 +180,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
         return await _repo.UpdateAsync(clientContact, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int clientId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int clientId, IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -177,7 +201,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
         return await ProcessBulkItemsAsync(clientId, items, ct);
     }
 
-    private List<BulkUploadClientContactPersonItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadClientContactPersonItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -203,8 +227,13 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
             int rowCount = 0;
             int maxRows = DomainExtensions.GetMaxCsvRows();
 
-            while (csv.Read() && rowCount < maxRows)
+            while (csv.Read())
             {
+                if (rowCount >= maxRows)
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.ReadCsvFile.MaxRows", maxRows), 400);
+                    return null;
+                }
                 try
                 {
                     var record = csv.GetRecord<BulkUploadClientContactPersonItem>();
@@ -241,24 +270,18 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
                 catch (CsvHelperException ex)
                 {
                     // Log linha com erro mas continua processamento
-                    _logger.LogWarning(ex, "Erro ao processar linha {RowNumber} do CSV de ClientContactPersons", rowCount + 2);
+                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de ClientContactPersons | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
                     _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
                     rowCount++;
                     continue;
                 }
             }
 
-            if (rowCount >= maxRows)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.ReadCsvFile.MaxRows", maxRows), 400);
-                return null;
-            }
-
             return records;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao ler arquivo CSV de ClientContactPersons: {Message}", ex.Message);
+            _logger.LogError("Erro ao ler arquivo CSV de ClientContactPersons: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.ReadCsvFile.Exception"), 400);
             return null;
         }
@@ -266,8 +289,6 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
 
     private async Task<bool> ProcessBulkItemsAsync(int clientId, List<BulkUploadClientContactPersonItem> items, CancellationToken ct)
     {
-        var tenantId = _currentUser.GetTenantId();
-        var userId = _currentUser.GetUserId();
         var hasErrors = false;
 
         foreach (var item in items)
@@ -280,30 +301,18 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
             }
 
             // Verificar se j� existe
-            var exists = await _repo.ExistsByClientAndEmailAsync(clientId, item.Email, null, ct);
-            if (exists)
+            var request = new CreateClientContactRequest
             {
-                _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.ProcessBulkItems.ExistsByClientAndEmail", item.Email, clientId), 400);
-                hasErrors = true;
-                continue;
-            }
-
-            //var entity = new ClientContactPersonsEntity(
-            //    tenantId,
-            //    clientId,
-            //    item.Name,
-            //    item.Email,
-            //    item.Phone,
-            //    item.IsPrimary,
-            //    userId
-            //);
-
-            //var created = await _domain.CreateAsync(entity, ct);
-            //if (!created)
-            //{
-            //    _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.ProcessBulkItems.FailedToCreate", item.Name), 400);
-            //    hasErrors = true;
-            //}
+                Name = item.Name,
+                Email = item.Email,
+                PhoneNumber = item.Phone,
+                CellPhoneNumber = item.CellPhoneNumber,
+                JobTitle = item.JobTitle,
+                Department = item.Department,
+                IsCellPhoneWhatsapp = item.IsCellPhoneWhatsapp,
+                IsPrimary = item.IsPrimary
+            };
+            if (await CreateAsync(clientId, request, ct) == 0) hasErrors = true;
         }
 
         return !hasErrors;

@@ -27,9 +27,9 @@ public class VisitAddressesEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public VisitEntity Visit { get; private set; }
-    public AddressTypeEntity AddressType { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public VisitEntity? Visit { get; private set; }
+    public AddressTypeEntity? AddressType { get; private set; }
 
     // Construtor protegido para o EF Core
     protected VisitAddressesEntity() { }
@@ -41,14 +41,14 @@ public class VisitAddressesEntity : Entity
         int tenantId,
         int interventionId,
         int addressTypeId,
-        string countryCode,
-        string street,
+        string? countryCode,
+        string? street,
         string? streetNumber,
         string? complement,
-        string neighborhood,
-        string city,
-        string district,
-        string postalCode,
+        string? neighborhood,
+        string? city,
+        string? district,
+        string? postalCode,
         decimal? latitude,
         decimal? longitude,
         string? note,
@@ -78,14 +78,14 @@ public class VisitAddressesEntity : Entity
 
     public void UpdateAddressInfo(
         int addressTypeId,
-        string countryCode,
-        string street,
+        string? countryCode,
+        string? street,
         string? streetNumber,
         string? complement,
-        string neighborhood,
-        string city,
-        string district,
-        string postalCode,
+        string? neighborhood,
+        string? city,
+        string? district,
+        string? postalCode,
         decimal? latitude,
         decimal? longitude,
         string? note,

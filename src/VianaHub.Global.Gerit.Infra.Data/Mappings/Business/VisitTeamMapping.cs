@@ -59,11 +59,11 @@ public class VisitTeamMapping : IEntityTypeConfiguration<VisitTeamEntity>
             .OnDelete(DeleteBehavior.Restrict);
 
         // Constraints
-        builder.HasCheckConstraint("CK_VisitTeam_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+        builder.ToTable(table => table.HasCheckConstraint("CK_VisitTeam_Active_Deleted",
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
 
-        builder.HasCheckConstraint("CK_VisitTeam_EndDateTime",
-            "[EndDateTime] IS NULL OR [EndDateTime] >= [StartDateTime]");
+        builder.ToTable(table => table.HasCheckConstraint("CK_VisitTeam_EndDateTime",
+            "[EndDateTime] IS NULL OR [EndDateTime] >= [StartDateTime]"));
 
         // Índice único filtrado: apenas uma equipa ativa por visita
         builder.HasIndex(x => new { x.TenantId, x.VisitId, x.TeamId })

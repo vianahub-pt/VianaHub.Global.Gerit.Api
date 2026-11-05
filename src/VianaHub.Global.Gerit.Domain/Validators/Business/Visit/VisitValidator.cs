@@ -7,11 +7,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Business.Visit;
 
 public class VisitValidator : BaseEntityValidator<VisitEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public VisitValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override async Task<ValidationResult> ValidateForCreateAsync(VisitEntity entity)

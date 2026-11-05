@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Api.Filters;
+namespace VianaHub.Global.Gerit.Api.Filters;
 
 /// <summary>
 /// Request para importação de arquivo de Actions (CSV ou JSON)
@@ -8,7 +8,7 @@ public class ImportActionFileRequest
     /// <summary>
     /// Arquivo a ser importado (CSV ou JSON)
     /// </summary>
-    public IFormFile File { get; set; }
+    public IFormFile? File { get; set; }
 
     /// <summary>
     /// Content Type do request

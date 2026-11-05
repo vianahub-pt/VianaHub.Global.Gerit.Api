@@ -9,7 +9,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 /// </summary>
 public interface IEmployeeAddressDomainService
 {
-    Task<EmployeeAddressesEntity> GetByIdAsync(int employeeId, int id, CancellationToken ct);
+    Task<EmployeeAddressesEntity?> GetByIdAsync(int employeeId, int id, CancellationToken ct);
     Task<IEnumerable<EmployeeAddressesEntity>> GetAllAsync(int employeeId, CancellationToken ct);
     Task<ListPage<EmployeeAddressesEntity>> GetPagedAsync(int employeeId, PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

@@ -54,7 +54,7 @@ public class EquipmentAppService : IEquipmentAppService
         return _mapper.Map<IEnumerable<EquipmentResponse>>(entities);
     }
 
-    public async Task<EquipmentDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<EquipmentDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -140,7 +140,7 @@ public class EquipmentAppService : IEquipmentAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -161,7 +161,7 @@ public class EquipmentAppService : IEquipmentAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadEquipmentItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadEquipmentItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -215,7 +215,7 @@ public class EquipmentAppService : IEquipmentAppService
                     }
                     rowCount++;
                 }
-                catch (CsvHelperException ex)
+                catch (CsvHelperException)
                 {
                     // Log linha com erro mas continua processamento
                     _notify.Add(_localization.GetMessage("Application.Service.Equipment.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
@@ -232,7 +232,7 @@ public class EquipmentAppService : IEquipmentAppService
 
             return records;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Equipment.ReadCsvFile.Exception"), 400);
             return null;

@@ -43,7 +43,7 @@ public class TenantAddressesAppService : ITenantAddressesAppService
         return _mapper.Map<IEnumerable<TenantAddressResponse>>(entities);
     }
 
-    public async Task<TenantAddressDetailResponse> GetByIdAsync(int tenantId, int id, CancellationToken ct)
+    public async Task<TenantAddressDetailResponse?> GetByIdAsync(int tenantId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(tenantId, id, ct);
         if (entity == null || entity.IsDeleted)

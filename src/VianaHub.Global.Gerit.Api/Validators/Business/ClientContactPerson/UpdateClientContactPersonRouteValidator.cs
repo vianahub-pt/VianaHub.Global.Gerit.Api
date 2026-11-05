@@ -5,7 +5,7 @@ using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 namespace VianaHub.Global.Gerit.Api.Validators.Business.ClientContact;
 
 /// <summary>
-/// Validador de rota para atualização de ClientContact
+/// Validador de rota para atualizaï¿½ï¿½o de ClientContact
 /// </summary>
 public class UpdateClientContactPersonRouteValidator : AbstractValidator<UpdateClientContactPersonRequest>
 {
@@ -26,8 +26,19 @@ public class UpdateClientContactPersonRouteValidator : AbstractValidator<UpdateC
             .WithMessage(localization.GetMessage("Api.Validator.ClientContactPerson.Update.Email.Invalid"));
 
         RuleFor(x => x.PhoneNumber)
-            .MaximumLength(30)
-            .WithMessage(localization.GetMessage("Api.Validator.ClientContactPerson.Update.Phone.MaximumLength", 30))
+            .MaximumLength(50)
+            .WithMessage(localization.GetMessage("Api.Validator.ClientContactPerson.Update.Phone.MaximumLength", 50))
             .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+
+        RuleFor(x => x.CellPhoneNumber).MaximumLength(50)
+            .WithMessage(localization.GetMessage("Domain.ClientContactPerson.CellPhoneNumberMaxLength", 50))
+            .When(x => !string.IsNullOrWhiteSpace(x.CellPhoneNumber));
+        RuleFor(x => x.CellPhoneNumber).NotEmpty()
+            .WithMessage(localization.GetMessage("Domain.ClientContactPerson.CellPhoneNumberRequiredForWhatsapp"))
+            .When(x => x.IsCellPhoneWhatsapp || x.IsWhatsapp);
+        RuleFor(x => x.JobTitle).MaximumLength(100)
+            .WithMessage(localization.GetMessage("Domain.ClientContactPerson.JobTitleMaxLength", 100));
+        RuleFor(x => x.Department).MaximumLength(100)
+            .WithMessage(localization.GetMessage("Domain.ClientContactPerson.DepartmentMaxLength", 100));
     }
 }

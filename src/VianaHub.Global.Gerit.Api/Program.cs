@@ -16,7 +16,6 @@ using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Infra.Data.Context;
 using VianaHub.Global.Gerit.Infra.Data.Interceptors;
-using VianaHub.Global.Gerit.Infra.Data.Tools;
 using VianaHub.Global.Gerit.Infra.IoC;
 
 namespace VianaHub.Global.Gerit.Api;
@@ -121,20 +120,6 @@ public class Program
 
         // Inicializar ServiceProviderHolder para uso em helpers estáticos
         ServiceProviderHolder.ServiceProvider = app.Services;
-
-        // Garantir inicialização do banco de dados (migrations + validação do schema)
-        try
-        {
-            var autoMigrate = builder.Configuration.GetValue<bool>("Database:AutoMigrate", true);
-            // Executa de forma síncrona no startup
-            app.InitializeDatabaseAsync(autoMigrate).GetAwaiter().GetResult();
-        }
-        catch (Exception ex)
-        {
-            Log.Logger.Error(ex, "Falha ao inicializar o banco de dados");
-            // Rethrow to fail fast
-            throw;
-        }
 
         // Habilita arquivos estáticos (custom.css e custom.js do Swagger)
         app.UseStaticFiles();

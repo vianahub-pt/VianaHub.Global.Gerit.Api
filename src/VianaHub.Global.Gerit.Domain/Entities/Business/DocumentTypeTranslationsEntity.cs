@@ -21,7 +21,7 @@ public class DocumentTypeTranslationsEntity
     /// <summary>
     /// Construtor para criação de uma nova tradução de DocumentType
     /// </summary>
-    public DocumentTypeTranslationsEntity(int documentTypeId, string languageCode, string name, string? description)
+    public DocumentTypeTranslationsEntity(int documentTypeId, string? languageCode, string? name, string? description)
     {
         DocumentTypeId = documentTypeId;
         LanguageCode = languageCode;
@@ -29,7 +29,7 @@ public class DocumentTypeTranslationsEntity
         Description = description;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string? name, string? description)
     {
         Name = name;
         Description = description;

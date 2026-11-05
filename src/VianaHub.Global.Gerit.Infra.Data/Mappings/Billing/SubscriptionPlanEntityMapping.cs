@@ -74,8 +74,8 @@ public class SubscriptionPlanEntityMapping : IEntityTypeConfiguration<Subscripti
             .IsRequired(false);
 
         // Constraints
-        builder.HasCheckConstraint("CK_SubscriptionPlans_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+        builder.ToTable(table => table.HasCheckConstraint("CK_SubscriptionPlans_Active_Deleted",
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
 
         // Índice único filtrado para Code
         builder.HasIndex(x => x.Code)

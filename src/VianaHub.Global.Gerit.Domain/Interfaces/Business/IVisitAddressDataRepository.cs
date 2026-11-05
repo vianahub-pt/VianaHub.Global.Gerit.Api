@@ -13,8 +13,8 @@ public interface IVisitAddressDataRepository
     Task<IEnumerable<VisitAddressesEntity>> GetAllAsync(int visitId, CancellationToken ct);
     Task<ListPage<VisitAddressesEntity>> GetPagedAsync(int visitId, PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
-    Task<bool> ExistsByVisitAndAddressAsync(int tenantId, int interventionId, string street, string city, string postalCode, CancellationToken ct);
-    Task<VisitAddressesEntity> GetPrimaryAddressByVisitAsync(int interventionId, CancellationToken ct);
+    Task<bool> ExistsByVisitAndAddressAsync(int tenantId, int interventionId, string? street, string? city, string? postalCode, CancellationToken ct);
+    Task<VisitAddressesEntity?> GetPrimaryAddressByVisitAsync(int interventionId, CancellationToken ct);
     Task<bool> AddAsync(VisitAddressesEntity entity, CancellationToken ct);
     Task<bool> UpdateAsync(VisitAddressesEntity entity, CancellationToken ct);
 }

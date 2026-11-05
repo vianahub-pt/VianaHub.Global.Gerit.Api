@@ -2,11 +2,10 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType;
 
 /// <summary>
 /// DTO para criação de um Tipo de Party (Pessoa Física / Jurídica).
-/// Name e Description são persistidos como tradução no idioma padrão (pt-PT).
+/// As traduções incluem obrigatoriamente um Name canónico em en-US.
 /// </summary>
 public class CreatePartyTypeRequest
 {
-    public string? Code { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
+    [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
+    public List<CreatePartyTypeTranslationRequest>? Translations { get; set; }
 }

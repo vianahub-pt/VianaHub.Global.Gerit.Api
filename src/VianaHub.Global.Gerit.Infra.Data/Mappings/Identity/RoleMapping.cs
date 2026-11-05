@@ -24,13 +24,10 @@ public class RoleMapping : IEntityTypeConfiguration<RoleEntity>
 
         // Chave alternativa para suportar FKs compostas com TenantId
         builder.HasAlternateKey(x => new { x.Id, x.TenantId })
-            .HasName("UQ_Roles_Id_Tenant");// Propriedades
-        builder.Property(x => x.TenantId)
-            .IsRequired();
+            .HasName("UQ_Roles_Id_Tenant");
 
-        builder.Property(x => x.Code)
-            .HasColumnType("NVARCHAR(50)")
-            .HasMaxLength(50)
+        // Propriedades
+        builder.Property(x => x.TenantId)
             .IsRequired();
 
         builder.Property(x => x.Name)

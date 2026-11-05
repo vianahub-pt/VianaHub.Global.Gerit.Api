@@ -11,16 +11,21 @@ public class CreatePartyTypeRouteValidator : AbstractValidator<CreatePartyTypeRe
 {
     public CreatePartyTypeRouteValidator(ILocalizationService localization)
     {
-        RuleFor(x => x.Code)
-            .NotEmpty()
-            .WithMessage(localization.GetMessage("Api.Validator.PartyType.Create.Code"))
-            .MaximumLength(50)
-            .WithMessage(localization.GetMessage("Api.Validator.PartyType.Create.Code.MaximumLength", 50));
+        RuleFor(x => x.Translations)
+            .Must(translations => !string.IsNullOrEmpty(VianaHub.Global.Gerit.Domain.Helpers.CatalogCodeGenerator.FromCanonicalTranslation(translations, t => t.LanguageCode, t => t.Name)))
+            .WithMessage(localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"));
+        RuleFor(x => x.Translations)
+            .Must(translations => translations != null && translations.All(t => t != null) && translations.Select(t => t.LanguageCode).Distinct(StringComparer.OrdinalIgnoreCase).Count() == translations.Count)
+            .WithMessage(localization.GetMessage("Application.Catalog.TranslationLanguageInvalid"));
+        RuleForEach(x => x.Translations).ChildRules(translation =>
+        {
+            translation.RuleFor(t => t.LanguageCode).NotEmpty().WithMessage(localization.GetMessage("Application.Catalog.TranslationLanguageInvalid")).MaximumLength(10)
+                .WithMessage(localization.GetMessage("Application.Catalog.TranslationLanguageInvalid"));
+            translation.RuleFor(t => t.Name).NotEmpty().WithMessage(localization.GetMessage("Application.Catalog.TranslationNameInvalid", 100)).MaximumLength(100)
+                .WithMessage(localization.GetMessage("Application.Catalog.TranslationNameInvalid", 100));
+            translation.RuleFor(t => t.Description).MaximumLength(300)
+                .WithMessage(localization.GetMessage("Application.Catalog.TranslationDescriptionInvalid", 300));
+        }).When(x => x.Translations != null && x.Translations.All(t => t != null));
 
-        RuleFor(x => x.Name)
-            .NotEmpty()
-            .WithMessage(localization.GetMessage("Api.Validator.PartyType.Create.Name"))
-            .MaximumLength(100)
-            .WithMessage(localization.GetMessage("Api.Validator.PartyType.Create.Name.MaximumLength", 100));
     }
 }

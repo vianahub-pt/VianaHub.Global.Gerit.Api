@@ -24,8 +24,7 @@ public class VisitAddressDataRepository : IVisitAddressDataRepository
         return await _context.VisitAddresses
             .AsNoTracking()
             .Include(x => x.Visit)
-            .Include(x => x.AddressType)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VisitAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.VisitId == visitId && x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -34,8 +33,7 @@ public class VisitAddressDataRepository : IVisitAddressDataRepository
         return await _context.VisitAddresses
             .AsNoTracking()
             .Include(x => x.Visit)
-            .Include(x => x.AddressType)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VisitAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
             .Where(x => x.VisitId == visitId && !x.IsDeleted)
             .OrderBy(x => x.VisitId)
             .ThenBy(x => x.City)
@@ -47,21 +45,20 @@ public class VisitAddressDataRepository : IVisitAddressDataRepository
         var query = _context.VisitAddresses
             .AsNoTracking()
             .Include(x => x.Visit)
-            .Include(x => x.AddressType)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VisitAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
             .Where(x => x.VisitId == visitId && !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var searchLower = request.Search.ToLower();
             query = query.Where(x =>
-                EF.Functions.Like(x.Street.ToLower(), $"%{searchLower}%") ||
-                EF.Functions.Like(x.City.ToLower(), $"%{searchLower}%") ||
-                EF.Functions.Like(x.PostalCode.ToLower(), $"%{searchLower}%") ||
-                EF.Functions.Like(x.District.ToLower(), $"%{searchLower}%") ||
-                EF.Functions.Like(x.Neighborhood.ToLower(), $"%{searchLower}%") ||
-                EF.Functions.Like(x.Visit.Title.ToLower(), $"%{searchLower}%") ||
-                x.AddressType.Translations.Any(t => EF.Functions.Like(t.Name.ToLower(), $"%{searchLower}%")));
+                (x.Street != null && EF.Functions.Like(x.Street.ToLower(), $"%{searchLower}%")) ||
+                (x.City != null && EF.Functions.Like(x.City.ToLower(), $"%{searchLower}%")) ||
+                (x.PostalCode != null && EF.Functions.Like(x.PostalCode.ToLower(), $"%{searchLower}%")) ||
+                (x.District != null && EF.Functions.Like(x.District.ToLower(), $"%{searchLower}%")) ||
+                (x.Neighborhood != null && EF.Functions.Like(x.Neighborhood.ToLower(), $"%{searchLower}%")) ||
+                (x.Visit != null && x.Visit.Title != null && EF.Functions.Like(x.Visit.Title.ToLower(), $"%{searchLower}%")) ||
+                x.AddressType != null && x.AddressType.Translations.Any(t => (t.Name != null && EF.Functions.Like(t.Name.ToLower(), $"%{searchLower}%"))));
         }
 
         if (request.IsActive.HasValue)
@@ -96,7 +93,7 @@ public class VisitAddressDataRepository : IVisitAddressDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByVisitAndAddressAsync(int tenantId, int interventionId, string street, string city, string postalCode, CancellationToken ct)
+    public async Task<bool> ExistsByVisitAndAddressAsync(int tenantId, int interventionId, string? street, string? city, string? postalCode, CancellationToken ct)
     {
         return await _context.VisitAddresses
             .AsNoTracking()
@@ -108,12 +105,11 @@ public class VisitAddressDataRepository : IVisitAddressDataRepository
                           !x.IsDeleted, ct);
     }
 
-    public async Task<VisitAddressesEntity> GetPrimaryAddressByVisitAsync(int interventionId, CancellationToken ct)
+    public async Task<VisitAddressesEntity?> GetPrimaryAddressByVisitAsync(int interventionId, CancellationToken ct)
     {
         return await _context.VisitAddresses
             .AsNoTracking()
-            .Include(x => x.AddressType)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(VisitAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
             .Include(x => x.Visit)
             .FirstOrDefaultAsync(x => x.VisitId == interventionId && x.IsPrimary && !x.IsDeleted, ct);
     }

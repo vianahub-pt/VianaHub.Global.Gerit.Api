@@ -118,8 +118,8 @@ public class EmployeeFiscalDataMapping : IEntityTypeConfiguration<EmployeeFiscal
             .HasDatabaseName("UX_EmployeeFiscalData_TaxNumber");
 
         // Check constraint
-        builder.HasCheckConstraint(
+        builder.ToTable(table => table.HasCheckConstraint(
             "CK_EmployeeFiscalData_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
     }
 }

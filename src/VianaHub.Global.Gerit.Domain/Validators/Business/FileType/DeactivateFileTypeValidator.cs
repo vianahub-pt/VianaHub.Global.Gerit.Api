@@ -12,8 +12,5 @@ public class DeactivateFileTypeValidator : AbstractValidator<FileTypeEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.FileType.IdRequired"));
 
-        RuleFor(x => x.IsActive)
-            .Equal(true)
-            .WithMessage(localization.GetMessage("Domain.FileType.AlreadyInactive"));
     }
 }

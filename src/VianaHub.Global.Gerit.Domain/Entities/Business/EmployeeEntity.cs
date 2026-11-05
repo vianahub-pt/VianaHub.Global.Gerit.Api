@@ -22,8 +22,8 @@ public class EmployeeEntity : Entity, IAggregateRoot
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public StatusDefinitionEntity StatusDefinition { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public StatusDefinitionEntity? StatusDefinition { get; private set; }
 
     private readonly List<EmployeeContactPersonsEntity> _contacts = [];
     public IReadOnlyCollection<EmployeeContactPersonsEntity> Contacts => _contacts.AsReadOnly();
@@ -37,7 +37,7 @@ public class EmployeeEntity : Entity, IAggregateRoot
     /// <summary>
     /// Construtor para criação de um novo Funcionário
     /// </summary>
-    public EmployeeEntity(int tenantId, int statusDefinitionId, int statusDomainId, string name,
+    public EmployeeEntity(int tenantId, int statusDefinitionId, int statusDomainId, string? name,
         string? phoneNumber, string? cellPhoneNumber, bool isCellPhoneWhatsapp,
         string? email, string? imageUrl, int createdBy)
     {
@@ -56,7 +56,7 @@ public class EmployeeEntity : Entity, IAggregateRoot
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int statusDefinitionId, int statusDomainId, string name,
+    public void Update(int statusDefinitionId, int statusDomainId, string? name,
         string? phoneNumber, string? cellPhoneNumber, bool isCellPhoneWhatsapp,
         string? email, string? imageUrl, int modifiedBy)
     {

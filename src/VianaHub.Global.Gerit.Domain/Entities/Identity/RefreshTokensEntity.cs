@@ -16,7 +16,7 @@ public class RefreshTokensEntity : Entity
 
     protected RefreshTokensEntity() { }
 
-    public RefreshTokensEntity(int tenantId, int userId, string token, DateTime expiresAt, int createdBy)
+    public RefreshTokensEntity(int tenantId, int userId, string? token, DateTime expiresAt, int createdBy)
     {
         if (tenantId <= 0) throw new ArgumentException("TenantId inv�lido", nameof(tenantId));
         if (userId <= 0) throw new ArgumentException("UserId inv�lido", nameof(userId));

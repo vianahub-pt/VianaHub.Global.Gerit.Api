@@ -1,5 +1,7 @@
-﻿using FluentValidation;
+using VianaHub.Global.Gerit.Domain.Helpers;
+using FluentValidation;
 using System.Net;
+using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
 namespace VianaHub.Global.Gerit.Api.Filters;
@@ -10,7 +12,7 @@ namespace VianaHub.Global.Gerit.Api.Filters;
 /// </summary>
 public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
 {
-    private readonly IValidator<TRequest> _validator;
+    private readonly IValidator<TRequest>? _validator;
     private readonly ILogger<ValidationFilter<TRequest>> _logger;
 
     /// <summary>
@@ -25,7 +27,7 @@ public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
     /// <summary>
     /// Executa a validação do request e retorna erros agrupados, se houver.
     /// </summary>
-    public async ValueTask<object> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         _logger.LogDebug("ValidationFilter<{RequestType}> executando", typeof(TRequest).Name);
 
@@ -36,7 +38,7 @@ public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
         }
 
         var notify = context.HttpContext.RequestServices.GetService<INotify>();
-        TRequest request = null;
+        TRequest? request = null;
 
         _logger.LogDebug("Total de argumentos: {Count}", context.Arguments.Count);
         for (int i = 0; i < context.Arguments.Count; i++)
@@ -74,8 +76,7 @@ public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
                 foreach (var error in validationResult.Errors)
                 {
                     notify.Add($"{error.PropertyName}: {error.ErrorMessage}", 400);
-                    _logger.LogDebug("Erro de validação adicionado ao Notify: {PropertyName} - {ErrorMessage}",
-                        error.PropertyName, error.ErrorMessage);
+                    _logger.LogDebug("Erro de validação adicionado ao Notify: {PropertyName} - {ErrorMessage}", LogValueSanitizer.Sanitize(error.PropertyName), LogValueSanitizer.Sanitize(error.ErrorMessage));
                 }
             }
 
@@ -86,9 +87,10 @@ public class ValidationFilter<TRequest> : IEndpointFilter where TRequest : class
                     g => g.Select(e => e.ErrorMessage).ToArray()
                 );
 
+            var localization = context.HttpContext.RequestServices.GetRequiredService<ILocalizationService>();
             return Results.BadRequest(new
             {
-                title = "Erro de validação",
+                title = localization.GetMessage("Api.Helpers.NotifyExtensions.Error.ValidationError"),
                 errors = errors
             });
         }

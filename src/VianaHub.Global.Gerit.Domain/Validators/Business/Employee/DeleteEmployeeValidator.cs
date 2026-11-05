@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
@@ -12,8 +12,5 @@ public class DeleteEmployeeValidator : AbstractValidator<EmployeeEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Employee.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Employee.AlreadyDeleted"));
     }
 }

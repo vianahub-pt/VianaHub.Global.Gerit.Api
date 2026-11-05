@@ -51,7 +51,7 @@ public class VisitTeamEquipmentAppService : IVisitTeamEquipmentsAppService
         return _mapper.Map<IEnumerable<VisitTeamEquipmentResponse>>(entities);
     }
 
-    public async Task<VisitTeamEquipmentDetailResponse> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
+    public async Task<VisitTeamEquipmentDetailResponse?> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted || entity.VisitTeamId != visitTeamId)
@@ -137,7 +137,7 @@ public class VisitTeamEquipmentAppService : IVisitTeamEquipmentsAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int visitTeamId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int visitTeamId, IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -155,7 +155,7 @@ public class VisitTeamEquipmentAppService : IVisitTeamEquipmentsAppService
         return await ProcessBulkItemsAsync(visitTeamId, items, ct);
     }
 
-    private List<BulkUploadVisitTeamEquipmentItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadVisitTeamEquipmentItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

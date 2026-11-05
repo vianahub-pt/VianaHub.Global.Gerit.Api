@@ -19,9 +19,9 @@ public class EquipmentEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public EquipmentTypeEntity EquipmentType { get; private set; }
-    public StatusDefinitionEntity StatusDefinition { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public EquipmentTypeEntity? EquipmentType { get; private set; }
+    public StatusDefinitionEntity? StatusDefinition { get; private set; }
 
     // Construtor protegido para o EF Core
     protected EquipmentEntity() { }
@@ -29,7 +29,7 @@ public class EquipmentEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Equipamento
     /// </summary>
-    public EquipmentEntity(int tenantId, int equipmentTypeId, int statusDefinitionId, int statusDomainId, string name, string? serialNumber, string? urlImage, int createdBy)
+    public EquipmentEntity(int tenantId, int equipmentTypeId, int statusDefinitionId, int statusDomainId, string? name, string? serialNumber, string? urlImage, int createdBy)
     {
         TenantId = tenantId;
         EquipmentTypeId = equipmentTypeId;
@@ -44,7 +44,7 @@ public class EquipmentEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int equipmentTypeId, int statusDefinitionId, int statusDomainId, string name, string? serialNumber, string? urlImage, int modifiedBy)
+    public void Update(int equipmentTypeId, int statusDefinitionId, int statusDomainId, string? name, string? serialNumber, string? urlImage, int modifiedBy)
     {
         EquipmentTypeId = equipmentTypeId;
         StatusDefinitionId = statusDefinitionId;
@@ -55,7 +55,7 @@ public class EquipmentEntity : Entity
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }
-    
+
     public void Activate(int modifiedBy)
     {
         IsActive = true;

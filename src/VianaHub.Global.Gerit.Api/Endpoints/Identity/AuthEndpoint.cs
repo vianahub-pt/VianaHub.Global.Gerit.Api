@@ -1,3 +1,5 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.Tenant;
+using VianaHub.Global.Gerit.Application.Dtos.Base;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -27,9 +29,10 @@ public static class AuthEndpoint
         .RequireRateLimiting("authentication")
         .WithValidation<RegisterRequest>()
         .WithSummary("Swagger.Endpoint.Auth.Register.Summary")
-        .Produces<AuthResponse>(StatusCodes.Status201Created)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status409Conflict);
+        .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
+        .Produces<AuthResponse>(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict);
 
         groupV1.MapPost("/login", async ([FromBody] LoginRequest request, [FromServices] IAuthAppService authService, [FromServices] INotify notify, CancellationToken ct) =>
         {
@@ -40,9 +43,10 @@ public static class AuthEndpoint
         .RequireRateLimiting("authentication")
         .WithValidation<LoginRequest>()
         .WithSummary("Swagger.Endpoint.Auth.Login.Summary")
-        .Produces(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status401Unauthorized);
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<AuthResponse>(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<ErrorResponse>(StatusCodes.Status401Unauthorized);
 
         groupV1.MapPost("/refresh", async ([FromBody] RefreshRequest request, [FromServices] IAuthAppService authService, [FromServices] INotify notify, CancellationToken ct) =>
         {
@@ -53,9 +57,11 @@ public static class AuthEndpoint
         .RequireRateLimiting("refreshtoken")
         .WithValidation<RefreshRequest>()
         .WithSummary("Swagger.Endpoint.Auth.Refresh.Summary")
-        .Produces(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status401Unauthorized);
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<AuthResponse>(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<ErrorResponse>(StatusCodes.Status401Unauthorized);
 
         groupV1.MapGet("/tenants", async ([FromServices] IAuthAppService authService, [FromServices] INotify notify, CancellationToken ct) =>
         {
@@ -66,8 +72,8 @@ public static class AuthEndpoint
         .RequireRateLimiting("tenant")
         .WithValidation<RefreshRequest>()
         .WithSummary("Swagger.Endpoint.Auth.Tenant.Summary")
-        .Produces(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status401Unauthorized);
+        .Produces<IEnumerable<TenantLoginResponse>>(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<ErrorResponse>(StatusCodes.Status401Unauthorized);
     }
 }

@@ -53,7 +53,7 @@ public class RolePermissionAppService : IRolePermissionAppService
         _fileValidation = fileValidation;
     }
 
-    public async Task<RolePermissionResponse> CreateAsync(CreateRolePermissionRequest request, CancellationToken ct)
+    public async Task<RolePermissionResponse?> CreateAsync(CreateRolePermissionRequest request, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
 
@@ -133,7 +133,7 @@ public class RolePermissionAppService : IRolePermissionAppService
         return _mapper.Map<IList<RolePermissionResponse>>(list);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
@@ -154,7 +154,7 @@ public class RolePermissionAppService : IRolePermissionAppService
         return await ProcessBulkItemsAsync(items, ct);
     }
 
-    private List<BulkUploadRolePermissionItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadRolePermissionItem>? ReadCsvFile(IFormFile file)
     {
         try
         {
@@ -208,7 +208,7 @@ public class RolePermissionAppService : IRolePermissionAppService
                     }
                     rowCount++;
                 }
-                catch (CsvHelperException ex)
+                catch (CsvHelperException)
                 {
                     // Log linha com erro mas continua processamento
                     _notify.Add(_localization.GetMessage("Application.Service.RolePermission.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
@@ -225,7 +225,7 @@ public class RolePermissionAppService : IRolePermissionAppService
 
             return records;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _notify.Add(_localization.GetMessage("Application.Service.RolePermission.ReadCsvFile.Exception"), 400);
             return null;

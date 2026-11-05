@@ -30,7 +30,7 @@ public class ClientAppServiceTests
         currentUserMock.Setup(x => x.GetTenantId()).Returns(7);
         currentUserMock.Setup(x => x.GetUserId()).Returns(1);
         localizationMock.Setup(x => x.GetMessage("Application.Service.Client.GetById.ResourceNotFound")).Returns("not-found");
-        repoMock.Setup(x => x.GetByIdAsync(12, It.IsAny<CancellationToken>())).ReturnsAsync((ClientEntity)null);
+        repoMock.Setup(x => x.GetByIdAsync(12, It.IsAny<CancellationToken>())).ReturnsAsync((ClientEntity?)null);
 
         var service = new ClientAppService(
             repoMock.Object,
@@ -64,7 +64,7 @@ public class ClientAppServiceTests
         currentUserMock.Setup(x => x.GetTenantId()).Returns(3);
         currentUserMock.Setup(x => x.GetUserId()).Returns(5);
 
-        ClientEntity capturedEntity = null;
+        ClientEntity? capturedEntity = null;
         domainMock.Setup(d => d.CreateAsync(It.IsAny<ClientEntity>(), It.IsAny<CancellationToken>()))
             .Callback<ClientEntity, CancellationToken>((entity, _) =>
             {

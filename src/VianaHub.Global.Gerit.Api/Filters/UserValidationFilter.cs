@@ -1,4 +1,5 @@
-﻿#nullable enable
+using VianaHub.Global.Gerit.Domain.Helpers;
+#nullable enable
 
 using System.Net;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
@@ -38,7 +39,7 @@ public class UserValidationFilter : IEndpointFilter
 
         if (!Guid.TryParse(userIdParam, out var requesteduserId))
         {
-            _logger.LogWarning("? userId inválido na URL: {userId}", userIdParam);
+            _logger.LogWarning("? userId inválido na URL: {userId}", LogValueSanitizer.Sanitize(userIdParam));
             var title = localization?.GetMessage("Api.Filters.UserValidation.UserId.Invalid") ?? "Api.Filters.UserValidation.UserId.Invalid";
             return CreateErrorResponse(title, localization?.GetMessage("Api.Filters.UserValidation.UserId.Invalid.Message") ?? "Api.Filters.UserValidation.UserId.Invalid.Message");
         }
@@ -60,7 +61,7 @@ public class UserValidationFilter : IEndpointFilter
         {
             _logger.LogWarning(
                 "?? Token JWT não contém claim de userId. Usuário: {UserId}",
-                user.FindFirst("sub")?.Value ?? "Unknown");
+                LogValueSanitizer.Sanitize(user.FindFirst("sub")?.Value ?? "Unknown"));
 
             // TODO: Em produção, isso deveria retornar Unauthorized
             // Por enquanto, permite acesso para compatibilidade com tokens antigos
@@ -75,7 +76,7 @@ public class UserValidationFilter : IEndpointFilter
         {
             _logger.LogError(
                 "? userId no token JWT está em formato inválido: {userId}",
-                useruserIdClaim);
+                LogValueSanitizer.Sanitize(useruserIdClaim));
             return Results.Unauthorized();
         }
 
@@ -92,11 +93,11 @@ public class UserValidationFilter : IEndpointFilter
                 "user Requisitado: {RequesteduserId}, " +
                 "Endpoint: {Endpoint}, " +
                 "IP: {IP}",
-                userId,
-                userName,
+                LogValueSanitizer.Sanitize(userId),
+                LogValueSanitizer.Sanitize(userName),
                 useruserId,
                 requesteduserId,
-                httpContext.Request.Path,
+                LogValueSanitizer.Sanitize(httpContext.Request.Path.Value),
                 httpContext.Connection.RemoteIpAddress);
 
             var title = localization?.GetMessage("Api.Filters.UserValidation.AccessDenied.Title") ?? "Api.Filters.UserValidation.AccessDenied.Title";
@@ -107,7 +108,7 @@ public class UserValidationFilter : IEndpointFilter
 
         _logger.LogDebug(
             "? Validação de user bem-sucedida. Usuário: {UserId}, user: {userId}",
-            user.FindFirst("sub")?.Value,
+            LogValueSanitizer.Sanitize(user.FindFirst("sub")?.Value),
             useruserId);
 
         return await next(context);

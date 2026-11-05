@@ -24,9 +24,9 @@ public class VisitEntity : Entity, IAggregateRoot
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public ClientEntity Client { get; private set; }
-    public StatusDefinitionEntity StatusDefinition { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public ClientEntity? Client { get; private set; }
+    public StatusDefinitionEntity? StatusDefinition { get; private set; }
 
     private readonly List<VisitContactPersonsEntity> _contacts = new();
     public IReadOnlyCollection<VisitContactPersonsEntity> Contacts => _contacts.AsReadOnly();
@@ -40,7 +40,7 @@ public class VisitEntity : Entity, IAggregateRoot
     /// <summary>
     /// Construtor para criação de uma nova Intervenção
     /// </summary>
-    public VisitEntity(int tenantId, int clientId, int statusDefinitionId, int statusDomainId, string currencyCode, string title, string description, DateTime startDateTime, 
+    public VisitEntity(int tenantId, int clientId, int statusDefinitionId, int statusDomainId, string currencyCode, string? title, string? description, DateTime startDateTime,
         decimal estimatedValue, int modifiedBy)
     {
         TenantId = tenantId;
@@ -60,7 +60,7 @@ public class VisitEntity : Entity, IAggregateRoot
         ModifiedAt = DateTime.UtcNow;
     }
 
-    public void UpdateDetails(int clientId, int statusDefinitionId, int statusDomainId, string currencyCode, string title, string description, DateTime startDateTime, DateTime? endDateTime,
+    public void UpdateDetails(int clientId, int statusDefinitionId, int statusDomainId, string currencyCode, string? title, string? description, DateTime startDateTime, DateTime? endDateTime,
         decimal estimatedValue, decimal? realValue, int modifiedBy)
     {
         ClientId = clientId;

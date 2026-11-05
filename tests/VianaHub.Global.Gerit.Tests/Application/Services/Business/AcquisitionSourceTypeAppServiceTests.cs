@@ -57,7 +57,7 @@ public class AcquisitionSourceTypeAppServiceTests
 
         currentUserMock.Setup(x => x.GetUserId()).Returns(5);
 
-        AcquisitionSourceTypeEntity capturedEntity = null;
+        AcquisitionSourceTypeEntity? capturedEntity = null;
         domainMock.Setup(d => d.CreateAsync(It.IsAny<AcquisitionSourceTypeEntity>(), It.IsAny<CancellationToken>()))
             .Callback<AcquisitionSourceTypeEntity, CancellationToken>((entity, _) =>
             {
@@ -70,19 +70,14 @@ public class AcquisitionSourceTypeAppServiceTests
 
         var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
-        var request = new CreateAcquisitionSourceTypeRequest
-        {
-            Code = "TEST",
-            Name = "Test Name",
-            Description = "Test Description"
-        };
+        var request = new CreateAcquisitionSourceTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Test Name", Description = "Test Description" }, new() { LanguageCode = "en-US", Name = "Test Name", Description = "Test Description" }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 
         Assert.Equal(42, result);
         Assert.NotNull(capturedEntity);
-        Assert.Equal("TEST", capturedEntity.Code);
-        Assert.Single(capturedEntity.Translations);
+        Assert.Equal("TEST_NAME", capturedEntity.Code);
+        Assert.Equal(2, capturedEntity.Translations.Count);
         Assert.Equal("pt-PT", capturedEntity.Translations.First().LanguageCode);
         Assert.Equal("Test Name", capturedEntity.Translations.First().Name);
         Assert.Equal("Test Description", capturedEntity.Translations.First().Description);
@@ -101,12 +96,12 @@ public class AcquisitionSourceTypeAppServiceTests
         var fileValidationMock = new Mock<IFileValidationService>();
         var loggerMock = new Mock<ILogger<AcquisitionSourceTypeAppService>>();
 
-        repoMock.Setup(r => r.ExistsByNameAsync("Existing", It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        localizationMock.Setup(l => l.GetMessage("Application.Service.AcquisitionSourceType.Create.NameAlreadyExists")).Returns("name-exists");
+        repoMock.Setup(r => r.ExistsByTranslationAsync("pt-PT", "Existing", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        localizationMock.Setup(l => l.GetMessage("Application.Catalog.TranslationAlreadyExists")).Returns("name-exists");
 
         var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
-        var request = new CreateAcquisitionSourceTypeRequest { Code = "NEW", Name = "Existing" };
+        var request = new CreateAcquisitionSourceTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Existing", Description = null }, new() { LanguageCode = "en-US", Name = "Existing", Description = null }] };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 

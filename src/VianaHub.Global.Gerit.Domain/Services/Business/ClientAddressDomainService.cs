@@ -26,7 +26,7 @@ public class ClientAddressDomainService : IClientAddressDomainService
         _notify = notify;
     }
 
-    public async Task<ClientAddressesEntity> GetByIdAsync(int clientId, int id, CancellationToken ct)
+    public async Task<ClientAddressesEntity?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(clientId, id, ct);
     }

@@ -6,7 +6,6 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDomain;
 /// </summary>
 public class UpdateStatusDomainRequest
 {
-    public string? Code { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
 }

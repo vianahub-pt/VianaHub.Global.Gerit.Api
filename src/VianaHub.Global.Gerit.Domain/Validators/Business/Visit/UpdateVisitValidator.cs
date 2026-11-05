@@ -52,14 +52,14 @@ public class UpdateVisitValidator : AbstractValidator<VisitEntity>
 
         When(x => x.RealValue.HasValue, () =>
         {
-            RuleFor(x => x.RealValue.Value)
+            RuleFor(x => x.RealValue)
                 .GreaterThanOrEqualTo(0)
                 .WithMessage(localization.GetMessage("Domain.Visit.RealValueGreaterThanOrEqual"));
         });
 
         When(x => x.EndDateTime.HasValue, () =>
         {
-            RuleFor(x => x.EndDateTime.Value)
+            RuleFor(x => x.EndDateTime)
                 .GreaterThan(x => x.StartDateTime)
                 .WithMessage(localization.GetMessage("Domain.Visit.EndDateTimeGreaterThanStart"));
         });

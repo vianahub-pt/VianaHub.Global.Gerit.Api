@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Resource;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
@@ -24,7 +25,9 @@ public static class ResourceEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "GetAll")
         .WithName("GetAllResources")
         .WithSummary("Swagger.Endpoint.Resource.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<ResourceResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async ([FromRoute] int id, [FromServices] IResourceAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -35,7 +38,10 @@ public static class ResourceEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "GetBy")
         .WithName("GetResourceById")
         .WithSummary("Swagger.Endpoint.Resource.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<ResourceDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -47,7 +53,9 @@ public static class ResourceEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "GetPaged")
         .WithName("GetPagedResources")
         .WithSummary("Swagger.Endpoint.Resource.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<ResourceResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async ([FromBody] CreateResourceRequest request, [FromServices] IResourceAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -58,6 +66,9 @@ public static class ResourceEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "Create")
         .WithName("CreateResource")
         .WithSummary("Swagger.Endpoint.Resource.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -71,7 +82,10 @@ public static class ResourceEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "Update")
         .WithName("UpdateResource")
         .WithSummary("Swagger.Endpoint.Resource.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateResourceRequest>();
@@ -84,7 +98,10 @@ public static class ResourceEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "Activate")
         .WithName("ActivateResource")
         .WithSummary("Swagger.Endpoint.Resource.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -96,7 +113,10 @@ public static class ResourceEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Resource", "Deactivate")
         .WithName("DeactivateResource")
         .WithSummary("Swagger.Endpoint.Resource.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -108,7 +128,10 @@ public static class ResourceEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "Delete")
         .WithName("DeleteResource")
         .WithSummary("Swagger.Endpoint.Resource.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -130,7 +153,10 @@ public static class ResourceEndpoint
         .WithSummary("Swagger.Endpoint.Resource.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

@@ -4,9 +4,9 @@ using VianaHub.Global.Gerit.Domain.Tools.Pagination;
 
 namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 
-public  interface IVisitTeamFunctionDomainService
+public interface IVisitTeamFunctionDomainService
 {
-    Task<VisitTeamFunctionsEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<VisitTeamFunctionsEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<VisitTeamFunctionsEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<VisitTeamFunctionsEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

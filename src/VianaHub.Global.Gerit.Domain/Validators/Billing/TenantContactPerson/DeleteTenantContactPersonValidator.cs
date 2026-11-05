@@ -15,8 +15,5 @@ public class DeleteTenantContactPersonValidator : AbstractValidator<TenantContac
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.TenantContactPerson.IdRequired"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.TenantContactPerson.AlreadyDeleted"));
     }
 }

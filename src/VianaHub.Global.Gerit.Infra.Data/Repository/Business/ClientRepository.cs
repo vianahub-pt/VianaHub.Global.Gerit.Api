@@ -28,10 +28,8 @@ public class ClientRepository : IClientRepository
             .Include(x => x.FiscalData)
             .Include(x => x.Contacts)
             .Include(x => x.Addresses)
-            .Include(x => x.PartyType)
-            .ThenInclude(x => x.Translations)
-            .Include(x => x.AcquisitionSourceType)
-            .ThenInclude(x => x.Translations)
+            .Include($"{nameof(ClientEntity.PartyType)}.{nameof(PartyTypeEntity.Translations)}")
+            .Include($"{nameof(ClientEntity.AcquisitionSourceType)}.{nameof(AcquisitionSourceTypeEntity.Translations)}")
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.CreatedAt)
             .ToListAsync(ct);
@@ -46,10 +44,8 @@ public class ClientRepository : IClientRepository
             .Include(x => x.FiscalData)
             .Include(x => x.Contacts)
             .Include(x => x.Addresses)
-            .Include(x => x.PartyType)
-            .ThenInclude(x => x.Translations)
-            .Include(x => x.AcquisitionSourceType)
-            .ThenInclude(x => x.Translations)
+            .Include($"{nameof(ClientEntity.PartyType)}.{nameof(PartyTypeEntity.Translations)}")
+            .Include($"{nameof(ClientEntity.AcquisitionSourceType)}.{nameof(AcquisitionSourceTypeEntity.Translations)}")
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -62,10 +58,8 @@ public class ClientRepository : IClientRepository
             .Include(x => x.FiscalData)
             .Include(x => x.Contacts)
             .Include(x => x.Addresses)
-            .Include(x => x.PartyType)
-            .ThenInclude(x => x.Translations)
-            .Include(x => x.AcquisitionSourceType)
-            .ThenInclude(x => x.Translations)
+            .Include($"{nameof(ClientEntity.PartyType)}.{nameof(PartyTypeEntity.Translations)}")
+            .Include($"{nameof(ClientEntity.AcquisitionSourceType)}.{nameof(AcquisitionSourceTypeEntity.Translations)}")
             .Where(x => !x.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -73,19 +67,19 @@ public class ClientRepository : IClientRepository
             var search = request.Search.Trim().ToLower();
 
             query = query.Where(x =>
-                EF.Functions.Like(x.Name.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.Email.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.PhoneNumber.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.CellPhoneNumber.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.Gender.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.Nationality.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.CompanyRegistrationNumber.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.EconomicActivityCode.ToLower(), $"%{search}%") ||
-                EF.Functions.Like(x.WebsiteUrl.ToLower(), $"%{search}%") ||
+                (x.Name != null && EF.Functions.Like(x.Name.ToLower(), $"%{search}%")) ||
+                (x.Email != null && EF.Functions.Like(x.Email.ToLower(), $"%{search}%")) ||
+                (x.PhoneNumber != null && EF.Functions.Like(x.PhoneNumber.ToLower(), $"%{search}%")) ||
+                (x.CellPhoneNumber != null && EF.Functions.Like(x.CellPhoneNumber.ToLower(), $"%{search}%")) ||
+                (x.Gender != null && EF.Functions.Like(x.Gender.ToLower(), $"%{search}%")) ||
+                (x.Nationality != null && EF.Functions.Like(x.Nationality.ToLower(), $"%{search}%")) ||
+                (x.CompanyRegistrationNumber != null && EF.Functions.Like(x.CompanyRegistrationNumber.ToLower(), $"%{search}%")) ||
+                (x.EconomicActivityCode != null && EF.Functions.Like(x.EconomicActivityCode.ToLower(), $"%{search}%")) ||
+                (x.WebsiteUrl != null && EF.Functions.Like(x.WebsiteUrl.ToLower(), $"%{search}%")) ||
                 x.Contacts.Any(c =>
-                    EF.Functions.Like(c.Name.ToLower(), $"%{search}%") ||
-                    EF.Functions.Like(c.Email.ToLower(), $"%{search}%") ||
-                    EF.Functions.Like(c.PhoneNumber.ToLower(), $"%{search}%")));
+                    (c.Name != null && EF.Functions.Like(c.Name.ToLower(), $"%{search}%")) ||
+                    (c.Email != null && EF.Functions.Like(c.Email.ToLower(), $"%{search}%")) ||
+                    (c.PhoneNumber != null && EF.Functions.Like(c.PhoneNumber.ToLower(), $"%{search}%"))));
         }
 
         if (request.IsActive.HasValue)
@@ -95,7 +89,7 @@ public class ClientRepository : IClientRepository
 
         var count = await query.CountAsync(ct);
         var orderedQuery = CreateSort.ApplyOrdering(query, request);
-        
+
         var pageNumber = request.PageNumber ?? 1;
         var pageSize = request.PageSize ?? Paging.MinPageSize();
         var skip = (pageNumber - 1) * pageSize;

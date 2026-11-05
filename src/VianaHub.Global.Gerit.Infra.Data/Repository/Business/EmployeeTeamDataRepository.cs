@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Infra.Data.Context;
@@ -17,7 +17,7 @@ public class EmployeeTeamDataRepository : IEmployeeTeamDataRepository
         _context = context;
     }
 
-    public async Task<EmployeeTeamEntity> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeTeamEntity?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         return await _context.Set<EmployeeTeamEntity>()
             .AsNoTracking()
@@ -45,8 +45,8 @@ public class EmployeeTeamDataRepository : IEmployeeTeamDataRepository
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            query = query.Where(x => EF.Functions.Like(x.Team.Name.ToString(), $"%{request.Search}%") || 
-                                     EF.Functions.Like(x.Employee.Name.ToString(), $"%{request.Search}%"));
+            query = query.Where(x => (x.Team != null && x.Team.Name != null && EF.Functions.Like(x.Team.Name.ToString(), $"%{request.Search}%")) ||
+                                     (x.Employee != null && x.Employee.Name != null && EF.Functions.Like(x.Employee.Name.ToString(), $"%{request.Search}%")));
         }
 
         if (request.IsActive.HasValue)

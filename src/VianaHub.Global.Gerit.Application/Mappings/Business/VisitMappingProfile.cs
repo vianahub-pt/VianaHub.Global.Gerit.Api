@@ -24,12 +24,12 @@ public class VisitMappingProfile : Profile
             .ForMember(dest => dest.Client, opt => opt.MapFrom(src => src.Client != null ? src.Client.Name : null))
             .ForMember(dest => dest.StatusDefinitionId, opt => opt.MapFrom(src => src.StatusDefinitionId))
             .ForMember(dest => dest.StatusDefinitionName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.StatusDomainId, opt => opt.MapFrom(src => src.StatusDomainId))
             .ForMember(dest => dest.StatusDomainName, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.StatusDomain?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.StatusDomain?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.StatusDefinition, opt => opt.MapFrom((src, _, _, _) =>
-                TranslationResolver.Resolve(src.StatusDefinition.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
+                TranslationResolver.Resolve(src.StatusDefinition?.Translations, CultureInfo.CurrentCulture.Name, t => t.LanguageCode, t => t.Name)))
             .ForMember(dest => dest.CurrencyCode, opt => opt.MapFrom(src => src.CurrencyCode))
             .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))

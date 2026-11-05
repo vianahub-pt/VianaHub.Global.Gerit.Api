@@ -29,7 +29,7 @@ public class SubscriptionPlanFileRuleDataRepository : ISubscriptionPlanFileRuleD
             .ToListAsync(ct);
     }
 
-    public async Task<SubscriptionPlanFileRulesEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<SubscriptionPlanFileRulesEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<SubscriptionPlanFileRulesEntity>()
             .AsNoTracking()
@@ -62,8 +62,8 @@ public class SubscriptionPlanFileRuleDataRepository : ISubscriptionPlanFileRuleD
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
                 x.SubscriptionPlan.Translations.Any(t =>
-                    EF.Functions.Like(t.Name.ToLower(), $"%{search}%")) ||
-                EF.Functions.Like(x.FileType.MimeType.ToLower(), $"%{search}%"));
+                    (t.Name != null && EF.Functions.Like(t.Name.ToLower(), $"%{search}%"))) ||
+                (x.FileType != null && x.FileType.MimeType != null && EF.Functions.Like(x.FileType.MimeType.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)

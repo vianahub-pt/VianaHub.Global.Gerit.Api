@@ -85,12 +85,18 @@ public class AuthAppService : IAuthAppService
         _requestTenantContext = requestTenantContext;
     }
 
-    public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct)
+    public async Task<AuthResponse?> RegisterAsync(RegisterRequest request, CancellationToken ct)
     {
         // Validar tenantId
         if (request.TenantId <= 0)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Register.InvalidTenantId"), 400);
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Auth.Register.EmailRequired"), 400);
             return null;
         }
 
@@ -120,7 +126,7 @@ public class AuthAppService : IAuthAppService
         }
 
         // Enviar email de confirma��o (NoOp por enquanto)
-        await _emailSender.SendAsync(user.Email, "Application.Service.Auth.Email.Confirm.Subject", "Application.Service.Auth.Email.Confirm.Body", user.Name);
+        await _emailSender.SendAsync(request.Email, "Application.Service.Auth.Email.Confirm.Subject", "Application.Service.Auth.Email.Confirm.Body", user.Name);
 
         _requestTenantContext.Clear();
 
@@ -130,14 +136,14 @@ public class AuthAppService : IAuthAppService
             RoleId = user.UserRoles.FirstOrDefault()?.RoleId ?? 0,
             RoleName = user.UserRoles.FirstOrDefault()?.Role?.Name,
             TenantId = user.TenantId,
-            TenantName = user.Tenant.Name,
+            TenantName = user.Tenant?.Name,
             UserId = user.Id,
             UserName = user.Name,
             Email = user.Email
         };
     }
 
-    public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken ct)
+    public async Task<AuthResponse?> LoginAsync(LoginRequest request, CancellationToken ct)
     {
         var tenant = await _tenantRepo.GetByUserEmailAsync(request.Email, ct);
         if (tenant == null)
@@ -208,7 +214,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Falha ao atualizar LastAccessAt para o usu�rio {UserId}", user.Id);
+            _logger.LogWarning("Falha ao atualizar LastAccessAt para o usu�rio {UserId} | Exception: {ExceptionDetails}", user.Id, LogValueSanitizer.ExceptionDetails(ex));
         }
 
         var refreshTokenValue = GenerateRefreshTokenValue();
@@ -227,14 +233,14 @@ public class AuthAppService : IAuthAppService
             RoleId = user.UserRoles.FirstOrDefault()?.RoleId ?? 0,
             RoleName = user.UserRoles.FirstOrDefault()?.Role?.Name,
             TenantId = user.TenantId,
-            TenantName = user.Tenant.Name, 
+            TenantName = user.Tenant?.Name,
             UserId = user.Id,
             UserName = user.Name,
             Email = user.Email
         };
     }
 
-    public async Task<AuthResponse> RefreshAsync(RefreshRequest request, CancellationToken ct)
+    public async Task<AuthResponse?> RefreshAsync(RefreshRequest request, CancellationToken ct)
     {
         if (request.TenantId <= 0)
         {
@@ -246,7 +252,7 @@ public class AuthAppService : IAuthAppService
         _requestTenantContext.SetTenantId(request.TenantId);
 
         var tokenEntity = await _refreshRepo.GetByTokenAsync(request.RefreshToken, request.TenantId);
-        if (tokenEntity == null || !tokenEntity.IsActive())
+        if (tokenEntity == null || tokenEntity.TenantId != request.TenantId || !tokenEntity.IsActive())
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Refresh.InvalidRefreshToken"), 401);
             return null;
@@ -257,6 +263,12 @@ public class AuthAppService : IAuthAppService
         if (user == null)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Refresh.UserNotFound"), 410);
+            return null;
+        }
+
+        if (user.TenantId != request.TenantId)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Auth.Refresh.InvalidRefreshToken"), 401);
             return null;
         }
 
@@ -276,20 +288,23 @@ public class AuthAppService : IAuthAppService
             return null;
         }
 
-        var isTrial = await _subscriptionDomain.IsTrialAsync(user.Id, ct);
+        var isTrial = await _subscriptionDomain.IsTrialAsync(request.TenantId, ct);
         if (isTrial)
         {
-            if (await _subscriptionDomain.IsTrialPeriodExpiredAsync(user.Id, ct))
+            if (await _subscriptionDomain.IsTrialPeriodExpiredAsync(request.TenantId, ct))
             {
                 _notify.Add(_localization.GetMessage("Application.Service.Auth.RefreshToken.Subscription.TrialPeriodExpired"), 403);
                 return null;
             }
         }
-        else if (await _subscriptionDomain.IsSubscriptionPeriodExpiredAsync(user.Id, ct))
+        else if (await _subscriptionDomain.IsSubscriptionPeriodExpiredAsync(request.TenantId, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.RefreshToken.Subscription.PeriodExpired"), 403);
             return null;
         }
+
+        var accessToken = await GenerateAccessTokenAsync(user, isTrial, ct);
+        if (accessToken.Token == null) return null;
 
         // Rota��o: revogar token antigo e criar novo
         await _refreshRepo.RevokeAsync(tokenEntity.TokenHash, user.Id, request.TenantId);
@@ -297,8 +312,6 @@ public class AuthAppService : IAuthAppService
         var newRefreshValue = GenerateRefreshTokenValue();
         var newRefresh = new RefreshTokensEntity(request.TenantId, user.Id, newRefreshValue, DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays), user.Id);
         await _refreshRepo.AddAsync(newRefresh);
-
-        var accessToken = await GenerateAccessTokenAsync(user, isTrial, ct);
 
         _requestTenantContext.Clear();
 
@@ -311,21 +324,21 @@ public class AuthAppService : IAuthAppService
             RoleId = user.UserRoles.FirstOrDefault()?.RoleId ?? 0,
             RoleName = user.UserRoles.FirstOrDefault()?.Role?.Name,
             TenantId = user.TenantId,
-            TenantName = user.Tenant.Name,
+            TenantName = user.Tenant?.Name,
             UserId = user.Id,
             UserName = user.Name,
             Email = user.Email
         };
     }
 
-    
+
     public async Task<IEnumerable<TenantLoginResponse>> GetLoginAsync(CancellationToken ct)
     {
         var entities = await _tenantRepo.GetLoginAsync(ct);
         return _mapper.Map<IEnumerable<TenantLoginResponse>>(entities);
     }
 
-    private async Task<(string Token, DateTime ExpiresAt)> GenerateAccessTokenAsync(UserEntity user, bool isTrial, CancellationToken ct)
+    private async Task<(string? Token, DateTime ExpiresAt)> GenerateAccessTokenAsync(UserEntity user, bool isTrial, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
         var expires = now.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes);
@@ -344,7 +357,7 @@ public class AuthAppService : IAuthAppService
             claims.Add(new Claim("tenant_subscription_type", "trial"));
         }
 
-        string permissionsJson = null;
+        string? permissionsJson = null;
 
         // Adicionar roles e permiss�es ao token para autoriza��o stateless
         try
@@ -354,7 +367,8 @@ public class AuthAppService : IAuthAppService
 
             var roleNames = userRoles?
                 .Where(r => r?.Role != null)
-                .Select(r => r.Role.Name?.Trim())
+                .Select(r => r.Role?.Name?.Trim())
+                .OfType<string>()
                 .Where(n => !string.IsNullOrWhiteSpace(n))
                 .Select(n => n.ToLower())
                 .Distinct()
@@ -370,7 +384,7 @@ public class AuthAppService : IAuthAppService
             // Coletar permiss�es de cada role agrupadas por recurso
             var permissionsByResource = new Dictionary<string, HashSet<string>>();
 
-            foreach (var role in userRoles ?? Enumerable.Empty<dynamic>())
+            foreach (var role in userRoles ?? Enumerable.Empty<UserRolesEntity>())
             {
                 if (role?.Role == null) continue;
                 var roleId = role.Role.Id;
@@ -386,7 +400,7 @@ public class AuthAppService : IAuthAppService
                     var resourceKey = resource.ToLower();
                     var actionKey = action.ToLower();
 
-                    if (!permissionsByResource.TryGetValue(resourceKey, out HashSet<string> actions))
+                    if (!permissionsByResource.TryGetValue(resourceKey, out var actions))
                     {
                         actions = new HashSet<string>();
                         permissionsByResource[resourceKey] = actions;
@@ -407,16 +421,24 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Falha ao incluir roles/permissions no token para user {UserId}", user.Id);
+            _logger.LogWarning("Falha ao incluir roles/permissions no token para user {UserId} | Exception: {ExceptionDetails}", user.Id, LogValueSanitizer.ExceptionDetails(ex));
             // N�o falhar a gera��o do token por causa das claims de permiss�o; conceder token b�sico
         }
 
         // Carregar chave ativa do tenant
         var keyEntity = await _jwtKeyRepo.GetActiveKeyAsync(user.TenantId, ct);
-        if (keyEntity == null)
+        if (keyEntity == null || keyEntity.TenantId != user.TenantId || !keyEntity.IsValidForSigning())
         {
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.NoActiveKey"), 500);
             _logger.LogError("Nenhuma chave JWT ativa encontrada para tenant {TenantId}", user.TenantId);
+            return (null, DateTime.MinValue);
+        }
+
+        // Preserva o lifetime configurado; uma chave perto da expiracao exige rotacao.
+        if (expires > keyEntity.ExpiresAt || _jwtSettings.AccessTokenExpirationMinutes > keyEntity.MaxTokenLifetimeMinutes)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.SigningKeyLifetimeInsufficient"), 500);
+            _logger.LogError("Signing key cannot cover the configured access token lifetime. TenantId={TenantId}, KeyId={KeyId}", user.TenantId, keyEntity.KeyId);
             return (null, DateTime.MinValue);
         }
 
@@ -436,7 +458,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao descriptografar chave privada para tenant {TenantId}", user.TenantId);
+            _logger.LogError("Erro ao descriptografar chave privada para tenant {TenantId} | Exception: {ExceptionDetails}", user.TenantId, LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.InvalidPrivateKey"), 500);
             return (null, DateTime.MinValue);
         }
@@ -483,7 +505,7 @@ public class AuthAppService : IAuthAppService
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Falha ao parsear permissionsJson antes de inserir no payload");
+                        _logger.LogWarning("Falha ao parsear permissionsJson antes de inserir no payload | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
                     }
                 }
 
@@ -499,7 +521,7 @@ public class AuthAppService : IAuthAppService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao criar token JWT para tenant {TenantId}", user.TenantId);
+            _logger.LogError("Erro ao criar token JWT para tenant {TenantId} | Exception: {ExceptionDetails}", user.TenantId, LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Auth.Token.CreateFailed"), 500);
             return (null, DateTime.MinValue);
         }

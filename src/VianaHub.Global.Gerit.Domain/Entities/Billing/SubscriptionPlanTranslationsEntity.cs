@@ -21,7 +21,7 @@ public class SubscriptionPlanTranslationsEntity
     /// <summary>
     /// Construtor para criação de uma nova tradução de SubscriptionPlan
     /// </summary>
-    public SubscriptionPlanTranslationsEntity(int subscriptionPlanId, string languageCode, string name, string? description)
+    public SubscriptionPlanTranslationsEntity(int subscriptionPlanId, string? languageCode, string? name, string? description)
     {
         SubscriptionPlanId = subscriptionPlanId;
         LanguageCode = languageCode;
@@ -29,7 +29,7 @@ public class SubscriptionPlanTranslationsEntity
         Description = description;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string? name, string? description)
     {
         Name = name;
         Description = description;

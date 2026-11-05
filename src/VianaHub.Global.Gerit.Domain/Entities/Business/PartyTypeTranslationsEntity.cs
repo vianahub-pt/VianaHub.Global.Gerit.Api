@@ -21,7 +21,7 @@ public class PartyTypeTranslationsEntity
     /// <summary>
     /// Construtor para criação de uma nova tradução de PartyType
     /// </summary>
-    public PartyTypeTranslationsEntity(byte partyTypeId, string languageCode, string name, string? description)
+    public PartyTypeTranslationsEntity(byte partyTypeId, string? languageCode, string? name, string? description)
     {
         PartyTypeId = partyTypeId;
         LanguageCode = languageCode;
@@ -29,7 +29,7 @@ public class PartyTypeTranslationsEntity
         Description = description;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string? name, string? description)
     {
         Name = name;
         Description = description;

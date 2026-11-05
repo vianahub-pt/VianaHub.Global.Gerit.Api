@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace VianaHub.Global.Gerit.Api.ModelBinders;
 
@@ -8,7 +8,7 @@ namespace VianaHub.Global.Gerit.Api.ModelBinders;
 /// </summary>
 public class GuidNoDashesModelBinderProvider : IModelBinderProvider
 {
-    public IModelBinder GetBinder(ModelBinderProviderContext context)
+    public IModelBinder? GetBinder(ModelBinderProviderContext context)
     {
         if (context == null)
         {

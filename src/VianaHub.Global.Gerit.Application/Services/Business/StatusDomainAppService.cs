@@ -1,3 +1,5 @@
+using VianaHub.Global.Gerit.Domain.Helpers;
+using VianaHub.Global.Gerit.Domain.Constants;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
@@ -51,7 +53,7 @@ public class StatusDomainAppService : IStatusDomainAppService
         return _mapper.Map<IEnumerable<StatusDomainResponse>>(entities);
     }
 
-    public async Task<StatusDomainDetailResponse> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<StatusDomainDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
@@ -71,26 +73,36 @@ public class StatusDomainAppService : IStatusDomainAppService
 
     public async Task<int> CreateAsync(CreateStatusDomainRequest request, CancellationToken ct)
     {
+        var code = CatalogCodeGenerator.FromCanonicalTranslation(request.Translations, t => t.LanguageCode, t => t.Name);
+        if (string.IsNullOrEmpty(code))
+        {
+            _notify.Add(_localization.GetMessage("Application.Catalog.CanonicalEnglishNameRequired"), 400);
+            return 0;
+        }
         // Verificar duplicidade: código já existe?
-        var existsByCode = await _repo.ExistsByCodeAsync(request.Code, ct);
+        var existsByCode = await _repo.ExistsByCodeAsync(code, ct);
         if (existsByCode)
         {
             _notify.Add(_localization.GetMessage("Application.Service.StatusDomain.Create.CodeAlreadyExists"), 409);
             return 0;
         }
 
+        foreach (var translation in request.Translations!)
+        {
+            if (await _repo.ExistsByTranslationAsync(translation.LanguageCode, translation.Name, ct))
+            {
+                _notify.Add(_localization.GetMessage("Application.Catalog.TranslationAlreadyExists"), 409);
+                return 0;
+            }
+        }
         var entity = new StatusDomainEntity(
-            request.Code,
+            code,
             _currentUser.GetUserId());
 
-        // Persistir Name e Description na tabela de traduções (idioma padrão: pt-PT)
-        var translation = new StatusDomainTranslationsEntity(
-            entity.Id, // 0 inicial, EF Core resolverá o FK após persistência
-            "pt-PT",
-            request.Name,
-            request.Description);
-        entity.Translations.Add(translation);
-
+        foreach (var translation in request.Translations!)
+        {
+            entity.Translations.Add(new StatusDomainTranslationsEntity(entity.Id, translation.LanguageCode, translation.Name, translation.Description));
+        }
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -104,18 +116,7 @@ public class StatusDomainAppService : IStatusDomainAppService
             return false;
         }
 
-        // Verificar duplicidade: se mudou o código, verificar se já existe
-        if (!string.Equals(entity.Code, request.Code, StringComparison.OrdinalIgnoreCase))
-        {
-            var existsByCode = await _repo.ExistsByCodeAsync(request.Code, ct);
-            if (existsByCode)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.StatusDomain.Update.CodeAlreadyExists"), 409);
-                return false;
-            }
-        }
-
-        entity.UpdateCode(request.Code, _currentUser.GetUserId());
+        entity.MarkModified(_currentUser.GetUserId());
 
         // Atualizar a tradução no idioma padrão (pt-PT)
         var translation = entity.Translations.FirstOrDefault(t => t.LanguageCode == "pt-PT");

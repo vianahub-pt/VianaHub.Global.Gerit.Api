@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Business;
 
 public interface IStatusDefinitionDomainService
 {
-    Task<StatusDefinitionEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<StatusDefinitionEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<StatusDefinitionEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<StatusDefinitionEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

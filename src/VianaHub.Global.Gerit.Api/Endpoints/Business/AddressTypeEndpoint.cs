@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.AddressType;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Helpers;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
@@ -23,7 +24,9 @@ public static class AddressTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "AddressTypes", "GetAll")
         .WithName("GetAddressTypes")
         .WithSummary("Swagger.Endpoint.AddressType.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<AddressTypeResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async ([FromRoute] int id, [FromServices] IAddressTypeAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -34,7 +37,10 @@ public static class AddressTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "AddressTypes", "GetBy")
         .WithName("GetAddressTypeById")
         .WithSummary("Swagger.Endpoint.AddressType.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<AddressTypeDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -46,7 +52,9 @@ public static class AddressTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "AddressTypes", "GetPaged")
         .WithName("GetAddressTypesPaged")
         .WithSummary("Swagger.Endpoint.AddressType.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<AddressTypeResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async ([FromBody] CreateAddressTypeRequest request, [FromServices] IAddressTypeAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -57,6 +65,9 @@ public static class AddressTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "AddressTypes", "Create")
         .WithName("CreateAddressType")
         .WithSummary("Swagger.Endpoint.AddressType.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -69,7 +80,11 @@ public static class AddressTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "AddressTypes", "Update")
         .WithName("UpdateAddressType")
         .WithSummary("Swagger.Endpoint.AddressType.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateAddressTypeRequest>();
@@ -82,7 +97,10 @@ public static class AddressTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "AddressTypes", "Activate")
         .WithName("ActivateAddressType")
         .WithSummary("Swagger.Endpoint.AddressType.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -94,7 +112,10 @@ public static class AddressTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "AddressTypes", "Deactivate")
         .WithName("DeactivateAddressType")
         .WithSummary("Swagger.Endpoint.AddressType.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -106,7 +127,10 @@ public static class AddressTypeEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "AddressTypes", "Delete")
         .WithName("DeleteAddressType")
         .WithSummary("Swagger.Endpoint.AddressType.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -128,7 +152,10 @@ public static class AddressTypeEndpoint
         .WithSummary("Swagger.Endpoint.AddressType.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

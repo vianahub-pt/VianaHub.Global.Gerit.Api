@@ -7,11 +7,11 @@ namespace VianaHub.Global.Gerit.Tests.Api.Configuration
 {
     public class CorsSetupTests
     {
-        [Fact(DisplayName = "CORS - Quando desabilitado não lança exceção")]
+        [Fact(DisplayName = "CORS - Quando desabilitado nÃ£o lanÃ§a exceÃ§Ã£o")]
         [Trait("Api", "")]
         public void AddCorsConfiguration_WhenEnableCorsFalse_DoesNotThrow()
         {
-            var inMemory = new Dictionary<string, string>
+            var inMemory = new Dictionary<string, string?>
             {
                 { "Cors:EnableCors", "false" }
             };
@@ -27,11 +27,11 @@ namespace VianaHub.Global.Gerit.Tests.Api.Configuration
             Assert.Same(services, result);
         }
 
-        [Fact(DisplayName = "CORS - AllowAnyOrigin em produção lança InvalidOperationException")]
+        [Fact(DisplayName = "CORS - AllowAnyOrigin em produÃ§Ã£o lanÃ§a InvalidOperationException")]
         [Trait("Api", "")]
         public void AddCorsConfiguration_WithAllowAnyOriginInProduction_ThrowsInvalidOperationException()
         {
-            var inMemory = new Dictionary<string, string>
+            var inMemory = new Dictionary<string, string?>
             {
                 { "Cors:EnableCors", "true" },
                 { "Cors:AllowedOrigins:0", "*" },
@@ -47,11 +47,11 @@ namespace VianaHub.Global.Gerit.Tests.Api.Configuration
             Assert.Throws<InvalidOperationException>(() => services.AddCorsConfiguration(configuration));
         }
 
-        [Fact(DisplayName = "CORS - Quando origem específica adiciona policy")]
+        [Fact(DisplayName = "CORS - Quando origem especÃ­fica adiciona policy")]
         [Trait("Api", "")]
         public void AddCorsConfiguration_WithSpecificOrigins_AddsPolicy()
         {
-            var inMemory = new Dictionary<string, string>
+            var inMemory = new Dictionary<string, string?>
             {
                 { "Cors:EnableCors", "true" },
                 { "Cors:AllowedOrigins:0", "https://example.com" },
@@ -67,10 +67,10 @@ namespace VianaHub.Global.Gerit.Tests.Api.Configuration
 
             var result = services.AddCorsConfiguration(configuration);
 
-            // Adiciona logging para resolver dependência de CorsService ao construir o provider
+            // Adiciona logging para resolver dependÃªncia de CorsService ao construir o provider
             services.AddLogging();
 
-            // Resolve service provider para garantir que a policy foi registrada sem lançar
+            // Resolve service provider para garantir que a policy foi registrada sem lanÃ§ar
             var sp = services.BuildServiceProvider();
             var cors = sp.GetService<Microsoft.AspNetCore.Cors.Infrastructure.ICorsService>();
 

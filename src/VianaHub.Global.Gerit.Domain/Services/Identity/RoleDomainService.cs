@@ -23,7 +23,7 @@ public class RoleDomainService : IRoleDomainService
         _notify = notify;
     }
 
-    public async Task<RoleEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<RoleEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
@@ -55,7 +55,7 @@ public class RoleDomainService : IRoleDomainService
             }
             return false;
         }
-        
+
         return await _repo.AddAsync(entity, ct);
     }
     public async Task<bool> UpdateAsync(RoleEntity entity, CancellationToken ct)
@@ -69,7 +69,7 @@ public class RoleDomainService : IRoleDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(RoleEntity entity, CancellationToken ct)
@@ -83,7 +83,7 @@ public class RoleDomainService : IRoleDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> DeactivateAsync(RoleEntity entity, CancellationToken ct)

@@ -23,7 +23,7 @@ public class EmployeeContactPersonDomainService : IEmployeeContactPersonDomainSe
         _notify = notify;
     }
 
-    public async Task<EmployeeContactPersonsEntity> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeContactPersonsEntity?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(employeeId, id, ct);
     }

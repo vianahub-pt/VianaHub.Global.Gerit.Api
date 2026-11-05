@@ -24,7 +24,7 @@ public class TenantDomainService : ITenantDomainService
         _notify = notify;
     }
 
-    public async Task<TenantEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<TenantEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
@@ -56,7 +56,7 @@ public class TenantDomainService : ITenantDomainService
             }
             return false;
         }
-        
+
         return await _repo.AddAsync(entity, ct);
     }
     public async Task<bool> UpdateAsync(TenantEntity entity, CancellationToken ct)
@@ -70,7 +70,7 @@ public class TenantDomainService : ITenantDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(TenantEntity entity, CancellationToken ct)
@@ -84,7 +84,7 @@ public class TenantDomainService : ITenantDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> DeactivateAsync(TenantEntity entity, CancellationToken ct)
@@ -98,7 +98,7 @@ public class TenantDomainService : ITenantDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
     public async Task<bool> DeleteAsync(TenantEntity entity, CancellationToken ct)
@@ -112,7 +112,7 @@ public class TenantDomainService : ITenantDomainService
             }
             return false;
         }
-        
+
         return await _repo.UpdateAsync(entity, ct);
     }
 }

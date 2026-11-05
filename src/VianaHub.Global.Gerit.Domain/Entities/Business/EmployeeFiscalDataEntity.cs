@@ -32,8 +32,8 @@ public class EmployeeFiscalDataEntity : Entity
     /// <summary>
     /// Construtor para criação de novos dados fiscais do Funcionário
     /// </summary>
-    public EmployeeFiscalDataEntity(int tenantId, int employeeId, string taxNumber, string? vatNumber,
-        string fiscalCountry, bool isVatRegistered, string? iban, string fiscalEmail, int createdBy)
+    public EmployeeFiscalDataEntity(int tenantId, int employeeId, string? taxNumber, string? vatNumber,
+        string? fiscalCountry, bool isVatRegistered, string? iban, string? fiscalEmail, int createdBy)
     {
         TenantId = tenantId;
         EmployeeId = employeeId;
@@ -52,8 +52,8 @@ public class EmployeeFiscalDataEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string taxNumber, string? vatNumber, string fiscalCountry, bool isVatRegistered,
-        string? iban, string fiscalEmail, int modifiedBy)
+    public void Update(string? taxNumber, string? vatNumber, string? fiscalCountry, bool isVatRegistered,
+        string? iban, string? fiscalEmail, int modifiedBy)
     {
         TaxNumber = taxNumber;
         VatNumber = vatNumber;

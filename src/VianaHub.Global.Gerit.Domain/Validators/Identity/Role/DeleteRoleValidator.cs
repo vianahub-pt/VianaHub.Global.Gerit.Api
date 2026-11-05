@@ -12,8 +12,5 @@ public class DeleteRoleValidator : AbstractValidator<RoleEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Role.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Role.AlreadyDeleted"));
     }
 }

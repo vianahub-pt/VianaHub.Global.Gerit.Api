@@ -24,7 +24,7 @@ public class SubscriptionDomainService : ISubscriptionDomainService
         _notify = notify;
     }
 
-    public async Task<SubscriptionEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<SubscriptionEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
@@ -44,7 +44,7 @@ public class SubscriptionDomainService : ISubscriptionDomainService
     {
         return await _repo.ExistsByTenantIdAsync(tenantId, ct);
     }
-    public async Task<SubscriptionEntity> GetByTenantIdAsync(int tenantId, CancellationToken ct)
+    public async Task<SubscriptionEntity?> GetByTenantIdAsync(int tenantId, CancellationToken ct)
     {
         return await _repo.GetByTenantIdAsync(tenantId, ct);
     }

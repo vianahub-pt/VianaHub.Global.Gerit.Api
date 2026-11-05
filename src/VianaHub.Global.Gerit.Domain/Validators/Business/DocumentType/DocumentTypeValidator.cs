@@ -7,11 +7,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Business.DocumentType;
 
 public class DocumentTypeValidator : BaseEntityValidator<DocumentTypeEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public DocumentTypeValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override async Task<ValidationResult> ValidateForCreateAsync(DocumentTypeEntity entity)

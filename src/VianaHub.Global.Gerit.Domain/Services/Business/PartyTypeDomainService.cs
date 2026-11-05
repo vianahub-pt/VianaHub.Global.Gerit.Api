@@ -23,7 +23,7 @@ public class PartyTypeDomainService : IPartyTypeDomainService
         _notify = notify;
     }
 
-    public async Task<PartyTypeEntity> GetByIdAsync(byte id, CancellationToken ct)
+    public async Task<PartyTypeEntity?> GetByIdAsync(byte id, CancellationToken ct)
         => await _repo.GetByIdAsync(id, ct);
 
     public async Task<IEnumerable<PartyTypeEntity>> GetAllAsync(CancellationToken ct)

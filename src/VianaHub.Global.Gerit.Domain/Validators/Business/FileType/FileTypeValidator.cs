@@ -7,11 +7,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Business.FileType;
 
 public class FileTypeValidator : BaseEntityValidator<FileTypeEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public FileTypeValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override async Task<ValidationResult> ValidateForCreateAsync(FileTypeEntity entity)

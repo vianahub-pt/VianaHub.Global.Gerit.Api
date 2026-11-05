@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientAddress;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
@@ -26,7 +27,9 @@ public static class ClientAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "GetAll")
         .WithName("GetClientAddresses")
         .WithSummary("Swagger.Endpoint.ClientAddress.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<ClientAddressResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{clientId}/addresses/{id}", async ([FromRoute] int clientId, [FromRoute] int id, [FromServices] IClientAddressAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -37,7 +40,9 @@ public static class ClientAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "GetBy")
         .WithName("GetClientAddressById")
         .WithSummary("Swagger.Endpoint.ClientAddress.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ClientAddressDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -49,7 +54,9 @@ public static class ClientAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "GetPaged")
         .WithName("GetClientAddressesPaged")
         .WithSummary("Swagger.Endpoint.ClientAddress.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<ClientAddressResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/{clientId}/addresses", async ([FromRoute] int clientId, [FromBody] CreateClientAddressRequest request, [FromServices] IClientAddressAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -60,6 +67,8 @@ public static class ClientAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "Create")
         .WithName("CreateClientAddress")
         .WithSummary("Swagger.Endpoint.ClientAddress.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
@@ -74,7 +83,9 @@ public static class ClientAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "Update")
         .WithName("UpdateClientAddress")
         .WithSummary("Swagger.Endpoint.ClientAddress.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -88,7 +99,9 @@ public static class ClientAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "Activate")
         .WithName("ActivateClientAddress")
         .WithSummary("Swagger.Endpoint.ClientAddress.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -100,7 +113,9 @@ public static class ClientAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "Deactivate")
         .WithName("DeactivateClientAddress")
         .WithSummary("Swagger.Endpoint.ClientAddress.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -112,7 +127,9 @@ public static class ClientAddressEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "Delete")
         .WithName("DeleteClientAddress")
         .WithSummary("Swagger.Endpoint.ClientAddress.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -133,7 +150,9 @@ public static class ClientAddressEndpoint
         .WithSummary("Swagger.Endpoint.ClientAddress.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

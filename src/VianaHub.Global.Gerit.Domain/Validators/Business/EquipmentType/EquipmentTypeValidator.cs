@@ -7,11 +7,9 @@ namespace VianaHub.Global.Gerit.Domain.Validators.Business.EquipmentType;
 
 public class EquipmentTypeValidator : BaseEntityValidator<EquipmentTypeEntity>
 {
-    private readonly ILocalizationService _localization;
 
     public EquipmentTypeValidator(ILocalizationService localization) : base(localization)
     {
-        _localization = localization;
     }
 
     public override async Task<ValidationResult> ValidateForCreateAsync(EquipmentTypeEntity entity)

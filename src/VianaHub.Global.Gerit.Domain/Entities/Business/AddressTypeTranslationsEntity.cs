@@ -21,7 +21,7 @@ public class AddressTypeTranslationsEntity
     /// <summary>
     /// Construtor para criação de uma nova tradução de AddressType
     /// </summary>
-    public AddressTypeTranslationsEntity(int addressTypeId, string languageCode, string name, string? description)
+    public AddressTypeTranslationsEntity(int addressTypeId, string? languageCode, string? name, string? description)
     {
         AddressTypeId = addressTypeId;
         LanguageCode = languageCode;
@@ -29,7 +29,7 @@ public class AddressTypeTranslationsEntity
         Description = description;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string? name, string? description)
     {
         Name = name;
         Description = description;

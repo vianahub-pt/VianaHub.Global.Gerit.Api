@@ -51,7 +51,7 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
         return _mapper.Map<IEnumerable<EmployeeAddressResponse>>(entities);
     }
 
-    public async Task<EmployeeAddressDetailResponse> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeAddressDetailResponse?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(employeeId, id, ct);
         if (entity == null || entity.IsDeleted)
@@ -167,7 +167,7 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int employeeId, IFormFile file, CancellationToken ct)
+    public async Task<bool> BulkUploadAsync(int employeeId, IFormFile? file, CancellationToken ct)
     {
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -185,7 +185,7 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
         return await ProcessBulkItemsAsync(employeeId, items, ct);
     }
 
-    private List<BulkUploadEmployeeAddressItem> ReadCsvFile(IFormFile file)
+    private List<BulkUploadEmployeeAddressItem>? ReadCsvFile(IFormFile file)
     {
         try
         {

@@ -12,8 +12,5 @@ public class DeleteVisitTeamFunctionValidator : AbstractValidator<VisitTeamFunct
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Function.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Function.AlreadyDeleted"));
     }
 }

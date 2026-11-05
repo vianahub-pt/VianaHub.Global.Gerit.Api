@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Action;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Action;
@@ -15,6 +15,6 @@ public interface IActionAppService
     Task<bool> ActivateAsync(int id, CancellationToken ct);
     Task<bool> DeactivateAsync(int id, CancellationToken ct);
     Task<bool> DeleteAsync(int id, CancellationToken ct);
-    Task<bool> BulkUploadAsync(IFormFile file, CancellationToken ct);
+    Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct);
 
 }

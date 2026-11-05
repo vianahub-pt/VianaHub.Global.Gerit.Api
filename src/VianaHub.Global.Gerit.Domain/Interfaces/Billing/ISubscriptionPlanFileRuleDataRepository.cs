@@ -7,7 +7,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Billing;
 public interface ISubscriptionPlanFileRuleDataRepository
 {
     Task<IEnumerable<SubscriptionPlanFileRulesEntity>> GetAllAsync(CancellationToken ct);
-    Task<SubscriptionPlanFileRulesEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<SubscriptionPlanFileRulesEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<SubscriptionPlanFileRulesEntity>> GetBySubscriptionPlanIdAsync(int subscriptionPlanId, CancellationToken ct);
     Task<ListPage<SubscriptionPlanFileRulesEntity>> GetPagedAsync(PagedFilter filter, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

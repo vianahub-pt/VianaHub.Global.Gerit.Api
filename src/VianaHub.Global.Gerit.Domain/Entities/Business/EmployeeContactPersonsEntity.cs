@@ -22,8 +22,8 @@ public class EmployeeContactPersonsEntity : Entity
     public bool IsDeleted { get; private set; }
 
     // Navigation Properties
-    public TenantEntity Tenant { get; private set; }
-    public EmployeeEntity Employee { get; private set; }
+    public TenantEntity? Tenant { get; private set; }
+    public EmployeeEntity? Employee { get; private set; }
 
     // Construtor protegido para o EF Core
     protected EmployeeContactPersonsEntity() { }
@@ -31,7 +31,7 @@ public class EmployeeContactPersonsEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo contato do Funcionário
     /// </summary>
-    public EmployeeContactPersonsEntity(int tenantId, int employeeId, string name, string email,
+    public EmployeeContactPersonsEntity(int tenantId, int employeeId, string? name, string? email,
         string? phone, string? jobTitle, string? department, string? cellPhoneNumber, bool isCellPhoneWhatsapp, bool isPrimary, int createdBy)
     {
         TenantId = tenantId;
@@ -50,7 +50,7 @@ public class EmployeeContactPersonsEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateContactInfo(string name, string email, string? phone, string? jobTitle, string? department, string? cellPhoneNumber, bool isCellPhoneWhatsapp, int modifiedBy)
+    public void UpdateContactInfo(string? name, string? email, string? phone, string? jobTitle, string? department, string? cellPhoneNumber, bool isCellPhoneWhatsapp, int modifiedBy)
     {
         Name = name;
         Email = email;

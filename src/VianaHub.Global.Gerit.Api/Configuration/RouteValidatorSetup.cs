@@ -1,4 +1,12 @@
-﻿using FluentValidation;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.EquipmentType;
+using VianaHub.Global.Gerit.Api.Validators.Business.EquipmentType;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.AddressType;
+using VianaHub.Global.Gerit.Api.Validators.Business.AddressType;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType;
+using VianaHub.Global.Gerit.Api.Validators.Business.PartyType;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDomain;
+using VianaHub.Global.Gerit.Api.Validators.Business.StatusDomain;
+using FluentValidation;
 using VianaHub.Global.Gerit.Api.Validators.Billing.Plan;
 using VianaHub.Global.Gerit.Api.Validators.Billing.Subscription;
 using VianaHub.Global.Gerit.Api.Validators.Billing.Tenant;
@@ -55,6 +63,8 @@ using VianaHub.Global.Gerit.Api.Validators.Business.DocumentType;
 // Client DTOs & Validators
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.Client;
 using VianaHub.Global.Gerit.Api.Validators.Business.Client;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientContact;
+using VianaHub.Global.Gerit.Api.Validators.Business.ClientContact;
 
 // TenantContact DTOs & Validators
 using VianaHub.Global.Gerit.Application.Dtos.Request.Billing.TenantContactPerson;
@@ -82,6 +92,9 @@ public static class RouteValidatorSetup
     /// <returns>A própria coleção de serviços para encadeamento.</returns>
     public static IServiceCollection AddRouteValidatorSetup(this IServiceCollection services)
     {
+        services.AddScoped<IValidator<CreateEquipmentTypeRequest>, CreateEquipmentTypeRouteValidator>();
+        services.AddScoped<IValidator<UpdateEquipmentTypeRequest>, UpdateEquipmentTypeRouteValidator>();
+
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
         // Action Route Validators
@@ -137,7 +150,7 @@ public static class RouteValidatorSetup
         // Vehicle Route Validators
         services.AddScoped<IValidator<CreateVehicleRequest>, CreateVehicleRouteValidator>();
         services.AddScoped<IValidator<UpdateVehicleRequest>, UpdateVehicleRouteValidator>();
-        
+
         // Equipment Route Validators
         services.AddScoped<IValidator<CreateEquipmentRequest>, CreateEquipmentRouteValidator>();
         services.AddScoped<IValidator<UpdateEquipmentRequest>, UpdateEquipmentRouteValidator>();
@@ -167,9 +180,17 @@ public static class RouteValidatorSetup
         // Client Route Validators
         services.AddScoped<IValidator<CreateClientRequest>, CreateClientRouteValidator>();
 
+        services.AddScoped<IValidator<CreateClientContactRequest>, CreateClientContactPersonRouteValidator>();
+        services.AddScoped<IValidator<UpdateClientContactPersonRequest>, UpdateClientContactPersonRouteValidator>();
+
         // StatusDefinition Route Validators
         services.AddScoped<IValidator<CreateStatusDefinitionRequest>, CreateStatusDefinitionRouteValidator>();
         services.AddScoped<IValidator<UpdateStatusDefinitionRequest>, UpdateStatusDefinitionRouteValidator>();
+
+        // Validators dos novos contratos multilingues de catálogo
+        services.AddScoped<IValidator<CreateAddressTypeRequest>, CreateAddressTypeRouteValidator>();
+        services.AddScoped<IValidator<CreatePartyTypeRequest>, CreatePartyTypeRouteValidator>();
+        services.AddScoped<IValidator<CreateStatusDomainRequest>, CreateStatusDomainRouteValidator>();
 
         // DocumentType Route Validators
         services.AddScoped<IValidator<CreateDocumentTypeRequest>, CreateDocumentTypeRouteValidator>();

@@ -120,17 +120,17 @@ public class SubscriptionEntity : Entity
         ModifiedAt = DateTime.UtcNow;
     }
 
-    public void Cancel(string cancellationReason, bool cancelAtPeriodEnd, int modifiedBy)
+    public void Cancel(string? cancellationReason, bool cancelAtPeriodEnd, int modifiedBy)
     {
         CancelAtPeriodEnd = cancelAtPeriodEnd;
         CanceledAt = DateTime.UtcNow;
         CancellationReason = cancellationReason;
-        
+
         if (!cancelAtPeriodEnd)
         {
             IsActive = false;
         }
-        
+
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

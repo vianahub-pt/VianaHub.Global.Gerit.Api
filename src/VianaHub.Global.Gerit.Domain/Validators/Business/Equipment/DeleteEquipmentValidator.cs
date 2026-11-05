@@ -12,8 +12,5 @@ public class DeleteEquipmentValidator : AbstractValidator<EquipmentEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Equipment.InvalidId"));
 
-        RuleFor(x => x.IsDeleted)
-            .Equal(false)
-            .WithMessage(localization.GetMessage("Domain.Equipment.AlreadyDeleted"));
     }
 }

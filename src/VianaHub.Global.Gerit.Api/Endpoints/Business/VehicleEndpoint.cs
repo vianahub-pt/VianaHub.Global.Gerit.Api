@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.Vehicle;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Helpers;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
@@ -24,7 +25,9 @@ public static class VehicleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Vehicles", "GetAll")
         .WithName("GetVehicles")
         .WithSummary("Swagger.Endpoint.Vehicle.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<VehicleResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async ([FromRoute] int id, [FromServices] IVehicleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -35,7 +38,10 @@ public static class VehicleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Vehicles", "GetBy")
         .WithName("GetVehicleById")
         .WithSummary("Swagger.Endpoint.Vehicle.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<VehicleDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -47,7 +53,9 @@ public static class VehicleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Vehicles", "GetPaged")
         .WithName("GetVehiclesPaged")
         .WithSummary("Swagger.Endpoint.Vehicle.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<VehicleResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async ([FromBody] CreateVehicleRequest request, [FromServices] IVehicleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -58,6 +66,8 @@ public static class VehicleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Vehicles", "Create")
         .WithName("CreateVehicle")
         .WithSummary("Swagger.Endpoint.Vehicle.Create.Summary")
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -71,7 +81,10 @@ public static class VehicleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Vehicles", "Update")
         .WithName("UpdateVehicle")
         .WithSummary("Swagger.Endpoint.Vehicle.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateVehicleRequest>();
@@ -84,7 +97,10 @@ public static class VehicleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Vehicles", "Activate")
         .WithName("ActivateVehicle")
         .WithSummary("Swagger.Endpoint.Vehicle.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -96,7 +112,10 @@ public static class VehicleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Vehicles", "Deactivate")
         .WithName("DeactivateVehicle")
         .WithSummary("Swagger.Endpoint.Vehicle.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -108,7 +127,10 @@ public static class VehicleEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Vehicles", "Delete")
         .WithName("DeleteVehicle")
         .WithSummary("Swagger.Endpoint.Vehicle.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -131,7 +153,9 @@ public static class VehicleEndpoint
         .WithSummary("Swagger.Endpoint.Vehicle.BulkUpload.Summary")
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

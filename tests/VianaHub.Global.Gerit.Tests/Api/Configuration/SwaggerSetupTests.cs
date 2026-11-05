@@ -9,11 +9,11 @@ namespace VianaHub.Global.Gerit.Tests.Api.Configuration
 {
     public class SwaggerSetupTests
     {
-        [Fact(DisplayName = "Swagger - Adicionar n„o lanÁa exceÁ„o")]
+        [Fact(DisplayName = "Swagger - Adicionar n√£o lan√ßa exce√ß√£o")]
         [Trait("Api", "")]
         public void AddSwagger_DoesNotThrow()
         {
-            var inMemory = new Dictionary<string, string>
+            var inMemory = new Dictionary<string, string?>
             {
                 { "Swagger:Title", "Test" }
             };

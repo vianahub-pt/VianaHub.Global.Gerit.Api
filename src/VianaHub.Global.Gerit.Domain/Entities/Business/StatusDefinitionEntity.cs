@@ -20,7 +20,7 @@ public class StatusDefinitionEntity : Entity
     // Navigation Properties
     public TenantEntity Tenant { get; private set; } = null!;
     public StatusDomainEntity StatusDomain { get; private set; } = null!;
-    public ICollection<StatusDefinitionTranslationsEntity> Translations { get; private set; }
+    public ICollection<StatusDefinitionTranslationsEntity> Translations { get; private set; } = new List<StatusDefinitionTranslationsEntity>();
 
     // Construtor protegido para o EF Core
     protected StatusDefinitionEntity() { }
@@ -28,7 +28,7 @@ public class StatusDefinitionEntity : Entity
     /// <summary>
     /// Construtor para criação de uma nova Definição de Status
     /// </summary>
-    public StatusDefinitionEntity(int tenantId, int statusDomainId, string code, int displayOrder, bool isSystem, int createdBy)
+    public StatusDefinitionEntity(int tenantId, int statusDomainId, string? code, int displayOrder, bool isSystem, int createdBy)
     {
         TenantId = tenantId;
         StatusDomainId = statusDomainId;
@@ -42,9 +42,9 @@ public class StatusDefinitionEntity : Entity
         Translations = new List<StatusDefinitionTranslationsEntity>();
     }
 
-    public void Update(string code, int displayOrder, bool isSystem, int modifiedBy)
+    public void Update(int displayOrder, bool isSystem, int modifiedBy)
     {
-        Code = code;
+
         DisplayOrder = displayOrder;
         IsSystem = isSystem;
         ModifiedBy = modifiedBy;

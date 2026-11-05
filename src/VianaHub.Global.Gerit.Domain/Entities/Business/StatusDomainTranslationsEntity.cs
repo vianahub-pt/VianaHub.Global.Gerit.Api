@@ -21,7 +21,7 @@ public class StatusDomainTranslationsEntity
     /// <summary>
     /// Construtor para criação de uma nova tradução de StatusDomain
     /// </summary>
-    public StatusDomainTranslationsEntity(int statusDomainId, string languageCode, string name, string? description)
+    public StatusDomainTranslationsEntity(int statusDomainId, string? languageCode, string? name, string? description)
     {
         StatusDomainId = statusDomainId;
         LanguageCode = languageCode;
@@ -29,7 +29,7 @@ public class StatusDomainTranslationsEntity
         Description = description;
     }
 
-    public void Update(string name, string? description)
+    public void Update(string? name, string? description)
     {
         Name = name;
         Description = description;

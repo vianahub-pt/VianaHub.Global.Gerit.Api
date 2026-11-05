@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Domain.Interfaces.Base;
+namespace VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
 /// <summary>
 /// Serviço de localização para mensagens de validação e erro
@@ -18,7 +18,7 @@ public interface ILocalizationService
     /// <param name="key">Chave da mensagem</param>
     /// <param name="args">Argumentos para formatação</param>
     /// <returns>Mensagem localizada e formatada</returns>
-    string GetMessage(string key, params object[] args);
+    string GetMessage(string key, params object?[] args);
 
     /// <summary>
     /// Obtém a cultura atual da requisição (ex: pt-PT, en-US, es-ES).

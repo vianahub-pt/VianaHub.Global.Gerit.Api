@@ -27,8 +27,6 @@ public class PlanMappingProfile : Profile
             .ForMember(dest => dest.PricePerMonth, opt => opt.MapFrom(src => src.PricePerMonth))
             .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
 
-        // Mapeia SubscriptionPlanEntity -> PlanDetailResponse
-        // Inclui propriedades de auditoria e IsDeleted para a página de detalhe
         CreateMap<SubscriptionPlanEntity, PlanDetailResponse>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
             .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Code))

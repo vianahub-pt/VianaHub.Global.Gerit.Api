@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace VianaHub.Global.Gerit.Domain.Tools.Cryptography;
@@ -73,7 +73,7 @@ public static class CryptoRSA
     /// <param name="encryptedPrivateKey">Chave privada criptografada em Base64</param>
     /// <param name="encryptionKey">Chave de criptografia</param>
     /// <returns>Chave privada em formato PEM</returns>
-    public static string DecryptPrivateKey(string encryptedPrivateKey, string encryptionKey)
+    public static string DecryptPrivateKey(string? encryptedPrivateKey, string encryptionKey)
     {
         if (string.IsNullOrWhiteSpace(encryptedPrivateKey))
             throw new ArgumentException("Encrypted private key cannot be null or empty", nameof(encryptedPrivateKey));
@@ -135,8 +135,9 @@ public static class CryptoRSA
     /// <summary>
     /// Extrai os bytes do formato PEM
     /// </summary>
-    public static byte[] ExtractBytesFromPem(string pem, string label)
+    public static byte[] ExtractBytesFromPem(string? pem, string label)
     {
+        ArgumentNullException.ThrowIfNull(pem);
         var header = $"-----BEGIN {label}-----";
         var footer = $"-----END {label}-----";
 

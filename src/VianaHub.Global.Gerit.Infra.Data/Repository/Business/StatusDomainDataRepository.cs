@@ -9,6 +9,8 @@ namespace VianaHub.Global.Gerit.Infra.Data.Repository.Business;
 
 public class StatusDomainDataRepository : IStatusDomainDataRepository
 {
+    public Task<bool> ExistsByTranslationAsync(string? languageCode, string? name, CancellationToken ct) => _context.Set<StatusDomainTranslationsEntity>().AnyAsync(x => x.LanguageCode == languageCode && x.Name == name, ct);
+
     private readonly GeritDbContext _context;
 
     public StatusDomainDataRepository(GeritDbContext context)
@@ -26,7 +28,7 @@ public class StatusDomainDataRepository : IStatusDomainDataRepository
             .ToListAsync(ct);
     }
 
-    public async Task<StatusDomainEntity> GetByIdAsync(int id, CancellationToken ct)
+    public async Task<StatusDomainEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<StatusDomainEntity>()
             .AsNoTracking()
@@ -45,7 +47,7 @@ public class StatusDomainDataRepository : IStatusDomainDataRepository
         {
             var search = request.Search.Trim().ToLower();
             query = query.Where(x =>
-                EF.Functions.Like(x.Code.ToLower(), $"%{search}%"));
+                (x.Code != null && EF.Functions.Like(x.Code.ToLower(), $"%{search}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -80,7 +82,7 @@ public class StatusDomainDataRepository : IStatusDomainDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByCodeAsync(string code, CancellationToken ct)
+    public async Task<bool> ExistsByCodeAsync(string? code, CancellationToken ct)
     {
         return await _context.Set<StatusDomainEntity>()
             .AsNoTracking()

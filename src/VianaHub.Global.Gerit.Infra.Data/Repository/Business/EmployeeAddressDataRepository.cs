@@ -16,12 +16,11 @@ public class EmployeeAddressDataRepository : IEmployeeAddressDataRepository
         _context = context;
     }
 
-    public async Task<EmployeeAddressesEntity> GetByIdAsync(int employeeId, int id, CancellationToken ct)
+    public async Task<EmployeeAddressesEntity?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
     {
         return await _context.EmployeeAddresses
             .AsNoTracking()
-            .Include(x => x.AddressType)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EmployeeAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
             .Include(x => x.Employee)
             .FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.Id == id && !x.IsDeleted, ct);
     }
@@ -30,8 +29,7 @@ public class EmployeeAddressDataRepository : IEmployeeAddressDataRepository
     {
         return await _context.EmployeeAddresses
             .AsNoTracking()
-            .Include(x => x.AddressType)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EmployeeAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
             .Include(x => x.Employee)
             .Where(x => x.EmployeeId == employeeId && !x.IsDeleted)
             .OrderBy(x => x.EmployeeId)
@@ -43,8 +41,7 @@ public class EmployeeAddressDataRepository : IEmployeeAddressDataRepository
     {
         var query = _context.EmployeeAddresses
             .AsNoTracking()
-            .Include(x => x.AddressType)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EmployeeAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
             .Include(x => x.Employee)
             .Where(x => x.EmployeeId == employeeId && !x.IsDeleted);
 
@@ -52,12 +49,12 @@ public class EmployeeAddressDataRepository : IEmployeeAddressDataRepository
         {
             var searchLower = request.Search.ToLower();
             query = query.Where(x =>
-                EF.Functions.Like(x.Street.ToLower(), $"%{searchLower}%") ||
-                EF.Functions.Like(x.City.ToLower(), $"%{searchLower}%") ||
-                EF.Functions.Like(x.PostalCode.ToLower(), $"%{searchLower}%") ||
-                EF.Functions.Like(x.District.ToLower(), $"%{searchLower}%") ||
-                x.AddressType.Translations.Any(t => EF.Functions.Like(t.Name.ToLower(), $"%{searchLower}%")) ||
-                EF.Functions.Like(x.Employee.Name.ToLower(), $"%{searchLower}%"));
+                (x.Street != null && EF.Functions.Like(x.Street.ToLower(), $"%{searchLower}%")) ||
+                (x.City != null && EF.Functions.Like(x.City.ToLower(), $"%{searchLower}%")) ||
+                (x.PostalCode != null && EF.Functions.Like(x.PostalCode.ToLower(), $"%{searchLower}%")) ||
+                (x.District != null && EF.Functions.Like(x.District.ToLower(), $"%{searchLower}%")) ||
+                x.AddressType != null && x.AddressType.Translations.Any(t => (t.Name != null && EF.Functions.Like(t.Name.ToLower(), $"%{searchLower}%"))) ||
+                (x.Employee != null && x.Employee.Name != null && EF.Functions.Like(x.Employee.Name.ToLower(), $"%{searchLower}%")));
         }
 
         if (request.IsActive.HasValue)
@@ -92,7 +89,7 @@ public class EmployeeAddressDataRepository : IEmployeeAddressDataRepository
             .AnyAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<bool> ExistsByEmployeeAndAddressAsync(int tenantId, int EmployeeId, string street, string city, string postalCode, CancellationToken ct)
+    public async Task<bool> ExistsByEmployeeAndAddressAsync(int tenantId, int EmployeeId, string? street, string? city, string? postalCode, CancellationToken ct)
     {
         return await _context.EmployeeAddresses
             .AsNoTracking()
@@ -104,12 +101,11 @@ public class EmployeeAddressDataRepository : IEmployeeAddressDataRepository
                           !x.IsDeleted, ct);
     }
 
-    public async Task<EmployeeAddressesEntity> GetPrimaryAddressByEmployeeAsync(int EmployeeId, CancellationToken ct)
+    public async Task<EmployeeAddressesEntity?> GetPrimaryAddressByEmployeeAsync(int EmployeeId, CancellationToken ct)
     {
         return await _context.EmployeeAddresses
             .AsNoTracking()
-            .Include(x => x.AddressType)
-                .ThenInclude(x => x.Translations)
+            .Include($"{nameof(EmployeeAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
             .Include(x => x.Employee)
             .FirstOrDefaultAsync(x => x.EmployeeId == EmployeeId && x.IsPrimary && !x.IsDeleted, ct);
     }

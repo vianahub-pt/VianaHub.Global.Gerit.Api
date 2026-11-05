@@ -11,6 +11,7 @@ public class TenantMappingProfile : Profile
     public TenantMappingProfile()
     {
         CreateMap<TenantEntity, TenantResponse>();
+        CreateMap<TenantEntity, TenantDetailResponse>();
         CreateMap<TenantEntity, TenantLoginResponse>();
         CreateMap<ListPage<TenantEntity>, ListPageResponse<TenantResponse>>();
     }

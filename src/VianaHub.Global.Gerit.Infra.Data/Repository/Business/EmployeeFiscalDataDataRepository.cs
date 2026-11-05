@@ -27,7 +27,7 @@ public class EmployeeFiscalDataDataRepository : IEmployeeFiscalDataDataRepositor
             .ToListAsync(ct);
     }
 
-    public async Task<EmployeeFiscalDataEntity> GetByIdAsync(int employeeId, int id, CancellationToken ct = default)
+    public async Task<EmployeeFiscalDataEntity?> GetByIdAsync(int employeeId, int id, CancellationToken ct = default)
     {
         return await _context.EmployeeFiscalData
             .AsNoTracking()

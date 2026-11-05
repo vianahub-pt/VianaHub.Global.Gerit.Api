@@ -21,7 +21,7 @@ public class UserPreferencesMapping : IEntityTypeConfiguration<UserPreferencesEn
 
         builder.Property(x => x.TenantId)
             .IsRequired();
-        
+
         builder.Property(x => x.UserId)
             .IsRequired();
 
@@ -75,27 +75,27 @@ public class UserPreferencesMapping : IEntityTypeConfiguration<UserPreferencesEn
             .HasColumnType("BIT")
             .HasDefaultValue(false)
             .IsRequired();
-        
+
         builder.Property(x => x.EmailWeeklyReport)
             .HasColumnType("BIT")
             .HasDefaultValue(false)
             .IsRequired();
-        
+
         builder.Property(x => x.EmailApproval)
             .HasColumnType("BIT")
             .HasDefaultValue(false)
             .IsRequired();
-        
+
         builder.Property(x => x.EmailAlerts)
             .HasColumnType("BIT")
             .HasDefaultValue(true)
             .IsRequired();
-        
+
         builder.Property(x => x.EmailReminders)
             .HasColumnType("BIT")
             .HasDefaultValue(true)
             .IsRequired();
-        
+
         builder.Property(x => x.EmailPlanner)
             .HasColumnType("BIT")
             .HasDefaultValue(true)
@@ -125,9 +125,9 @@ public class UserPreferencesMapping : IEntityTypeConfiguration<UserPreferencesEn
             .IsRequired(false);
 
         // Check constraints to match SQL table
-        builder.HasCheckConstraint("CK_UserPreferences_Active_Deleted", "NOT (IsActive = 1 AND IsDeleted = 1)");
-        builder.HasCheckConstraint("CK_UserPreferences_Appearance", "Appearance IN ('light', 'dark')");
-        builder.HasCheckConstraint("CK_UserPreferences_TimeFormat", "TimeFormat IN ('24h', '12h')");
+        builder.ToTable(table => table.HasCheckConstraint("CK_UserPreferences_Active_Deleted", "NOT (IsActive = 1 AND IsDeleted = 1)"));
+        builder.ToTable(table => table.HasCheckConstraint("CK_UserPreferences_Appearance", "Appearance IN ('light', 'dark')"));
+        builder.ToTable(table => table.HasCheckConstraint("CK_UserPreferences_TimeFormat", "TimeFormat IN ('24h', '12h')"));
 
         // Relationships
         // Composite FK (UserId, TenantId) targeting Users(Id, TenantId) as defined in SQL

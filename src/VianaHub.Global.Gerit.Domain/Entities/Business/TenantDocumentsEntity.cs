@@ -31,7 +31,7 @@ public class TenantDocumentsEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Documento do Tenant
     /// </summary>
-    public TenantDocumentsEntity(int tenantId, int documentTypeId, string documentNumber,
+    public TenantDocumentsEntity(int tenantId, int documentTypeId, string? documentNumber,
         string? issuingCountryCode, DateTime? issuedAt, DateTime? expiresAt, bool isPrimary, int createdBy)
     {
         TenantId = tenantId;
@@ -50,7 +50,7 @@ public class TenantDocumentsEntity : Entity
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string documentNumber, string? issuingCountryCode,
+    public void Update(string? documentNumber, string? issuingCountryCode,
         DateTime? issuedAt, DateTime? expiresAt, bool isPrimary, int modifiedBy)
     {
         DocumentNumber = documentNumber;

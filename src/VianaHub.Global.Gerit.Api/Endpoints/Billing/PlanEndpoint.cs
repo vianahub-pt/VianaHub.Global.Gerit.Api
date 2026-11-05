@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.Plan;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
@@ -24,7 +25,9 @@ public static class PlanEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Plans", "GetAll")
         .WithName("GetAllPlans")
         .WithSummary("Swagger.Endpoint.Plan.GetAll.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<IEnumerable<PlanResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/{id}", async ([FromRoute] int id, [FromServices] IPlanAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -35,7 +38,9 @@ public static class PlanEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Plans", "GetBy")
         .WithName("GetPlanById")
         .WithSummary("Swagger.Endpoint.Plan.GetById.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<PlanDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -47,7 +52,9 @@ public static class PlanEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager,Operator", "Plans", "GetPaged")
         .WithName("GetPagedPlans")
         .WithSummary("Swagger.Endpoint.Plan.GetPaged.Summary")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ListPageResponse<PlanResponse>>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPost("/", async ([FromBody] CreatePlanRequest request, [FromServices] IPlanAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -58,6 +65,9 @@ public static class PlanEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Plans", "Create")
         .WithName("CreatePlan")
         .WithSummary("Swagger.Endpoint.Plan.Create.Summary")
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
@@ -71,7 +81,10 @@ public static class PlanEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Plans", "Update")
         .WithName("UpdatePlan")
         .WithSummary("Swagger.Endpoint.Plan.Update.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdatePlanRequest>();
@@ -84,7 +97,10 @@ public static class PlanEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Plans", "Activate")
         .WithName("ActivatePlan")
         .WithSummary("Swagger.Endpoint.Plan.Activate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -96,7 +112,10 @@ public static class PlanEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Plans", "Deactivate")
         .WithName("DeactivatePlan")
         .WithSummary("Swagger.Endpoint.Plan.Deactivate.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -108,7 +127,10 @@ public static class PlanEndpoint
         .CustomAuthorize("Admin,BackOffice,Manager", "Plans", "Delete")
         .WithName("DeletePlan")
         .WithSummary("Swagger.Endpoint.Plan.Delete.Summary")
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
+        .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
@@ -132,7 +154,10 @@ public static class PlanEndpoint
         .DisableAntiforgery()
         .Accepts<IFormFile>("multipart/form-data")
         .Accepts<IFormFile>("multipart/form-data")
-        .Produces(StatusCodes.Status200OK)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces(StatusCodes.Status401Unauthorized)
+        .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }

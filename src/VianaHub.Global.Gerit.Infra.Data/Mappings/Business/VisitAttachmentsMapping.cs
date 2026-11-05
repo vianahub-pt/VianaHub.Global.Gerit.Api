@@ -119,10 +119,10 @@ public class VisitAttachmentsMapping : IEntityTypeConfiguration<VisitAttachments
             .HasDatabaseName("UX_VisitAttachments_Primary");
 
         // Constraints
-        builder.HasCheckConstraint("CK_VisitAttachments_Active_Deleted",
-            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)");
+        builder.ToTable(table => table.HasCheckConstraint("CK_VisitAttachments_Active_Deleted",
+            "NOT ([IsActive] = 1 AND [IsDeleted] = 1)"));
 
-        builder.HasCheckConstraint("CK_VisitAttachments_FileSizeBytes",
-            "[FileSizeBytes] > 0");
+        builder.ToTable(table => table.HasCheckConstraint("CK_VisitAttachments_FileSizeBytes",
+            "[FileSizeBytes] > 0"));
     }
 }

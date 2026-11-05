@@ -6,7 +6,7 @@ namespace VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 
 public interface IResourceDomainService
 {
-    Task<ResourceEntity> GetByIdAsync(int id, CancellationToken ct);
+    Task<ResourceEntity?> GetByIdAsync(int id, CancellationToken ct);
     Task<IEnumerable<ResourceEntity>> GetAllAsync(CancellationToken ct);
     Task<ListPage<ResourceEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);

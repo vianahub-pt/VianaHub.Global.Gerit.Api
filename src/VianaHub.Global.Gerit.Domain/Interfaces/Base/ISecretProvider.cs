@@ -4,8 +4,8 @@ public interface ISecretProvider
 {
     /// <summary>
     /// Recupera a chave mestra utilizada para criptografar/descriptografar chaves privadas JWT.
-    /// Deve ser gerenciada externamente (Key Vault, KMS, vari·vel de ambiente, etc.).
+    /// Deve ser gerenciada externamente (Key Vault, KMS, vari√°vel de ambiente, etc.).
     /// </summary>
-    /// <returns>Chave mestra em texto simples ou null se n„o disponÌvel.</returns>
-    string GetMasterKey();
+    /// <returns>Chave mestra em texto simples ou null se n√£o dispon√≠vel.</returns>
+    string? GetMasterKey();
 }
