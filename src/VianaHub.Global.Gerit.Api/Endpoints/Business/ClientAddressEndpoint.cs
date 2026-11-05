@@ -94,7 +94,7 @@ public static class ClientAddressEndpoint
         groupV1.MapPatch("/{clientId}/addresses/{id}/activate", async ([FromRoute] int clientId, [FromRoute] int id, [FromServices] IClientAddressAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.ActivateAsync(clientId, id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok, ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "Activate")
         .WithName("ActivateClientAddress")
@@ -108,7 +108,7 @@ public static class ClientAddressEndpoint
         groupV1.MapPatch("/{clientId}/addresses/{id}/deactivate", async ([FromRoute] int clientId, [FromRoute] int id, [FromServices] IClientAddressAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeactivateAsync(clientId, id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok, ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "Deactivate")
         .WithName("DeactivateClientAddress")
@@ -122,7 +122,7 @@ public static class ClientAddressEndpoint
         groupV1.MapDelete("/{clientId}/addresses/{id}", async ([FromRoute] int clientId, [FromRoute] int id, [FromServices] IClientAddressAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeleteAsync(clientId, id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok, ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "ClientAddresses", "Delete")
         .WithName("DeleteClientAddress")
@@ -135,13 +135,20 @@ public static class ClientAddressEndpoint
 
         groupV1.MapPost("/{clientId}/addresses/bulk-upload", async ([FromRoute] int clientId, HttpRequest request, [FromServices] IClientAddressAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
-            if (!request.HasFormContentType || request.Form.Files.Count == 0)
+            if (!request.HasFormContentType)
             {
                 notify.Add("Api.Upload.NoFileProvided", 400);
                 return notify.CustomResponse();
             }
 
-            var file = request.Form.Files[0];
+            var form = await request.ReadFormAsync(ct);
+            if (form.Files.Count == 0)
+            {
+                notify.Add("Api.Upload.NoFileProvided", 400);
+                return notify.CustomResponse();
+            }
+
+            var file = form.Files[0];
             var success = await appService.BulkUploadAsync(clientId, file, ct);
             return notify.CustomResponse(success);
         })

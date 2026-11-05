@@ -3,6 +3,7 @@ using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Pagination;
+using VianaHub.Global.Gerit.Domain.Exceptions;
 using VianaHub.Global.Gerit.Infra.Data.Context;
 
 namespace VianaHub.Global.Gerit.Infra.Data.Repository.Business;
@@ -35,7 +36,7 @@ public class ClientAddressRepository : IClientAddressDataRepository
             .AsNoTracking()
             .Include(x => x.Client)
             .Include($"{nameof(ClientAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
-            .Where(x => x.Client.Id == clientId && !x.IsDeleted)
+            .Where(x => x.ClientId == clientId && !x.IsDeleted)
             .OrderBy(x => x.ClientId)
             .ThenBy(x => x.IsPrimary ? 0 : 1)
             .ThenBy(x => x.Id)
@@ -48,7 +49,7 @@ public class ClientAddressRepository : IClientAddressDataRepository
             .AsNoTracking()
             .Include(x => x.Client)
             .Include($"{nameof(ClientAddressesEntity.AddressType)}.{nameof(AddressTypeEntity.Translations)}")
-            .Where(x => x.Client.Id == clientId && !x.IsDeleted);
+            .Where(x => x.ClientId == clientId && !x.IsDeleted);
 
         // Aplicar busca
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -105,7 +106,7 @@ public class ClientAddressRepository : IClientAddressDataRepository
     {
         return await _context.ClientAddresses
             .AsNoTracking()
-            .AnyAsync(x => x.Client.Id == clientId &&
+            .AnyAsync(x => x.ClientId == clientId &&
                            x.CountryCode == countryCode &&
                            x.Street == street &&
                            x.StreetNumber == streetNumber &&
@@ -142,13 +143,36 @@ public class ClientAddressRepository : IClientAddressDataRepository
     public async Task<bool> CreateAsync(ClientAddressesEntity entity, CancellationToken ct)
     {
         await _context.ClientAddresses.AddAsync(entity, ct);
-        return await _context.SaveChangesAsync(ct) > 0;
+        try { return await _context.SaveChangesAsync(ct) > 0; }
+        catch (DbUpdateException ex) { throw new ClientAddressConflictException(ex); }
+    }
+
+    public async Task<bool> CreateManyAsync(IReadOnlyCollection<ClientAddressesEntity> entities, CancellationToken ct)
+    {
+        await using var transaction = _context.Database.IsRelational()
+            ? await _context.Database.BeginTransactionAsync(ct)
+            : null;
+        try
+        {
+            await _context.ClientAddresses.AddRangeAsync(entities, ct);
+            var saved = await _context.SaveChangesAsync(ct) > 0;
+            if (saved && transaction is not null)
+                await transaction.CommitAsync(ct);
+            return saved;
+        }
+        catch (DbUpdateException ex)
+        {
+            if (transaction is not null)
+                await transaction.RollbackAsync(ct);
+            throw new ClientAddressConflictException(ex);
+        }
     }
 
     public async Task<bool> UpdateAsync(ClientAddressesEntity entity, CancellationToken ct)
     {
         _context.ClientAddresses.Update(entity);
-        return await _context.SaveChangesAsync(ct) > 0;
+        try { return await _context.SaveChangesAsync(ct) > 0; }
+        catch (DbUpdateException ex) { throw new ClientAddressConflictException(ex); }
     }
 
     public async Task<bool> DeleteAsync(ClientAddressesEntity entity, CancellationToken ct)

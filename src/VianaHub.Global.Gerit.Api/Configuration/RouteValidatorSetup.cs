@@ -67,6 +67,8 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientContact;
 using VianaHub.Global.Gerit.Api.Validators.Business.ClientContact;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientDocument;
 using VianaHub.Global.Gerit.Api.Validators.Business.ClientDocument;
+using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientAddress;
+using VianaHub.Global.Gerit.Api.Validators.Business.ClientAddress;
 
 // TenantContact DTOs & Validators
 using VianaHub.Global.Gerit.Application.Dtos.Request.Billing.TenantContactPerson;
@@ -186,6 +188,8 @@ public static class RouteValidatorSetup
         services.AddScoped<IValidator<UpdateClientContactPersonRequest>, UpdateClientContactPersonRouteValidator>();
         services.AddScoped<IValidator<CreateClientDocumentRequest>, CreateClientDocumentRouteValidator>();
         services.AddScoped<IValidator<UpdateClientDocumentRequest>, UpdateClientDocumentRouteValidator>();
+        services.AddScoped<IValidator<CreateClientAddressRequest>, CreateClientAddressRouteValidator>();
+        services.AddScoped<IValidator<UpdateClientAddressRequest>, UpdateClientAddressRouteValidator>();
 
         // StatusDefinition Route Validators
         services.AddScoped<IValidator<CreateStatusDefinitionRequest>, CreateStatusDefinitionRouteValidator>();

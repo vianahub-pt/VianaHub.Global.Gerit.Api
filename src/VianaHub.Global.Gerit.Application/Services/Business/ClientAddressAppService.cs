@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +7,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientAddress;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientAddress;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -28,7 +28,6 @@ public class ClientAddressAppService : IClientAddressAppService
     private readonly IClientRepository _clientRepository;
     private readonly IAddressTypeDataRepository _addressTypeRepository;
     private readonly IClientAddressDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -39,7 +38,6 @@ public class ClientAddressAppService : IClientAddressAppService
         IClientRepository clientRepository,
         IAddressTypeDataRepository addressTypeRepository,
         IClientAddressDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -51,7 +49,6 @@ public class ClientAddressAppService : IClientAddressAppService
         _clientRepository = clientRepository;
         _addressTypeRepository = addressTypeRepository;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -61,7 +58,7 @@ public class ClientAddressAppService : IClientAddressAppService
     public async Task<IEnumerable<ClientAddressResponse>> GetAllAsync(int clientId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(clientId, ct);
-        return _mapper.Map<IEnumerable<ClientAddressResponse>>(entities);
+        return ClientAddressMapper.ToResponses(entities);
     }
 
     public async Task<ClientAddressDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
@@ -72,21 +69,26 @@ public class ClientAddressAppService : IClientAddressAppService
             _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<ClientAddressDetailResponse>(entity);
+        return ClientAddressMapper.ToLocalizedDetail(entity);
     }
 
     public async Task<ListPageResponse<ClientAddressResponse>> GetPagedAsync(int clientId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(clientId, filter, ct);
-        return _mapper.Map<ListPageResponse<ClientAddressResponse>>(paged);
+        return ClientAddressMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int clientId, CreateClientAddressRequest request, CancellationToken ct)
     {
-        if (!await HasActiveClientAsync(clientId, ct) || !await _addressTypeRepository.ExistsByIdAsync(request.AddressTypeId, ct))
+        if (!await HasActiveClientAsync(clientId, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.GetById.ResourceNotFound"), 410);
+            return 0;
+        }
+        if (!await _addressTypeRepository.ExistsByIdAsync(request.AddressTypeId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.AddressType.GetById.ResourceNotFound"), 410);
             return 0;
         }
 
@@ -101,14 +103,14 @@ public class ClientAddressAppService : IClientAddressAppService
             TenantId,
             clientId,
             request.AddressTypeId,
-            request.CountryCode,
-            request.Street,
+            NormalizeCountryCode(request.CountryCode) ?? string.Empty,
+            request.Street ?? string.Empty,
             request.StreetNumber,
             request.Complement,
-            request.Neighborhood,
-            request.City,
+            request.Neighborhood ?? string.Empty,
+            request.City ?? string.Empty,
             request.District,
-            request.PostalCode,
+            request.PostalCode ?? string.Empty,
             request.Latitude,
             request.Longitude,
             request.Note,
@@ -134,9 +136,14 @@ public class ClientAddressAppService : IClientAddressAppService
             return false;
         }
 
-        if (!await HasActiveClientAsync(clientId, ct) || !await _addressTypeRepository.ExistsByIdAsync(request.AddressTypeId, ct))
+        if (!await HasActiveClientAsync(clientId, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Update.ResourceNotFound"), 410);
+            return false;
+        }
+        if (!await _addressTypeRepository.ExistsByIdAsync(request.AddressTypeId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.AddressType.GetById.ResourceNotFound"), 410);
             return false;
         }
 
@@ -152,13 +159,18 @@ public class ClientAddressAppService : IClientAddressAppService
             return false;
         }
 
-        clientAddress.Update(request.AddressTypeId, request.CountryCode, request.Street, request.StreetNumber, request.Complement, request.Neighborhood, request.City, request.District, request.PostalCode, request.Latitude, request.Longitude, request.Note, request.IsPrimary, UserId);
+        clientAddress.Update(request.AddressTypeId, NormalizeCountryCode(request.CountryCode) ?? string.Empty, request.Street ?? string.Empty, request.StreetNumber, request.Complement, request.Neighborhood ?? string.Empty, request.City ?? string.Empty, request.District, request.PostalCode ?? string.Empty, request.Latitude, request.Longitude, request.Note, request.IsPrimary, UserId);
 
         return await _domain.UpdateAsync(clientAddress, ct);
     }
 
     public async Task<bool> ActivateAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await HasActiveClientAsync(clientId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Activate.ResourceNotFound"), 410);
+            return false;
+        }
         var clientAddress = await _repo.GetByIdAsync(clientId, id, ct);
         if (clientAddress == null || clientAddress.IsDeleted)
         {
@@ -167,7 +179,7 @@ public class ClientAddressAppService : IClientAddressAppService
         }
 
         clientAddress.Activate(UserId);
-        return await _domain.UpdateAsync(clientAddress, ct);
+        return await _domain.ActivateAsync(clientAddress, ct);
     }
 
     public async Task<bool> DeactivateAsync(int clientId, int id, CancellationToken ct)
@@ -245,8 +257,13 @@ public class ClientAddressAppService : IClientAddressAppService
             int rowCount = 0;
             int maxRows = DomainExtensions.GetMaxCsvRows();
 
-            while (csv.Read() && rowCount < maxRows)
+            while (csv.Read())
             {
+                if (rowCount >= maxRows)
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.ReadCsvFile.MaxRows", maxRows), 400);
+                    return null;
+                }
                 try
                 {
                     var record = csv.GetRecord<BulkUploadClientAddressItem>();
@@ -257,7 +274,7 @@ public class ClientAddressAppService : IClientAddressAppService
                         record.PostalCode = record.PostalCode?.SanitizeCsvInput().NormalizeUtf8();
                         record.District = record.District?.SanitizeCsvInput().NormalizeUtf8();
                         record.Neighborhood = record.Neighborhood?.SanitizeCsvInput().NormalizeUtf8();
-                        record.CountryCode = record.CountryCode?.SanitizeCsvInput().NormalizeUtf8();
+                        record.CountryCode = record.CountryCode?.SanitizeCsvInput().NormalizeUtf8().Trim().ToUpperInvariant();
                         record.StreetNumber = record.StreetNumber?.SanitizeCsvInput().NormalizeUtf8();
                         record.Complement = record.Complement?.SanitizeCsvInput().NormalizeUtf8();
                         record.Note = record.Note?.SanitizeCsvInput().NormalizeUtf8();
@@ -292,12 +309,6 @@ public class ClientAddressAppService : IClientAddressAppService
                 }
             }
 
-            if (rowCount >= maxRows)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.ReadCsvFile.MaxRows", maxRows), 400);
-                return null;
-            }
-
             return records;
         }
         catch (Exception)
@@ -309,67 +320,67 @@ public class ClientAddressAppService : IClientAddressAppService
 
     private async Task<bool> ProcessBulkItemsAsync(int clientId, List<BulkUploadClientAddressItem> items, CancellationToken ct)
     {
-        var hasErrors = false;
         var tenantId = _currentUser.GetTenantId();
+        var entities = new List<ClientAddressesEntity>();
+        var identities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var primaryCount = 0;
 
         foreach (var item in items)
         {
             if (!ValidateBulkItem(clientId, item))
-            {
-                hasErrors = true;
                 continue;
-            }
 
             if (!await _addressTypeRepository.ExistsByIdAsync(item.AddressTypeId, ct))
             {
-                _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.GetById.ResourceNotFound"), 410);
-                hasErrors = true;
+                _notify.Add(_localization.GetMessage("Application.Service.AddressType.GetById.ResourceNotFound"), 410);
                 continue;
             }
 
-            if (item.IsPrimary && await _repo.ExistsPrimaryAsync(clientId, null, ct))
+            var identity = string.Join("|", item.CountryCode, item.Street, item.StreetNumber, item.Neighborhood, item.City, item.District, item.PostalCode);
+            if (!identities.Add(identity))
             {
                 _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Create.ResourceAlreadyExists"), 409);
-                hasErrors = true;
                 continue;
             }
 
-            var exists = await _repo.ExistsByIdentityAsync(clientId, null, item.CountryCode, item.Street, item.StreetNumber, item.Neighborhood, item.City, item.District, item.PostalCode, ct);
-            if (exists)
+            if (await _repo.ExistsByIdentityAsync(clientId, null, item.CountryCode, item.Street, item.StreetNumber, item.Neighborhood, item.City, item.District, item.PostalCode, ct))
             {
                 _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.ProcessBulkItems.ExistsByClientAndType", clientId, item.AddressTypeId), 400);
-                hasErrors = true;
                 continue;
             }
 
-            var entity = new ClientAddressesEntity(
+            if (item.IsPrimary)
+                primaryCount++;
+
+            entities.Add(new ClientAddressesEntity(
                 tenantId,
                 clientId,
                 item.AddressTypeId,
-                item.CountryCode,
-                item.Street,
+                item.CountryCode ?? string.Empty,
+                item.Street ?? string.Empty,
                 item.StreetNumber,
                 item.Complement,
-                item.Neighborhood,
-                item.City,
+                item.Neighborhood ?? string.Empty,
+                item.City ?? string.Empty,
                 item.District,
-                item.PostalCode,
+                item.PostalCode ?? string.Empty,
                 item.Latitude,
                 item.Longitude,
                 item.Note,
                 item.IsPrimary,
-                _currentUser.GetUserId());
-
-            var success = await _domain.CreateAsync(entity, ct);
-
-            if (!success)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.ProcessBulkItems.FailedToCreate", item.Street), 400);
-                hasErrors = true;
-            }
+                _currentUser.GetUserId()));
         }
 
-        return !hasErrors;
+        if (_notify.HasNotify() || entities.Count != items.Count)
+            return false;
+
+        if (primaryCount > 1 || (primaryCount == 1 && await _repo.ExistsPrimaryAsync(clientId, null, ct)))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Create.ResourceAlreadyExists"), 409);
+            return false;
+        }
+
+        return await _domain.CreateManyAsync(entities, ct);
     }
 
     private async Task<bool> HasActiveClientAsync(int clientId, CancellationToken ct)
@@ -418,5 +429,7 @@ public class ClientAddressAppService : IClientAddressAppService
 
         return true;
     }
+
+    private static string? NormalizeCountryCode(string? value) => string.IsNullOrWhiteSpace(value) ? value : value.Trim().ToUpperInvariant();
 }
 

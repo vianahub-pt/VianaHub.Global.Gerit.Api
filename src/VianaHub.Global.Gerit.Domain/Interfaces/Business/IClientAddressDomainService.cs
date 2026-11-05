@@ -15,6 +15,7 @@ public interface IClientAddressDomainService
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
 
     Task<bool> CreateAsync(ClientAddressesEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<ClientAddressesEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(ClientAddressesEntity entity, CancellationToken ct);
     Task<bool> ActivateAsync(ClientAddressesEntity entity, CancellationToken ct);
     Task<bool> DeactivateAsync(ClientAddressesEntity entity, CancellationToken ct);
