@@ -41,7 +41,15 @@ try
     Console.WriteLine("Database modified: NO");
     return 0;
 }
-catch (Exception ex)
+catch (SqlException ex)
+{
+    return Fail($"Read-only database audit failed: {ex.GetType().Name}.");
+}
+catch (InvalidOperationException ex)
+{
+    return Fail($"Read-only database audit failed: {ex.GetType().Name}.");
+}
+catch (OperationCanceledException ex)
 {
     return Fail($"Read-only database audit failed: {ex.GetType().Name}.");
 }
