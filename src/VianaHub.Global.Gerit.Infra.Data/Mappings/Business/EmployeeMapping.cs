@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 
@@ -117,6 +117,13 @@ public class EmployeeMapping : IEntityTypeConfiguration<EmployeeEntity>
             .HasForeignKey(x => new { x.EmployeeId, x.TenantId })
             .HasPrincipalKey(tm => new { tm.Id, tm.TenantId })
             .HasConstraintName("FK_EmployeeAddresses_Employee")
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(tm => tm.Documents)
+            .WithOne(x => x.Employee)
+            .HasForeignKey(x => new { x.EmployeeId, x.TenantId })
+            .HasPrincipalKey(tm => new { tm.Id, tm.TenantId })
+            .HasConstraintName("FK_EmployeeDocuments_Employee")
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
