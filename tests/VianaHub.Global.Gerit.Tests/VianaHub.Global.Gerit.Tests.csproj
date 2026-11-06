@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <!-- Project references required by the tests -->
+    <ProjectReference Include="..\..\tools\EmployeeDocumentsAudit\EmployeeDocumentsAudit.csproj" />
     <ProjectReference Include="..\..\src\VianaHub.Global.Gerit.Application\VianaHub.Global.Gerit.Application.csproj" />
     <ProjectReference Include="..\..\src\VianaHub.Global.Gerit.Domain\VianaHub.Global.Gerit.Domain.csproj" />
     <ProjectReference Include="..\..\src\VianaHub.Global.Gerit.Api\VianaHub.Global.Gerit.Api.csproj" />
