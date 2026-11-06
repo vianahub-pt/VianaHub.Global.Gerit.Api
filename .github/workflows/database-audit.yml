@@ -1,0 +1,35 @@
+name: Database Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: GitHub Environment containing the database connection
+        type: environment
+        required: true
+      audit_target:
+        description: Database audit to execute
+        type: choice
+        required: true
+        options:
+          - employee-documents
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.target_environment }}
+    env:
+      GERIT_DB_CONNECTION: ${{ secrets.GERIT_DB_CONNECTION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+      - name: Run read-only database audit
+        run: dotnet run --project tools/EmployeeDocumentsAudit/EmployeeDocumentsAudit.csproj -- --audit-target "${{ inputs.audit_target }}" >> "$GITHUB_STEP_SUMMARY"
