@@ -923,10 +923,10 @@ CREATE TABLE dbo.EmployeeDocuments (
 	EmployeeId          INT               NOT NULL,                         -- FK para Employees
 	DocumentTypeId      INT               NOT NULL,                         -- FK para DocumentTypes
 	DocumentNumber      NVARCHAR(100)     NOT NULL,                         -- Número do documento
-	IssuingCountryCode  CHAR(2)           NOT NULL,                         -- Código do país emissor (opcional)
+	IssuingCountryCode  CHAR(2)           NOT NULL,                         -- Código do país emissor
 	IssuedAt            DATE                  NULL,                         -- Data de emissão (opcional)
 	ExpiresAt           DATE                  NULL,                         -- Data de expiração (opcional)
-	IsPrimary           BIT               NOT NULL DEFAULT 0,               -- Indica se é o documento principal do cliente
+	IsPrimary           BIT               NOT NULL DEFAULT 0,               -- Indica se é o documento principal do funcionário
 	IsActive            BIT               NOT NULL DEFAULT 1,               -- Indica se o documento está ativo
 	IsDeleted           BIT               NOT NULL DEFAULT 0,               -- Indica se o documento foi excluído (soft delete)
 	CreatedBy           INT               NOT NULL,                         -- Usuário criador
@@ -939,6 +939,7 @@ CREATE TABLE dbo.EmployeeDocuments (
 	CONSTRAINT CK_EmployeeDocuments_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
 	CONSTRAINT CK_EmployeeDocuments_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
 	CONSTRAINT CK_EmployeeDocuments_Dates CHECK (ExpiresAt IS NULL OR IssuedAt IS NULL OR ExpiresAt >= IssuedAt),
+	CONSTRAINT FK_EmployeeDocuments_Tenant FOREIGN KEY (TenantId) REFERENCES dbo.Tenants(Id),
 	CONSTRAINT FK_EmployeeDocuments_Employee FOREIGN KEY (EmployeeId, TenantId) REFERENCES dbo.Employees(Id, TenantId),
 	CONSTRAINT FK_EmployeeDocuments_DocumentType FOREIGN KEY (DocumentTypeId) REFERENCES dbo.DocumentTypes(Id)
 );
@@ -1327,7 +1328,7 @@ CREATE NONCLUSTERED INDEX IX_Clients_TenantId                                   
 CREATE NONCLUSTERED INDEX IX_ClientAddresses_Client                                 ON dbo.ClientAddresses (TenantId, ClientId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_ClientContactPersons_Client                            ON dbo.ClientContactPersons (TenantId, ClientId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_ClientDocuments_Client                                 ON dbo.ClientDocuments (TenantId, ClientId) WHERE IsDeleted = 0;
-CREATE NONCLUSTERED INDEX IX_EmployeeDocuments_Client                               ON dbo.EmployeeDocuments (TenantId, EmployeeId) WHERE IsDeleted = 0;
+CREATE NONCLUSTERED INDEX IX_EmployeeDocuments_Employee                             ON dbo.EmployeeDocuments (TenantId, EmployeeId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_EmployeeContacts_EmployeeId		                    ON dbo.EmployeeContactPersons (TenantId, EmployeeId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_EmployeeAddresses_EmployeeId		                    ON dbo.EmployeeAddresses (TenantId, EmployeeId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_VisitContacts_VisitId                                  ON dbo.VisitContactPersons (TenantId, VisitId) WHERE IsDeleted = 0;
