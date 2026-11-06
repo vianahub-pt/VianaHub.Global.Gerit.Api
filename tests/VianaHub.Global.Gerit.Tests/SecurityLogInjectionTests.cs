@@ -72,7 +72,7 @@ public class SecurityLogInjectionTests
         localization.Setup(l => l.GetMessage(It.IsAny<string>())).Returns((string key) => key);
         var notify = new Notify();
         var service = new ActionAppService(Mock.Of<IActionDataRepository>(), Mock.Of<IActionDomainService>(),
-            notify, Mock.Of<IMapper>(), Mock.Of<ICurrentUserService>(), localization.Object, logger, validation.Object);
+            notify, Mock.Of<ICurrentUserService>(), localization.Object, logger, validation.Object);
 
         Assert.False(await service.BulkUploadAsync(file.Object, CancellationToken.None));
         Assert.True(notify.HasNotify());
