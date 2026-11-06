@@ -48,12 +48,12 @@ public class StatusDefinitionMappingProfileTests
             .SetValue(tenant, tenantId);
 
         // Definition
-        var entity = new StatusDefinitionEntity(tenantId, 0, definitionCode, 1, false, 1);
+        var entity = new StatusDefinitionEntity(tenantId, 10, definitionCode, 1, false, 1);
         // Adiciona traduções à definição (via reflection)
         ((List<StatusDefinitionTranslationsEntity>)entity.Translations)
-            .Add(new StatusDefinitionTranslationsEntity(tenantId, 0, 0, "pt-PT", definitionPtName, null));
+            .Add(new StatusDefinitionTranslationsEntity(tenantId, 10, 1, "pt-PT", definitionPtName, null));
         ((List<StatusDefinitionTranslationsEntity>)entity.Translations)
-            .Add(new StatusDefinitionTranslationsEntity(tenantId, 0, 0, "en-US", definitionEnName, null));
+            .Add(new StatusDefinitionTranslationsEntity(tenantId, 10, 1, "en-US", definitionEnName, null));
 
         // Seta navigation properties e Id via reflection
         var entityType = typeof(StatusDefinitionEntity);
@@ -87,6 +87,7 @@ public class StatusDefinitionMappingProfileTests
 
             Assert.NotNull(result);
             Assert.Equal(1, result.Id);
+            Assert.Equal(10, result.StatusDomainId);
             Assert.Equal("Pendente PT", result.Name);
             Assert.Equal("pt-PT", result.LanguageCode);
         }

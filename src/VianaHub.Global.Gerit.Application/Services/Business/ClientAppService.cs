@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +8,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Business.Client;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.Client;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -24,7 +24,10 @@ public class ClientAppService : IClientAppService
     private int TenantId { get; set; }
     private readonly IClientRepository _repo;
     private readonly IClientDomainService _domain;
-    private readonly IMapper _mapper;
+    private readonly IPartyTypeDataRepository? _partyTypes;
+    private readonly IAcquisitionSourceTypeDataRepository? _acquisitionSources;
+    private readonly IStatusDomainDataRepository? _statusDomains;
+    private readonly IStatusDefinitionDataRepository? _statusDefinitions;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -35,16 +38,22 @@ public class ClientAppService : IClientAppService
     public ClientAppService(
         IClientRepository repo,
         IClientDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
         IFileValidationService fileValidation,
-        ILogger<ClientAppService> logger)
+        ILogger<ClientAppService> logger,
+        IPartyTypeDataRepository? partyTypes = null,
+        IAcquisitionSourceTypeDataRepository? acquisitionSources = null,
+        IStatusDomainDataRepository? statusDomains = null,
+        IStatusDefinitionDataRepository? statusDefinitions = null)
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
+        _partyTypes = partyTypes;
+        _acquisitionSources = acquisitionSources;
+        _statusDomains = statusDomains;
+        _statusDefinitions = statusDefinitions;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -57,7 +66,7 @@ public class ClientAppService : IClientAppService
     public async Task<IEnumerable<ClientResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<ClientResponse>>(entities);
+        return ClientMapper.ToResponses(entities);
     }
 
     public async Task<ClientDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -68,20 +77,23 @@ public class ClientAppService : IClientAppService
             _notify.Add(_localization.GetMessage("Application.Service.Client.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<ClientDetailResponse>(entity);
+        return ClientMapper.ToLocalizedDetail(entity);
     }
 
     public async Task<ListPageResponse<ClientResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<ClientResponse>>(paged);
+        return ClientMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateClientRequest request, CancellationToken ct)
     {
         // Valida consistência PartyTypeId vs campos obrigatórios via INotify
         if (!ValidatePartyTypeConsistency(request, isCreate: true))
+            return 0;
+
+        if (!await ValidateDependenciesAsync(request.PartyTypeId, request.AcquisitionSourceTypeId, request.StatusDomainId, request.StatusDefinitionId, ct))
             return 0;
 
         var client = new ClientEntity(
@@ -102,8 +114,8 @@ public class ClientAppService : IClientAppService
             request.CompanyRegistrationNumber,
             request.EconomicActivityCode,
             request.NumberOfEmployees,
-            request.StatusDefinitionId ?? 0,
-            request.StatusDomainId ?? 0,
+            request.StatusDefinitionId,
+            request.StatusDomainId,
             UserId);
 
         var success = await _domain.CreateAsync(client, ct);
@@ -124,6 +136,9 @@ public class ClientAppService : IClientAppService
         if (!ValidatePartyTypeConsistency(request, isCreate: false))
             return false;
 
+        if (!await ValidateDependenciesAsync(request.PartyTypeId, request.AcquisitionSourceTypeId, request.StatusDomainId, request.StatusDefinitionId, ct))
+            return false;
+
         client.Update(
             request.PartyTypeId,
             request.AcquisitionSourceTypeId,
@@ -141,8 +156,8 @@ public class ClientAppService : IClientAppService
             request.CompanyRegistrationNumber,
             request.EconomicActivityCode,
             request.NumberOfEmployees,
-            request.StatusDefinitionId ?? 0,
-            request.StatusDomainId ?? 0,
+            request.StatusDefinitionId,
+            request.StatusDomainId,
             UserId);
 
         return await _domain.UpdateAsync(client, ct);
@@ -157,8 +172,14 @@ public class ClientAppService : IClientAppService
             return false;
         }
 
+        if (client.IsActive)
+            return true;
+
         client.Activate(UserId);
-        return await _domain.ActivateAsync(client, ct);
+        var success = await _domain.ActivateAsync(client, ct);
+        if (!success)
+            _notify.Add(_localization.GetMessage("Api.Helpers.NotifyExtensions.Error.Generic"), 400);
+        return success;
     }
 
     public async Task<bool> DeactivateAsync(int id, CancellationToken ct)
@@ -170,8 +191,14 @@ public class ClientAppService : IClientAppService
             return false;
         }
 
+        if (!client.IsActive)
+            return true;
+
         client.Deactivate(UserId);
-        return await _domain.DeactivateAsync(client, ct);
+        var success = await _domain.DeactivateAsync(client, ct);
+        if (!success)
+            _notify.Add(_localization.GetMessage("Api.Helpers.NotifyExtensions.Error.Generic"), 400);
+        return success;
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken ct)
@@ -184,7 +211,10 @@ public class ClientAppService : IClientAppService
         }
 
         client.Delete(UserId);
-        return await _domain.DeleteAsync(client, ct);
+        var success = await _domain.DeleteAsync(client, ct);
+        if (!success)
+            _notify.Add(_localization.GetMessage("Api.Helpers.NotifyExtensions.Error.Generic"), 400);
+        return success;
     }
 
     public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
@@ -272,6 +302,31 @@ public class ClientAppService : IClientAppService
         return true;
     }
 
+    private async Task<bool> ValidateDependenciesAsync(byte partyTypeId, int acquisitionSourceTypeId, int statusDomainId, int statusDefinitionId, CancellationToken ct)
+    {
+        // Os repositórios são opcionais apenas para manter compatibilidade com testes unitários antigos.
+        if (_partyTypes is null || _acquisitionSources is null || _statusDomains is null || _statusDefinitions is null)
+            return true;
+
+        var partyType = await _partyTypes.GetByIdAsync(partyTypeId, ct);
+        var source = await _acquisitionSources.GetByIdAsync(acquisitionSourceTypeId, ct);
+        var domain = await _statusDomains.GetByIdAsync(statusDomainId, ct);
+        var definition = await _statusDefinitions.GetByIdAsync(statusDefinitionId, ct);
+
+        if (partyType is null || partyType.IsDeleted || !partyType.IsActive ||
+            source is null || source.IsDeleted || !source.IsActive ||
+            domain is null || domain.IsDeleted || !domain.IsActive ||
+            definition is null || definition.IsDeleted || !definition.IsActive ||
+            definition.StatusDomainId != statusDomainId ||
+            definition.TenantId != TenantId)
+        {
+            _notify.Add(_localization.GetMessage("Api.Helpers.NotifyExtensions.Error.ValidationError"), 400);
+            return false;
+        }
+
+        return true;
+    }
+
     private List<BulkUploadClientItem>? ReadCsvFile(IFormFile file)
     {
         try
@@ -298,7 +353,7 @@ public class ClientAppService : IClientAppService
             int rowCount = 0;
             int maxRows = DomainExtensions.GetMaxCsvRows();
 
-            while (csv.Read() && rowCount < maxRows)
+            while (csv.Read())
             {
                 try
                 {
@@ -319,7 +374,7 @@ public class ClientAppService : IClientAppService
                 }
             }
 
-            if (rowCount >= maxRows)
+            if (rowCount > maxRows)
             {
                 _notify.Add(_localization.GetMessage("Application.Service.Client.ReadCsvFile.MaxRows", maxRows), 400);
                 return null;
@@ -337,16 +392,18 @@ public class ClientAppService : IClientAppService
 
     private async Task<bool> ProcessBulkItemsAsync(List<BulkUploadClientItem> items, CancellationToken ct)
     {
-        var hasErrors = false;
+        var entities = new List<ClientEntity>(items.Count);
 
         foreach (var item in items)
         {
             // Valida campos obrigatorios
             if (!ValidateBulkItem(item))
             {
-                hasErrors = true;
-                continue;
+                return false;
             }
+
+            if (!await ValidateDependenciesAsync(item.PartyTypeId, item.AcquisitionSourceTypeId, item.StatusDomainId, item.StatusDefinitionId, ct))
+                return false;
 
             // Cria a entidade com campos minimos do CSV
             var entity = new ClientEntity(
@@ -355,7 +412,7 @@ public class ClientAppService : IClientAppService
                 item.AcquisitionSourceTypeId,
                 item.UrlImage,
                 item.Note,
-                item.Name,
+                item.Name!,
                 item.PhoneNumber,
                 null, // CellPhoneNumber
                 false, // IsCellPhoneWhatsapp
@@ -367,25 +424,24 @@ public class ClientAppService : IClientAppService
                 null, // CompanyRegistrationNumber
                 null, // EconomicActivityCode
                 null, // NumberOfEmployees
-                0, // StatusDefinitionId — obrigatório, deve ser validado externamente
-                0, // StatusDomainId — obrigatório, deve ser validado externamente
+                item.StatusDefinitionId,
+                item.StatusDomainId,
                 _currentUser.GetUserId());
 
-            // Tenta criar no dominio
-            var success = await _domain.CreateAsync(entity, ct);
-
-            if (!success)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.Client.ProcessBulkItems.FailedToCreate"), 400);
-                hasErrors = true;
-            }
+            entities.Add(entity);
         }
 
-        return !hasErrors;
+        return await _domain.CreateManyAsync(entities, ct);
     }
 
     private bool ValidateBulkItem(BulkUploadClientItem item)
     {
+        if (string.IsNullOrWhiteSpace(item.Name))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Client.ValidateBulkItem.Name"), 400);
+            return false;
+        }
+
         if (item.PartyTypeId <= 0)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Client.ValidateBulkItem.PartyTypeId"), 400);

@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -18,6 +17,7 @@ public class ClientContactPersonAppServiceTests
     private readonly Mock<IClientContactPersonDomainService> _domain = new();
     private readonly Mock<INotify> _notify = new();
     private readonly Mock<IFileValidationService> _fileValidation = new();
+    private readonly Mock<IClientRepository> _clients = new();
     private readonly ClientContactPersonAppService _service;
 
     public ClientContactPersonAppServiceTests()
@@ -29,9 +29,13 @@ public class ClientContactPersonAppServiceTests
         current.Setup(x => x.GetTenantId()).Returns(7);
         current.Setup(x => x.GetUserId()).Returns(17);
         _service = new ClientContactPersonAppService(
-            _repo.Object, _domain.Object, Mock.Of<IMapper>(), _notify.Object,
+            _repo.Object, _domain.Object, _notify.Object,
             localization.Object, current.Object, _fileValidation.Object,
-            Mock.Of<ILogger<ClientContactPersonAppService>>());
+            Mock.Of<ILogger<ClientContactPersonAppService>>(), _clients.Object);
+        _clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ClientEntity(7, 1, 1, null, null, "Client", null, null, false, null, null, null, null, null, null, null, null, 1, 1, 7));
+        _clients.Setup(x => x.GetByIdAsync(11, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ClientEntity(7, 1, 1, null, null, "Other Client", null, null, false, null, null, null, null, null, null, null, null, 1, 1, 7));
     }
 
     private static CreateClientContactRequest Request(bool primary = false) => new()
@@ -58,6 +62,17 @@ public class ClientContactPersonAppServiceTests
         Assert.Equal(0, await _service.CreateAsync(10, Request(), default));
         _domain.Verify(x => x.CreateAsync(It.IsAny<ClientContactPersonsEntity>(), default), Times.Never);
         _notify.Verify(x => x.Add("Application.Service.ClientContactPerson.Create.ResourceAlreadyExists", 409), Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_InactiveParentIsBlockedBeforePersistence()
+    {
+        var parent = new ClientEntity(7, 1, 1, null, null, "Client", null, null, false, null, null, null, null, null, null, null, null, 1, 1, 7);
+        parent.Deactivate(17);
+        _clients.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(parent);
+
+        Assert.Equal(0, await _service.CreateAsync(10, Request(), default));
+        _domain.Verify(x => x.CreateAsync(It.IsAny<ClientContactPersonsEntity>(), default), Times.Never);
     }
 
     [Fact]

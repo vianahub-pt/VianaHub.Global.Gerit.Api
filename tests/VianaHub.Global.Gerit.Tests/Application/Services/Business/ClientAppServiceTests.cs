@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.Client;
@@ -20,7 +19,6 @@ public class ClientAppServiceTests
     {
         var repoMock = new Mock<IClientRepository>();
         var domainMock = new Mock<IClientDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -35,7 +33,6 @@ public class ClientAppServiceTests
         var service = new ClientAppService(
             repoMock.Object,
             domainMock.Object,
-            mapperMock.Object,
             notifyMock.Object,
             localizationMock.Object,
             currentUserMock.Object,
@@ -54,7 +51,6 @@ public class ClientAppServiceTests
     {
         var repoMock = new Mock<IClientRepository>();
         var domainMock = new Mock<IClientDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -76,7 +72,6 @@ public class ClientAppServiceTests
         var service = new ClientAppService(
             repoMock.Object,
             domainMock.Object,
-            mapperMock.Object,
             notifyMock.Object,
             localizationMock.Object,
             currentUserMock.Object,
@@ -101,13 +96,70 @@ public class ClientAppServiceTests
             CompanyRegistrationNumber = null,
             EconomicActivityCode = null,
             NumberOfEmployees = null,
-            StatusDefinitionId = null,
-            StatusDomainId = null
+            StatusDefinitionId = 1,
+            StatusDomainId = 1
         };
 
         var result = await service.CreateAsync(request, CancellationToken.None);
 
         Assert.True(result > 0);
         domainMock.Verify(x => x.CreateAsync(It.IsAny<ClientEntity>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact(DisplayName = "ClientAppService - ActivateAsync é idempotente quando o cliente já está ativo")]
+    public async Task ActivateAsync_ShouldNotPersist_WhenClientIsAlreadyActive()
+    {
+        var repoMock = new Mock<IClientRepository>();
+        var domainMock = new Mock<IClientDomainService>();
+        var notifyMock = new Mock<INotify>();
+        var localizationMock = new Mock<ILocalizationService>();
+        var currentUserMock = new Mock<ICurrentUserService>();
+        currentUserMock.Setup(x => x.GetTenantId()).Returns(1);
+        currentUserMock.Setup(x => x.GetUserId()).Returns(1);
+        var client = new ClientEntity(1, 1, 1, null, null, "Client", null, null, false, null, null, null, null, null, null, null, null, 1, 1, 1);
+        repoMock.Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(client);
+
+        var service = new ClientAppService(repoMock.Object, domainMock.Object, notifyMock.Object,
+            localizationMock.Object, currentUserMock.Object, new Mock<IFileValidationService>().Object,
+            new Mock<ILogger<ClientAppService>>().Object);
+
+        Assert.True(await service.ActivateAsync(10, CancellationToken.None));
+        domainMock.Verify(x => x.ActivateAsync(It.IsAny<ClientEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "ClientAppService - CreateAsync rejeita dependência de status inválida antes da persistência")]
+    public async Task CreateAsync_ShouldRejectInvalidStatusDependency()
+    {
+        var repoMock = new Mock<IClientRepository>();
+        var domainMock = new Mock<IClientDomainService>();
+        var partyTypes = new Mock<IPartyTypeDataRepository>();
+        var sources = new Mock<IAcquisitionSourceTypeDataRepository>();
+        var domains = new Mock<IStatusDomainDataRepository>();
+        var definitions = new Mock<IStatusDefinitionDataRepository>();
+        partyTypes.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((PartyTypeEntity?)null);
+        sources.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((AcquisitionSourceTypeEntity?)null);
+        domains.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((StatusDomainEntity?)null);
+        definitions.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((StatusDefinitionEntity?)null);
+        var localization = new Mock<ILocalizationService>();
+        localization.Setup(x => x.GetMessage(It.IsAny<string>())).Returns("validation");
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(x => x.GetTenantId()).Returns(1);
+        currentUser.Setup(x => x.GetUserId()).Returns(1);
+
+        var service = new ClientAppService(repoMock.Object, domainMock.Object, new Mock<INotify>().Object,
+            localization.Object, currentUser.Object, new Mock<IFileValidationService>().Object,
+            new Mock<ILogger<ClientAppService>>().Object, partyTypes.Object, sources.Object, domains.Object, definitions.Object);
+
+        var result = await service.CreateAsync(new CreateClientRequest
+        {
+            PartyTypeId = 1,
+            AcquisitionSourceTypeId = 1,
+            Name = "Client",
+            StatusDomainId = 1,
+            StatusDefinitionId = 1
+        }, CancellationToken.None);
+
+        Assert.Equal(0, result);
+        domainMock.Verify(x => x.CreateAsync(It.IsAny<ClientEntity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

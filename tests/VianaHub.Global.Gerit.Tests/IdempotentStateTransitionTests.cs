@@ -128,7 +128,10 @@ public class IdempotentStateTransitionTests
             Assert.Equal(activate, fixture.GetProperty<bool>("IsActive"));
             Assert.False(fixture.GetProperty<bool>("IsDeleted"));
         }
-        Assert.Equal(2, fixture.WriteInvocations.Count());
+        var expectedWrites = resource == "Client"
+            ? (initiallyActive == activate ? 0 : 1)
+            : 2;
+        Assert.Equal(expectedWrites, fixture.WriteInvocations.Count());
         fixture.Notify.Verify(notify => notify.Add(It.IsAny<string>(), It.IsAny<int>()), Times.Never);
     }
 
@@ -194,6 +197,12 @@ public class IdempotentStateTransitionTests
     public async Task PersistenceException_IsNotConvertedToSuccess(string resource, string operation)
     {
         var fixture = new TransitionFixture(Find(resource)) { PersistenceFailure = new IOException("Test persistence failure") };
+        if (resource == "Client" && operation == "Activate")
+        {
+            Assert.True(await fixture.CallApp(operation));
+            Assert.Empty(fixture.WriteInvocations);
+            return;
+        }
         await Assert.ThrowsAsync<IOException>(() => fixture.CallApp(operation));
         Assert.Single(fixture.WriteInvocations);
     }
@@ -332,7 +341,7 @@ public class IdempotentStateTransitionTests
             _services[typeof(ILocalizationService)] = localization.Object;
             _services[typeof(ICurrentUserService)] = user.Object;
             _services[typeof(INotify)] = Notify.Object;
-            if (resource.Name == "ClientAddresses")
+            if (resource.Name is "ClientAddresses" or "ClientContactPersons" or "ClientFiscalData")
             {
                 var clients = new Mock<IClientRepository>();
                 clients.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>()))

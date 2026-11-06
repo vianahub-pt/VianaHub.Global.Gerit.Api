@@ -6,6 +6,7 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Response.Business.StatusDefinit
 public class StatusDefinitionDetailResponse
 {
     public int Id { get; set; }
+    public int StatusDomainId { get; set; }
     public int TenantId { get; set; }
     public string? TenantName { get; set; }
     public string? Code { get; set; }

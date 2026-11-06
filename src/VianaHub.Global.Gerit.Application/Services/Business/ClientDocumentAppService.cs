@@ -34,11 +34,15 @@ public class ClientDocumentAppService : IClientDocumentAppService
         _repo = repo; _clients = clients; _documentTypes = documentTypes; _domain = domain; _notify = notify; _localization = localization; _currentUser = currentUser; _fileValidation = fileValidation;
     }
 
-    public async Task<IEnumerable<ClientDocumentResponse>> GetAllAsync(int clientId, CancellationToken ct) =>
-        (await _repo.GetAllAsync(_currentUser.GetTenantId(), clientId, ct)).Select(ClientDocumentMapper.ToResponse);
+    public async Task<IEnumerable<ClientDocumentResponse>> GetAllAsync(int clientId, CancellationToken ct)
+    {
+        if (!await EnsureReadableClientAsync(clientId, ct)) return [];
+        return (await _repo.GetAllAsync(_currentUser.GetTenantId(), clientId, ct)).Select(ClientDocumentMapper.ToResponse);
+    }
 
     public async Task<ClientDocumentDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await EnsureReadableClientAsync(clientId, ct)) return null;
         var entity = await _repo.GetByIdAsync(_currentUser.GetTenantId(), clientId, id, ct);
         if (entity == null || entity.IsDeleted)
         {
@@ -50,6 +54,7 @@ public class ClientDocumentAppService : IClientDocumentAppService
 
     public async Task<ListPageResponse<ClientDocumentResponse>> GetPagedAsync(int clientId, PagedFilterRequest request, CancellationToken ct)
     {
+        if (!await EnsureReadableClientAsync(clientId, ct)) return new ListPageResponse<ClientDocumentResponse>();
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         return ClientDocumentMapper.ToPaged(await _repo.GetPagedAsync(_currentUser.GetTenantId(), clientId, filter, ct));
     }
@@ -92,7 +97,7 @@ public class ClientDocumentAppService : IClientDocumentAppService
     {
         var entity = await _repo.GetByIdAsync(_currentUser.GetTenantId(), clientId, id, ct);
         if (entity == null || entity.IsDeleted) return NotFound("Delete");
-        if (!await EnsureActiveClientAsync(clientId, "Delete", ct)) return false;
+        if (!await EnsureReadableClientAsync(clientId, ct)) return false;
         entity.Delete(_currentUser.GetUserId());
         return await _domain.DeleteAsync(entity, ct);
     }
@@ -245,7 +250,16 @@ public class ClientDocumentAppService : IClientDocumentAppService
     {
         var entity = await _repo.GetByIdAsync(_currentUser.GetTenantId(), clientId, id, ct);
         if (entity == null || entity.IsDeleted) return NotFound(activate ? "Activate" : "Deactivate");
-        if (!await EnsureActiveClientAsync(clientId, activate ? "Activate" : "Deactivate", ct)) return false;
+        if (activate && !await EnsureActiveClientAsync(clientId, "Activate", ct))
+            return false;
+        if (!activate && !entity.IsActive)
+            return true;
+        if (activate && entity.IsActive)
+            return true;
+        if (!activate && !await EnsureReadableClientAsync(clientId, ct))
+        {
+            return false;
+        }
         if (activate) entity.Activate(_currentUser.GetUserId()); else entity.Deactivate(_currentUser.GetUserId());
         return activate ? await _domain.ActivateAsync(entity, ct) : await _domain.DeactivateAsync(entity, ct);
     }
@@ -256,6 +270,17 @@ public class ClientDocumentAppService : IClientDocumentAppService
         if (client != null && client.IsActive && !client.IsDeleted) return true;
         _notify.Add(_localization.GetMessage($"Application.Service.ClientDocument.{operation}.ClientNotFound"), 410);
         return false;
+    }
+
+    private async Task<bool> EnsureReadableClientAsync(int clientId, CancellationToken ct)
+    {
+        var client = await _clients.GetByIdAsync(clientId, ct);
+        if (client is null || client.IsDeleted)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientDocument.ResourceNotFound"), 410);
+            return false;
+        }
+        return true;
     }
 
     private async Task<bool> EnsureActiveDocumentTypeAsync(int id, string operation, CancellationToken ct)

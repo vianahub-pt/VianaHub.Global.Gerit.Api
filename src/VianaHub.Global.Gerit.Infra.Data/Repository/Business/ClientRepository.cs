@@ -46,6 +46,8 @@ public class ClientRepository : IClientRepository
             .Include(x => x.Addresses)
             .Include($"{nameof(ClientEntity.PartyType)}.{nameof(PartyTypeEntity.Translations)}")
             .Include($"{nameof(ClientEntity.AcquisitionSourceType)}.{nameof(AcquisitionSourceTypeEntity.Translations)}")
+            .Include(x => x.StatusDefinition).ThenInclude(x => x!.Translations)
+            .Include(x => x.StatusDefinition).ThenInclude(x => x!.StatusDomain).ThenInclude(x => x.Translations)
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
@@ -117,6 +119,28 @@ public class ClientRepository : IClientRepository
     {
         await _context.Clients.AddAsync(entity, ct);
         return await _context.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task<bool> AddManyAsync(IReadOnlyCollection<ClientEntity> entities, CancellationToken ct)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+        try
+        {
+            await _context.Clients.AddRangeAsync(entities, ct);
+            var saved = await _context.SaveChangesAsync(ct) > 0;
+            if (!saved)
+            {
+                await transaction.RollbackAsync(ct);
+                return false;
+            }
+            await transaction.CommitAsync(ct);
+            return true;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(ct);
+            throw;
+        }
     }
 
     public async Task<bool> UpdateAsync(ClientEntity entity, CancellationToken ct)

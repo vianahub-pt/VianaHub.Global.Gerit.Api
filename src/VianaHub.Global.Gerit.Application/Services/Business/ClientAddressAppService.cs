@@ -57,12 +57,18 @@ public class ClientAddressAppService : IClientAddressAppService
 
     public async Task<IEnumerable<ClientAddressResponse>> GetAllAsync(int clientId, CancellationToken ct)
     {
+        if (!await HasReadableClientAsync(clientId, ct)) return [];
         var entities = await _repo.GetAllAsync(clientId, ct);
         return ClientAddressMapper.ToResponses(entities);
     }
 
     public async Task<ClientAddressDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await HasReadableClientAsync(clientId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.GetById.ResourceNotFound"), 410);
+            return null;
+        }
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
         if (entity == null || entity.IsDeleted)
         {
@@ -74,6 +80,7 @@ public class ClientAddressAppService : IClientAddressAppService
 
     public async Task<ListPageResponse<ClientAddressResponse>> GetPagedAsync(int clientId, PagedFilterRequest request, CancellationToken ct)
     {
+        if (!await HasReadableClientAsync(clientId, ct)) return new ListPageResponse<ClientAddressResponse>();
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(clientId, filter, ct);
         return ClientAddressMapper.ToPaged(paged);
@@ -184,6 +191,11 @@ public class ClientAddressAppService : IClientAddressAppService
 
     public async Task<bool> DeactivateAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await HasReadableClientAsync(clientId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Deactivate.ResourceNotFound"), 410);
+            return false;
+        }
         var clientAddress = await _repo.GetByIdAsync(clientId, id, ct);
         if (clientAddress == null || clientAddress.IsDeleted)
         {
@@ -197,6 +209,11 @@ public class ClientAddressAppService : IClientAddressAppService
 
     public async Task<bool> DeleteAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await HasReadableClientAsync(clientId, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Delete.ResourceNotFound"), 410);
+            return false;
+        }
         var clientAddress = await _repo.GetByIdAsync(clientId, id, ct);
         if (clientAddress == null || clientAddress.IsDeleted)
         {
@@ -387,6 +404,12 @@ public class ClientAddressAppService : IClientAddressAppService
     {
         var client = await _clientRepository.GetByIdAsync(clientId, ct);
         return client is not null && client.IsActive && !client.IsDeleted;
+    }
+
+    private async Task<bool> HasReadableClientAsync(int clientId, CancellationToken ct)
+    {
+        var client = await _clientRepository.GetByIdAsync(clientId, ct);
+        return client is not null && !client.IsDeleted;
     }
 
     private bool ValidateBulkItem(int clientId, BulkUploadClientAddressItem item)
