@@ -917,6 +917,32 @@ CONSTRAINT FK_EmployeeAddresses_Employee FOREIGN KEY (EmployeeId, TenantId) REFE
 CONSTRAINT FK_EmployeeAddresses_AddressType FOREIGN KEY (AddressTypeId) REFERENCES dbo.AddressTypes(Id)
 );
 GO
+CREATE TABLE dbo.EmployeeDocuments (
+	Id                  INT IDENTITY(1,1) NOT NULL,                         -- Identificador do documento, chave primária
+	TenantId            INT               NOT NULL,                         -- Tenant dono do documento
+	EmployeeId          INT               NOT NULL,                         -- FK para Employees
+	DocumentTypeId      INT               NOT NULL,                         -- FK para DocumentTypes
+	DocumentNumber      NVARCHAR(100)     NOT NULL,                         -- Número do documento
+	IssuingCountryCode  CHAR(2)           NOT NULL,                         -- Código do país emissor (opcional)
+	IssuedAt            DATE                  NULL,                         -- Data de emissão (opcional)
+	ExpiresAt           DATE                  NULL,                         -- Data de expiração (opcional)
+	IsPrimary           BIT               NOT NULL DEFAULT 0,               -- Indica se é o documento principal do cliente
+	IsActive            BIT               NOT NULL DEFAULT 1,               -- Indica se o documento está ativo
+	IsDeleted           BIT               NOT NULL DEFAULT 0,               -- Indica se o documento foi excluído (soft delete)
+	CreatedBy           INT               NOT NULL,                         -- Usuário criador
+	CreatedAt           DATETIME2(7)      NOT NULL DEFAULT SYSUTCDATETIME(),-- Data de criação
+	ModifiedBy          INT                   NULL,                         -- Usuário modificador
+	ModifiedAt          DATETIME2(7)          NULL,                         -- Data de modificação
+	CONSTRAINT PK_EmployeeDocuments PRIMARY KEY CLUSTERED (Id),
+	CONSTRAINT UQ_EmployeeDocuments_Id_Tenant UNIQUE (Id, TenantId),
+	CONSTRAINT CK_EmployeeDocuments_Primary_Active CHECK (IsPrimary = 0 OR IsActive = 1),
+	CONSTRAINT CK_EmployeeDocuments_Active_Deleted CHECK (NOT (IsActive = 1 AND IsDeleted = 1)),
+	CONSTRAINT CK_EmployeeDocuments_Modification CHECK ((ModifiedAt IS NULL AND ModifiedBy IS NULL) OR (ModifiedAt IS NOT NULL AND ModifiedBy IS NOT NULL)),
+	CONSTRAINT CK_EmployeeDocuments_Dates CHECK (ExpiresAt IS NULL OR IssuedAt IS NULL OR ExpiresAt >= IssuedAt),
+	CONSTRAINT FK_EmployeeDocuments_Employee FOREIGN KEY (EmployeeId, TenantId) REFERENCES dbo.Employees(Id, TenantId),
+	CONSTRAINT FK_EmployeeDocuments_DocumentType FOREIGN KEY (DocumentTypeId) REFERENCES dbo.DocumentTypes(Id)
+);
+GO
 CREATE TABLE dbo.EmployeeFiscalData (
 Id                      INT IDENTITY(1,1)   NOT NULL,
 TenantId                INT                 NOT NULL,
@@ -1243,6 +1269,7 @@ GO
 
 CREATE UNIQUE INDEX UX_ClientContactPersons_Email                                   ON dbo.ClientContactPersons (TenantId, ClientId, Email) WHERE Email IS NOT NULL AND IsActive = 1 AND IsDeleted = 0;
 CREATE UNIQUE INDEX UX_ClientDocuments_Type_Country_Number                          ON dbo.ClientDocuments (TenantId, DocumentTypeId, IssuingCountryCode, DocumentNumber) WHERE IsDeleted = 0;
+CREATE UNIQUE INDEX UX_EmployeeDocuments_Type_Country_Number                        ON dbo.EmployeeDocuments (TenantId, DocumentTypeId, IssuingCountryCode, DocumentNumber) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_ClientFiscalData_TaxNumber                                   ON dbo.ClientFiscalData (TenantId, FiscalCountry, TaxNumber) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_TenantFiscalData_TaxNumber                                   ON dbo.TenantFiscalData (TenantId, FiscalCountry, TaxNumber) WHERE IsDeleted = 0;
 CREATE UNIQUE INDEX UX_EmployeeFiscalData_TaxNumber                                 ON dbo.EmployeeFiscalData (TenantId, FiscalCountry, TaxNumber) WHERE IsDeleted = 0;
@@ -1278,6 +1305,7 @@ CREATE UNIQUE INDEX UX_VisitTeamEmployee_Active                                 
 CREATE UNIQUE INDEX UX_ClientAddresses_Primary                                      ON dbo.ClientAddresses (TenantId, ClientId)         WHERE IsPrimary = 1 AND IsActive = 1 AND IsDeleted = 0;
 CREATE UNIQUE INDEX UX_ClientContactPersons_Primary                                 ON dbo.ClientContactPersons (TenantId, ClientId)    WHERE IsPrimary = 1 AND IsActive = 1 AND IsDeleted = 0;
 CREATE UNIQUE INDEX UX_ClientDocuments_Primary                                      ON dbo.ClientDocuments (TenantId, ClientId)         WHERE IsPrimary = 1 AND IsActive = 1 AND IsDeleted = 0;
+CREATE UNIQUE INDEX UX_EmployeeDocuments_Primary                                    ON dbo.EmployeeDocuments (TenantId, EmployeeId)     WHERE IsPrimary = 1 AND IsActive = 1 AND IsDeleted = 0;
 CREATE UNIQUE INDEX UX_TenantAddresses_Primary                                      ON dbo.TenantAddresses (TenantId)                   WHERE IsPrimary = 1 AND IsActive = 1 AND IsDeleted = 0;
 CREATE UNIQUE INDEX UX_TenantContactPersons_Primary                                 ON dbo.TenantContactPersons (TenantId)              WHERE IsPrimary = 1 AND IsActive = 1 AND IsDeleted = 0;
 CREATE UNIQUE INDEX UX_TenantDocuments_Primary                                      ON dbo.TenantDocuments (TenantId)                   WHERE IsPrimary = 1 AND IsActive = 1 AND IsDeleted = 0;
@@ -1299,6 +1327,7 @@ CREATE NONCLUSTERED INDEX IX_Clients_TenantId                                   
 CREATE NONCLUSTERED INDEX IX_ClientAddresses_Client                                 ON dbo.ClientAddresses (TenantId, ClientId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_ClientContactPersons_Client                            ON dbo.ClientContactPersons (TenantId, ClientId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_ClientDocuments_Client                                 ON dbo.ClientDocuments (TenantId, ClientId) WHERE IsDeleted = 0;
+CREATE NONCLUSTERED INDEX IX_EmployeeDocuments_Client                               ON dbo.EmployeeDocuments (TenantId, EmployeeId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_EmployeeContacts_EmployeeId		                    ON dbo.EmployeeContactPersons (TenantId, EmployeeId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_EmployeeAddresses_EmployeeId		                    ON dbo.EmployeeAddresses (TenantId, EmployeeId) WHERE IsDeleted = 0;
 CREATE NONCLUSTERED INDEX IX_VisitContacts_VisitId                                  ON dbo.VisitContactPersons (TenantId, VisitId) WHERE IsDeleted = 0;
@@ -1368,6 +1397,7 @@ ADD FILTER PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.Clients,
 ADD FILTER PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientAddresses,
 ADD FILTER PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientContactPersons,
 ADD FILTER PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientDocuments,
+ADD FILTER PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.EmployeeDocuments,
 ADD FILTER PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientFiscalData,
 ADD FILTER PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.Employees,
 ADD FILTER PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.EmployeeAddresses,
@@ -1439,6 +1469,9 @@ ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientContactP
 ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientDocuments AFTER INSERT,
 ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientDocuments AFTER UPDATE,
 ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientDocuments BEFORE DELETE,
+ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.EmployeeDocuments AFTER INSERT,
+ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.EmployeeDocuments AFTER UPDATE,
+ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.EmployeeDocuments BEFORE DELETE,
 ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientFiscalData AFTER INSERT,
 ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientFiscalData AFTER UPDATE,
 ADD BLOCK PREDICATE dbo.fn_TenantAccessPredicate(TenantId) ON dbo.ClientFiscalData BEFORE DELETE,
