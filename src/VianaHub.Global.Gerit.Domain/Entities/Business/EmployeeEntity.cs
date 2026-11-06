@@ -31,6 +31,9 @@ public class EmployeeEntity : Entity, IAggregateRoot
     private readonly List<EmployeeAddressesEntity> _addresses = [];
     public IReadOnlyCollection<EmployeeAddressesEntity> Addresses => _addresses.AsReadOnly();
 
+    private readonly List<EmployeeDocumentsEntity> _documents = [];
+    public IReadOnlyCollection<EmployeeDocumentsEntity> Documents => _documents.AsReadOnly();
+
     // Construtor protegido para o EF Core
     protected EmployeeEntity() { }
 
@@ -108,5 +111,13 @@ public class EmployeeEntity : Entity, IAggregateRoot
             throw new ArgumentNullException(nameof(address));
 
         _addresses.Add(address);
+    }
+
+    public void AddDocument(EmployeeDocumentsEntity document)
+    {
+        if (document == null)
+            throw new ArgumentNullException(nameof(document));
+
+        _documents.Add(document);
     }
 }

@@ -272,6 +272,7 @@ public static class DependencyInjection
         services.AddScoped<IClientFiscalDataDataRepository, ClientFiscalDataDataRepository>();
         services.AddScoped<IClientDocumentDataRepository, ClientDocumentDataRepository>();
         services.AddScoped<IEmployeeFiscalDataDataRepository, EmployeeFiscalDataDataRepository>();
+        services.AddScoped<IEmployeeDocumentDataRepository, EmployeeDocumentDataRepository>();
         services.AddScoped<IVisitContactDataRepository, VisitContactPersonDataRepository>();
         services.AddScoped<IVisitAddressDataRepository, VisitAddressDataRepository>();
         services.AddScoped<IVisitDataRepository, VisitDataRepository>();
