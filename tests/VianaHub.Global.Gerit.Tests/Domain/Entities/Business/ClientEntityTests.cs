@@ -44,6 +44,20 @@ public class ClientEntityTests
         Assert.False(second.IsPrimary);
     }
 
+    [Fact(DisplayName = "ClientEntity - Delete é root-only e não depende de children carregados")]
+    [Trait("Domain", "Lifecycle")]
+    public void Delete_DoesNotTouchChildNavigations()
+    {
+        var client = CreateClient();
+
+        client.Delete(7);
+
+        Assert.True(client.IsDeleted);
+        Assert.False(client.IsActive);
+        Assert.Empty(client.Contacts);
+        Assert.Empty(client.Addresses);
+    }
+
     private static ClientEntity CreateClient()
     {
         return new ClientEntity(

@@ -95,7 +95,8 @@ public sealed class ClientFiscalDataHttpIntegrationTests
             builder.Services.AddScoped<IEntityDomainValidator<ClientFiscalDataEntity>, ClientFiscalDataValidator>();
             builder.Services.AddScoped<IClientFiscalDataDomainService, ClientFiscalDataDomainService>();
             builder.Services.AddScoped<IClientFiscalDataAppService, ClientFiscalDataAppService>();
-            builder.Services.AddScoped(_ => Mock.Of<IClientRepository>());
+            var clientRepository = new Mock<IClientRepository>();
+            builder.Services.AddScoped(_ => clientRepository.Object);
             builder.Services.AddScoped(_ => Mock.Of<IFileValidationService>());
             builder.Services.AddRouteValidatorSetup();
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
@@ -132,6 +133,9 @@ public sealed class ClientFiscalDataHttpIntegrationTests
                 var client = new ClientEntity(7, 1, 1, null, null, "Integration Client", null, null, false, null, null, null, null, null, null, null, null, 1, 1, 17);
                 typeof(ClientEntity).GetProperty("Id")!.SetValue(client, 10);
                 typeof(ClientEntity).GetProperty("PartyType")!.SetValue(client, partyType);
+                clientRepository
+                    .Setup(x => x.GetByIdAsync(10, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(client);
                 var fiscal = new ClientFiscalDataEntity(7, 10, "PT123", null, "PT", true, null, null, 17);
                 typeof(ClientFiscalDataEntity).GetProperty("Id")!.SetValue(fiscal, 44);
                 typeof(ClientFiscalDataEntity).GetProperty("Client")!.SetValue(fiscal, client);

@@ -91,7 +91,7 @@ public static class ClientEndpoint
         groupV1.MapPatch("/{id}/activate", async ([FromRoute] int id, [FromServices] IClientAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.ActivateAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "Clients", "Activate")
         .WithName("ActivateClient")
@@ -106,7 +106,7 @@ public static class ClientEndpoint
         groupV1.MapPatch("/{id}/deactivate", async ([FromRoute] int id, [FromServices] IClientAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeactivateAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "Clients", "Deactivate")
         .WithName("DeactivateClient")
@@ -121,7 +121,7 @@ public static class ClientEndpoint
         groupV1.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] IClientAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeleteAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.CustomResponse(ok);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "Clients", "Delete")
         .WithName("DeleteClient")

@@ -2,6 +2,8 @@
 
 ClientFiscalData **87→100%**: [evidências e limites](API-WEB-READINESS-MATRIX.md#clientfiscaldata). ClientDocuments está implementado na API, com bulk upload CSV, mas permanece **NOT PRODUCTION CLOSED** até novo deploy e smoke produtivo. Não iniciar outra capability antes da validação de produção.
 
+Client root foi implementado para a certificação local: CRUD, dependências e par de status validados antes da persistência, detail localizado com status/domain, lifecycle idempotente, bulk transacional e delete root-only. Filhos bloqueiam mutações quando o parent está removido; parent inativo permite leitura/cleanup conforme a matriz. Não foi adicionada unicidade de negócio nem alterado schema. HTTP/SQL/RLS e smoke ainda são gates pendentes.
+
 Certificação parent-scoped cobre identidade por email, primary, alias WhatsApp, propagação de persistência e BulkUpload real. Smoke produtivo apenas preparado: requer promoção e deploy antes da execução. Nenhum Web ou deploy nesta etapa.
 
 ## Histórico anterior preservado
@@ -22,7 +24,7 @@ Atualização de02/11/2026, mesma branch fix/team-api-readiness. Histórico pres
 
 ## Próximo candidato
 
-**NEXT1:EquipmentTypes —91%**, seguindo a prioridade definida no pedido. Não foi iniciado nesta execução. UserPreferences e as abas ClientContactPerson/ClientAddress permanecem candidatos anteriores, sem nova reavaliação ou implementação. Nenhuma fila adicional foi inventada para preencher posição.
+**NEXT1:Client root — implementação concluída**, aguardando validação HTTP/SQL e smoke após promoção. ClientDocuments permanece dependente de validação produtiva; não iniciar nova capability antes dos gates do root.
 
 Teams sai da fila de remediação e está pronto para implementação no Gerit.Web no escopo certificado. O próximo trabalho no Web deve reutilizar o contrato agora formalizado, preservando Name/Description editáveis em Teams,409 de duplicidade, Update204, idempotência e410 para removidos. Esta execução não implementou Web.
 
@@ -83,6 +85,7 @@ Os NEXT abaixo têm contrato recuperável e nenhum hard cap confirmado **no esco
 | NEXT 3 | UserPreferences —91% | Configurações do usuário autorizado | Todos os campos editáveis expostos; Create usa usuário/tenant correntes; GET /user/{userId} usa ID real da sessão | Não inventar /current ou nova página de negócio; confirmar defaults de horário e grants para a role alvo; não ampliar autorização |
 | NEXT 4 | ClientContactPerson —91% | Aba de contatos de um Client existente | Detail/Update recuperáveis; clientId encaminhado ao repository; não necessita criar Client nem escolher status | Depende de shell/rota do pai no Web e de cliente existente. Não declarar CRUD completo de Clients pronto; testar ownership entre pais |
 | NEXT 5 | ClientAddress —100% | Aba de endereços de um Client existente | Parent scope, mapping, identidade, primary/lifecycle, coordenadas e BulkUpload certificados | Requer shell do pai e lookup de tipos; smoke produtivo pendente |
+| NEXT 6 | Client —100% local | CRUD principal do aggregate Client | Validar contrato HTTP, RLS/SQL e smoke; delete não remove filhos |
 
 Essas são cinco entregas de UI, não cinco novas páginas independentes. Se produto exigir apenas novos aggregates completos com página própria, NEXT4/NEXT5 não são substitutos: ficam reservados até corrigir os blockers dos próximos aggregates. Business value de todos permanece **needs product decision**; não há evidência de receita, adoção ou ROI para inventar High/Medium/Low.
 
@@ -92,7 +95,7 @@ A matriz principal está estritamente ordenada por readiness decrescente. A fila
 
 ## Dependências que mudam a fila
 
-**StatusDefinitions deve ser remediado antes de CRUD completo de Clients, Employees, Equipments, Vehicles, Visits e Subscriptions.** Os requests exigem StatusDefinitionId e StatusDomainId, mas as leituras do catálogo não expõem StatusDomainId nem oferecem filtro público por domínio que permita descobrir o par. Nome traduzido não é FK. Não forçar o usuário a digitar números e não parear por nome/posição como workaround.
+**StatusDefinitions continua sendo dependência dos demais aggregates.** Client root foi remediado nesta etapa: os requests expõem o par StatusDefinitionId/StatusDomainId e a API valida existência, atividade, remoção e tenant antes da persistência. O catálogo deve continuar expondo o domínio para os próximos aggregates; não parear por nome/posição como workaround.
 
 PartyTypes e AcquisitionSourceTypes já fornecem IDs em leituras de lookup; seus blockers de administração do aggregate não devem ser transferidos indiscriminadamente a toda leitura. O blocker do par de status é diferente: impede construir uma seleção consistente de dados requeridos por criação/edição do consumidor. O TenantId da sessão também não obriga a construir o painel Tenants antes de Teams.
 

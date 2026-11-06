@@ -17,7 +17,7 @@ public class ClientEntity : Entity, IAggregateRoot
     public bool IsDeleted { get; private set; }
 
     // Campos unificados (pessoa singular + jurídica)
-    public string? Name { get; private set; }
+    public string Name { get; private set; } = string.Empty;
     public string? PhoneNumber { get; private set; }
     public string? CellPhoneNumber { get; private set; }
     public bool IsCellPhoneWhatsapp { get; private set; }
@@ -54,7 +54,7 @@ public class ClientEntity : Entity, IAggregateRoot
         int acquisitionSourceTypeId,
         string? imageUrl,
         string? note,
-        string? name,
+        string name,
         string? phoneNumber,
         string? cellPhoneNumber,
         bool isCellPhoneWhatsapp,
@@ -100,7 +100,7 @@ public class ClientEntity : Entity, IAggregateRoot
         int acquisitionSourceTypeId,
         string? imageUrl,
         string? note,
-        string? name,
+        string name,
         string? phoneNumber,
         string? cellPhoneNumber,
         bool isCellPhoneWhatsapp,
@@ -156,16 +156,6 @@ public class ClientEntity : Entity, IAggregateRoot
     {
         IsActive = false;
         IsDeleted = true;
-
-        foreach (var address in _addresses)
-        {
-            address.Delete(modifiedBy);
-        }
-
-        foreach (var contact in _contacts)
-        {
-            contact.Delete(modifiedBy);
-        }
 
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;

@@ -14,5 +14,6 @@ public interface IClientRepository
     Task<ListPage<ClientEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct);
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
     Task<bool> AddAsync(ClientEntity entity, CancellationToken ct);
+    Task<bool> AddManyAsync(IReadOnlyCollection<ClientEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(ClientEntity entity, CancellationToken ct);
 }
