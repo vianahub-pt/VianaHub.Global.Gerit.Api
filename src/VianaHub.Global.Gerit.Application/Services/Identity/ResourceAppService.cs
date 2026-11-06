@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +7,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Resource;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Resource;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
@@ -23,7 +23,6 @@ public class ResourceAppService : IResourceAppService
     private readonly IResourceDomainService _domain;
     private readonly ICurrentUserService _currentUser;
     private readonly INotify _notify;
-    private readonly IMapper _mapper;
     private readonly ILocalizationService _localization;
     private readonly IFileValidationService _fileValidation;
 
@@ -31,7 +30,6 @@ public class ResourceAppService : IResourceAppService
         IResourceDataRepository repo,
         IResourceDomainService domain,
         INotify notify,
-        IMapper mapper,
         ICurrentUserService currentUser,
         ILocalizationService localization,
         IFileValidationService fileValidation)
@@ -39,7 +37,6 @@ public class ResourceAppService : IResourceAppService
         _repo = repo;
         _domain = domain;
         _notify = notify;
-        _mapper = mapper;
         _currentUser = currentUser;
         _localization = localization;
         _fileValidation = fileValidation;
@@ -48,7 +45,7 @@ public class ResourceAppService : IResourceAppService
     public async Task<IEnumerable<ResourceResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<ResourceResponse>>(entities);
+        return ResourceMapper.ToResponses(entities);
     }
     public async Task<ResourceDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
@@ -58,13 +55,13 @@ public class ResourceAppService : IResourceAppService
             _notify.Add(_localization.GetMessage("Application.Service.Resource.Update.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<ResourceDetailResponse>(entity);
+        return ResourceMapper.ToDetail(entity);
     }
     public async Task<ListPageResponse<ResourceResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<ResourceResponse>>(paged);
+        return ResourceMapper.ToPaged(paged);
     }
 
 

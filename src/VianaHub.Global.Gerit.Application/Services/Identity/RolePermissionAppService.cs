@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +6,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Role;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.RolePermission;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.RolePermission;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Helpers;
@@ -23,7 +23,6 @@ public class RolePermissionAppService : IRolePermissionAppService
     private readonly IRoleDataRepository _roleRepository;
     private readonly IResourceDataRepository _resourceRepository;
     private readonly IActionDataRepository _actionRepository;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -35,7 +34,6 @@ public class RolePermissionAppService : IRolePermissionAppService
         IRoleDataRepository roleRepository,
         IResourceDataRepository resourceRepository,
         IActionDataRepository actionRepository,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -46,7 +44,6 @@ public class RolePermissionAppService : IRolePermissionAppService
         _roleRepository = roleRepository;
         _resourceRepository = resourceRepository;
         _actionRepository = actionRepository;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -89,7 +86,7 @@ public class RolePermissionAppService : IRolePermissionAppService
 
         var entity = new RolePermissionsEntity(tenantId, request.RoleId, request.ResourceId, request.ActionId);
         await _domain.CreateAsync(entity, ct);
-        return _mapper.Map<RolePermissionResponse>(entity);
+        return RolePermissionMapper.ToResponse(entity);
     }
 
     public async Task DeleteAsync(int roleId, int resourceId, int actionId, CancellationToken ct)
@@ -109,28 +106,28 @@ public class RolePermissionAppService : IRolePermissionAppService
     {
         var tenantId = _currentUser.GetTenantId();
         var entity = await _repository.GetByIdAsync(tenantId, roleId, resourceId, actionId, ct);
-        return _mapper.Map<RolePermissionDetailResponse>(entity);
+        return entity is null ? null! : RolePermissionMapper.ToDetail(entity);
     }
 
     public async Task<IList<RolePermissionResponse>> GetByRoleAsync(int roleId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var list = await _repository.GetByRoleAsync(roleId, tenantId, ct);
-        return _mapper.Map<IList<RolePermissionResponse>>(list);
+        return RolePermissionMapper.ToResponses(list);
     }
 
     public async Task<IList<RolePermissionResponse>> GetByResourceAsync(int resourceId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var list = await _repository.GetByResourceAsync(resourceId, tenantId, ct);
-        return _mapper.Map<IList<RolePermissionResponse>>(list);
+        return RolePermissionMapper.ToResponses(list);
     }
 
     public async Task<IList<RolePermissionResponse>> GetAllAsync(CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var list = await _repository.GetAllAsync(tenantId, ct);
-        return _mapper.Map<IList<RolePermissionResponse>>(list);
+        return RolePermissionMapper.ToResponses(list);
     }
 
     public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)

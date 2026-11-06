@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +7,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Role;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Role;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
@@ -23,7 +23,6 @@ public class RoleAppService : IRoleAppService
     private readonly IRoleDomainService _domain;
     private readonly ICurrentUserService _currentUser;
     private readonly INotify _notify;
-    private readonly IMapper _mapper;
     private readonly ILocalizationService _localization;
     private readonly IFileValidationService _fileValidation;
 
@@ -31,7 +30,6 @@ public class RoleAppService : IRoleAppService
         IRoleDataRepository repo,
         IRoleDomainService domain,
         INotify notify,
-        IMapper mapper,
         ICurrentUserService currentUser,
         ILocalizationService localization,
         IFileValidationService fileValidation)
@@ -39,7 +37,6 @@ public class RoleAppService : IRoleAppService
         _repo = repo;
         _domain = domain;
         _notify = notify;
-        _mapper = mapper;
         _currentUser = currentUser;
         _localization = localization;
         _fileValidation = fileValidation;
@@ -48,20 +45,20 @@ public class RoleAppService : IRoleAppService
     public async Task<IEnumerable<RoleResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<RoleResponse>>(entities);
+        return RoleMapper.ToResponses(entities);
     }
 
     public async Task<RoleDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return _mapper.Map<RoleDetailResponse>(entity);
+        return entity is null ? null! : RoleMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<RoleResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<RoleResponse>>(paged);
+        return RoleMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateRoleRequest request, CancellationToken ct)
