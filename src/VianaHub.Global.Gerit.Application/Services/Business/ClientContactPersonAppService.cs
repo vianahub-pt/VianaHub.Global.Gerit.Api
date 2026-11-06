@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +8,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientContact;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientContact;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -27,53 +27,57 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
     public int UserId { get; set; }
     private readonly IClientContactPersonDataRepository _repo;
     private readonly IClientContactPersonDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
     private readonly IFileValidationService _fileValidation;
     private readonly ILogger<ClientContactPersonAppService> _logger;
+    private readonly IClientRepository? _clients;
 
-    public ClientContactPersonAppService(IClientContactPersonDataRepository repo, IClientContactPersonDomainService domain, IMapper mapper, INotify notify, ILocalizationService localization, ICurrentUserService currentUser, IFileValidationService fileValidation, ILogger<ClientContactPersonAppService> logger)
+    public ClientContactPersonAppService(IClientContactPersonDataRepository repo, IClientContactPersonDomainService domain, INotify notify, ILocalizationService localization, ICurrentUserService currentUser, IFileValidationService fileValidation, ILogger<ClientContactPersonAppService> logger, IClientRepository? clients = null)
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
         _fileValidation = fileValidation;
         _logger = logger;
+        _clients = clients;
         TenantId = _currentUser.GetTenantId();
         UserId = _currentUser.GetUserId();
     }
 
     public async Task<IEnumerable<ClientContactPersonResponse>> GetAllAsync(int clientId, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: true, ct)) return [];
         var entities = await _repo.GetAllAsync(clientId, ct);
-        return _mapper.Map<IEnumerable<ClientContactPersonResponse>>(entities);
+        return entities.Select(ClientContactPersonMapper.ToResponse);
     }
 
     public async Task<ClientContactPersonDetailResponse?> GetByIdAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: true, ct)) return null;
         var entity = await _repo.GetByIdAsync(clientId, id, ct);
         if (entity == null || entity.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<ClientContactPersonDetailResponse>(entity);
+        return ClientContactPersonMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<ClientContactPersonResponse>> GetPagedAsync(int clientId, PagedFilterRequest request, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: true, ct)) return new ListPageResponse<ClientContactPersonResponse>();
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(clientId, filter, ct);
-        return _mapper.Map<ListPageResponse<ClientContactPersonResponse>>(paged);
+        return ClientContactPersonMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int clientId, CreateClientContactRequest request, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: false, ct)) return 0;
         var exists = await _repo.ExistsActiveByClientAndEmailAsync(clientId, request.Email, null, ct);
         if (exists)
         {
@@ -107,6 +111,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
 
     public async Task<bool> UpdateAsync(int clientId, int id, UpdateClientContactPersonRequest request, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: false, ct)) return false;
         var clientContact = await _repo.GetByIdAsync(clientId, id, ct);
         if (clientContact == null || clientContact.IsDeleted)
         {
@@ -134,6 +139,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
 
     public async Task<bool> ActivateAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: false, ct)) return false;
         var clientContact = await _repo.GetByIdAsync(clientId, id, ct);
         if (clientContact == null || clientContact.IsDeleted)
         {
@@ -154,6 +160,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
 
     public async Task<bool> DeactivateAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: true, ct)) return false;
         var clientContact = await _repo.GetByIdAsync(clientId, id, ct);
         if (clientContact == null || clientContact.IsDeleted)
         {
@@ -168,6 +175,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
 
     public async Task<bool> DeleteAsync(int clientId, int id, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: true, ct)) return false;
         var clientContact = await _repo.GetByIdAsync(clientId, id, ct);
         if (clientContact == null || clientContact.IsDeleted)
         {
@@ -182,6 +190,7 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
 
     public async Task<bool> BulkUploadAsync(int clientId, IFormFile? file, CancellationToken ct)
     {
+        if (!await EnsureParentAsync(clientId, allowInactive: false, ct)) return false;
         // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
             return false;
@@ -332,6 +341,18 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
             return false;
         }
 
+        return true;
+    }
+
+    private async Task<bool> EnsureParentAsync(int clientId, bool allowInactive, CancellationToken ct)
+    {
+        if (_clients is null) return true;
+        var client = await _clients.GetByIdAsync(clientId, ct);
+        if (client is null || client.IsDeleted || (!allowInactive && !client.IsActive))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Client.GetById.ResourceNotFound"), 410);
+            return false;
+        }
         return true;
     }
 }

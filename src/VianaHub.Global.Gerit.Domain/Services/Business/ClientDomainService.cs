@@ -57,6 +57,21 @@ public class ClientDomainService : IClientDomainService
 
         return await _repo.AddAsync(entity, ct);
     }
+
+    public async Task<bool> CreateManyAsync(IReadOnlyCollection<ClientEntity> entities, CancellationToken ct)
+    {
+        foreach (var entity in entities)
+        {
+            var validationResult = await _validator.ValidateForCreateAsync(entity);
+            if (!validationResult.IsValid)
+            {
+                foreach (var error in validationResult.Errors)
+                    _notify.Add(error.ErrorMessage, 400);
+                return false;
+            }
+        }
+        return await _repo.AddManyAsync(entities, ct);
+    }
     public async Task<bool> UpdateAsync(ClientEntity entity, CancellationToken ct)
     {
         var validationResult = await _validator.ValidateForUpdateAsync(entity);

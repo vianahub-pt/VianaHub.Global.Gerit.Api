@@ -53,7 +53,7 @@ public class ClientMapping : IEntityTypeConfiguration<ClientEntity>
         builder.Property(x => x.Name)
             .HasColumnType("NVARCHAR(500)")
             .HasMaxLength(500)
-            .IsRequired(false);
+            .IsRequired(true);
 
         builder.Property(x => x.PhoneNumber)
             .HasColumnType("NVARCHAR(50)")

@@ -11,7 +11,7 @@ public class UpdateClientRequest
     public string? Note { get; set; }
 
     // Campos unificados
-    public string? Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public string? CellPhoneNumber { get; set; }
     public bool IsCellPhoneWhatsapp { get; set; }
@@ -23,6 +23,6 @@ public class UpdateClientRequest
     public string? CompanyRegistrationNumber { get; set; }
     public string? EconomicActivityCode { get; set; }
     public int? NumberOfEmployees { get; set; }
-    public int? StatusDefinitionId { get; set; }
-    public int? StatusDomainId { get; set; }
+    public int StatusDefinitionId { get; set; }
+    public int StatusDomainId { get; set; }
 }

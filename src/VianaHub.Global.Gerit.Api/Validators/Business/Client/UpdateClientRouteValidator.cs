@@ -18,5 +18,12 @@ public class UpdateClientRouteValidator : AbstractValidator<UpdateClientRequest>
         RuleFor(x => x.AcquisitionSourceTypeId)
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Api.Validator.Client.Update.AcquisitionSourceTypeId"));
+
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(500)
+            .WithMessage(localization.GetMessage("Api.Validator.Client.Update.Name"));
+        RuleFor(x => x.StatusDefinitionId).GreaterThan(0)
+            .WithMessage(localization.GetMessage("Api.Validator.Client.Update.StatusDefinitionId"));
+        RuleFor(x => x.StatusDomainId).GreaterThan(0)
+            .WithMessage(localization.GetMessage("Api.Validator.Client.Update.StatusDomainId"));
     }
 }

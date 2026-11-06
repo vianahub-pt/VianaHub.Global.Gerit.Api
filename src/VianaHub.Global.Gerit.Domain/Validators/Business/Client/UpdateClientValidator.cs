@@ -31,6 +31,13 @@ public class UpdateClientValidator : AbstractValidator<ClientEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Client.AcquisitionSourceTypeIdRequired"));
 
+        RuleFor(x => x.PartyTypeId).GreaterThan((byte)0);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.StatusDefinitionId).GreaterThan(0);
+        RuleFor(x => x.StatusDomainId).GreaterThan(0);
+        RuleFor(x => x.BirthDate).LessThanOrEqualTo(DateTime.UtcNow.Date).When(x => x.BirthDate.HasValue);
+        RuleFor(x => x.NumberOfEmployees).GreaterThanOrEqualTo(0).When(x => x.NumberOfEmployees.HasValue);
+
         // CK_Clients_PartyTypeData: When PartyTypeId=1 (individual), company fields must be null
         RuleFor(x => x.CompanyRegistrationNumber)
             .Null()
