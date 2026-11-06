@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +8,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Action;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Action;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
@@ -24,7 +24,6 @@ public class ActionAppService : IActionAppService
     private readonly IActionDomainService _domain;
     private readonly ICurrentUserService _currentUser;
     private readonly INotify _notify;
-    private readonly IMapper _mapper;
     private readonly ILocalizationService _localization;
     private readonly ILogger<ActionAppService> _logger;
     private readonly IFileValidationService _fileValidation;
@@ -33,7 +32,6 @@ public class ActionAppService : IActionAppService
         IActionDataRepository repo,
         IActionDomainService domain,
         INotify notify,
-        IMapper mapper,
         ICurrentUserService currentUser,
         ILocalizationService localization,
         ILogger<ActionAppService> logger,
@@ -42,7 +40,6 @@ public class ActionAppService : IActionAppService
         _repo = repo;
         _domain = domain;
         _notify = notify;
-        _mapper = mapper;
         _currentUser = currentUser;
         _localization = localization;
         _logger = logger;
@@ -52,7 +49,7 @@ public class ActionAppService : IActionAppService
     public async Task<IEnumerable<ActionResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<ActionResponse>>(entities);
+        return ActionMapper.ToResponses(entities);
     }
     public async Task<ActionDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
@@ -62,13 +59,13 @@ public class ActionAppService : IActionAppService
             _notify.Add(_localization.GetMessage("Application.Service.Action.Update.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<ActionDetailResponse?>(entity);
+        return ActionMapper.ToDetail(entity);
     }
     public async Task<ListPageResponse<ActionResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<ActionResponse>>(paged);
+        return ActionMapper.ToPaged(paged);
     }
 
 

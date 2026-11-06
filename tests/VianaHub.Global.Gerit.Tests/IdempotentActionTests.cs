@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
@@ -43,7 +42,7 @@ public class IdempotentActionTests
         var notify = new Mock<INotify>();
         var localization = Localization;
         var domain = new ActionDomainService(repo.Object, new ActionValidator(localization), notify.Object);
-        var app = new ActionAppService(repo.Object, domain, notify.Object, Mock.Of<IMapper>(),
+        var app = new ActionAppService(repo.Object, domain, notify.Object,
             Mock.Of<ICurrentUserService>(), localization, NullLogger<ActionAppService>.Instance,
             Mock.Of<IFileValidationService>());
 
@@ -81,7 +80,7 @@ public class IdempotentActionTests
         var notify = new Mock<INotify>();
         var localization = Localization;
         var domain = new ActionDomainService(repo.Object, new ActionValidator(localization), notify.Object);
-        var app = new ActionAppService(repo.Object, domain, notify.Object, Mock.Of<IMapper>(),
+        var app = new ActionAppService(repo.Object, domain, notify.Object,
             Mock.Of<ICurrentUserService>(), localization, NullLogger<ActionAppService>.Instance,
             Mock.Of<IFileValidationService>());
 
@@ -136,7 +135,7 @@ public class IdempotentActionTests
         var notify = new Mock<INotify>();
         var localization = Localization;
         var domain = new ActionDomainService(repo.Object, new ActionValidator(localization), notify.Object);
-        var app = new ActionAppService(repo.Object, domain, notify.Object, Mock.Of<IMapper>(),
+        var app = new ActionAppService(repo.Object, domain, notify.Object,
             Mock.Of<ICurrentUserService>(), localization, NullLogger<ActionAppService>.Instance,
             Mock.Of<IFileValidationService>());
 

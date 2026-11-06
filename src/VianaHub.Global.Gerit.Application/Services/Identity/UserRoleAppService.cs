@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +6,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.User;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.UserRole;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.UserRole;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Helpers;
@@ -21,7 +21,6 @@ public class UserRoleAppService : IUserRoleAppService
     private readonly IUserRoleDomainService _domain;
     private readonly IUserRoleDataRepository _repository;
     private readonly IRoleDataRepository _roleRepository;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -31,7 +30,6 @@ public class UserRoleAppService : IUserRoleAppService
         IUserRoleDomainService domain,
         IUserRoleDataRepository repository,
         IRoleDataRepository roleRepository,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -40,7 +38,6 @@ public class UserRoleAppService : IUserRoleAppService
         _domain = domain;
         _repository = repository;
         _roleRepository = roleRepository;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -51,28 +48,28 @@ public class UserRoleAppService : IUserRoleAppService
     {
         var tenantId = _currentUser.GetTenantId();
         var entity = await _repository.GetByIdAsync(tenantId, userId, roleId, ct);
-        return _mapper.Map<UserRoleDetailResponse>(entity);
+        return entity is null ? null! : UserRoleMapper.ToDetail(entity);
     }
 
     public async Task<IList<UserRoleResponse>> GetByUserAsync(int userId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var list = await _repository.GetByUserAsync(tenantId, userId, ct);
-        return _mapper.Map<IList<UserRoleResponse>>(list);
+        return UserRoleMapper.ToResponses(list);
     }
 
     public async Task<IList<UserRoleResponse>> GetByRoleAsync(int roleId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var list = await _repository.GetByRoleAsync(tenantId, roleId, ct);
-        return _mapper.Map<IList<UserRoleResponse>>(list);
+        return UserRoleMapper.ToResponses(list);
     }
 
     public async Task<IList<UserRoleResponse>> GetAllAsync(CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
         var list = await _repository.GetAllAsync(tenantId, ct);
-        return _mapper.Map<IList<UserRoleResponse>>(list);
+        return UserRoleMapper.ToResponses(list);
     }
     public async Task<bool> ExistsAsync(int tenantId, int userId, int roleId, CancellationToken ct)
     {
@@ -100,7 +97,7 @@ public class UserRoleAppService : IUserRoleAppService
 
         var entity = new UserRolesEntity(tenantId, request.UserId, request.RoleId);
         await _domain.CreateAsync(entity, ct);
-        return _mapper.Map<UserRoleResponse>(entity);
+        return UserRoleMapper.ToResponse(entity);
     }
 
 
