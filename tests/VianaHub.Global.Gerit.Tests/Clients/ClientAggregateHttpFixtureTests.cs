@@ -119,9 +119,8 @@ public sealed class ClientAggregateHttpFixtureTests
         Assert.Equal(activeClientId, detail!.ClientId);
         Assert.Equal(1, detail.TenantId);
 
-        var unauthorized = fixture.CreateAuthorizedClient(contactPermissions: ["Create", "Update", "Activate", "Deactivate", "Delete"]);
+        using var unauthorized = fixture.CreateAuthorizedClient(contactPermissions: ["Create", "Update", "Activate", "Deactivate", "Delete"]);
         Assert.Equal(HttpStatusCode.Forbidden, (await unauthorized.GetAsync($"/v1/clients/{activeClientId}/contacts/{contactId}")).StatusCode);
-        unauthorized.Dispose();
 
         var update = new
         {

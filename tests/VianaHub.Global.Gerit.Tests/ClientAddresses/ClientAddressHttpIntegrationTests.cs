@@ -359,7 +359,14 @@ public sealed class ClientAddressHttpIntegrationTests
         public Task<ListPage<ClientEntity>> GetPagedAsync(PagedFilter request, CancellationToken ct) => Task.FromResult(new ListPage<ClientEntity>());
         public Task<bool> ExistsByIdAsync(int id, CancellationToken ct) => Task.FromResult(_clients.TryGetValue(id, out var value) && value.TenantId == Tenant());
         public Task<bool> AddAsync(ClientEntity entity, CancellationToken ct) { _clients[entity.Id] = entity; return Task.FromResult(true); }
-        public Task<bool> AddManyAsync(IReadOnlyCollection<ClientEntity> entities, CancellationToken ct) { foreach (var entity in entities) _clients[entity.Id] = entity; return Task.FromResult(true); }
+        public Task<bool> AddManyAsync(IReadOnlyCollection<ClientEntity> entities, CancellationToken ct)
+        {
+            foreach (var entity in entities)
+            {
+                _clients[entity.Id] = entity;
+            }
+            return Task.FromResult(true);
+        }
         public Task<bool> UpdateAsync(ClientEntity entity, CancellationToken ct) { _clients[entity.Id] = entity; return Task.FromResult(true); }
         private int Tenant() => int.TryParse(_http.HttpContext?.User.FindFirst("tenant_id")?.Value, out var tenant) ? tenant : 7;
     }

@@ -136,10 +136,10 @@ public class ClientAppServiceTests
         var sources = new Mock<IAcquisitionSourceTypeDataRepository>();
         var domains = new Mock<IStatusDomainDataRepository>();
         var definitions = new Mock<IStatusDefinitionDataRepository>();
-        partyTypes.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((PartyTypeEntity?)null);
-        sources.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((AcquisitionSourceTypeEntity?)null);
-        domains.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((StatusDomainEntity?)null);
-        definitions.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((StatusDefinitionEntity?)null);
+        partyTypes.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).Returns(Task.FromResult<PartyTypeEntity?>(null));
+        sources.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).Returns(Task.FromResult<AcquisitionSourceTypeEntity?>(null));
+        domains.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).Returns(Task.FromResult<StatusDomainEntity?>(null));
+        definitions.Setup(x => x.GetByIdAsync(1, It.IsAny<CancellationToken>())).Returns(Task.FromResult<StatusDefinitionEntity?>(null));
         var localization = new Mock<ILocalizationService>();
         localization.Setup(x => x.GetMessage(It.IsAny<string>())).Returns("validation");
         var currentUser = new Mock<ICurrentUserService>();
