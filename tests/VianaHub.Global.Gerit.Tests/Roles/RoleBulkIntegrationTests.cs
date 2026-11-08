@@ -136,9 +136,10 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
         if (!payload.RootElement.TryGetProperty("items", out var items))
             return;
 
-        foreach (var item in items.EnumerateArray().Where(item => item.TryGetProperty("id", out _)))
+        foreach (var id in items.EnumerateArray()
+                     .Where(item => item.TryGetProperty("id", out _))
+                     .Select(item => item.GetProperty("id").GetInt32()))
         {
-            var id = item.GetProperty("id").GetInt32();
             using var deleted = await client.DeleteAsync($"/v1/roles/{id}");
         }
     }
