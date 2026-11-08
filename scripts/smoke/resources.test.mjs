@@ -15,6 +15,13 @@ test('Resources smoke covers lifecycle, search and logical cleanup', async () =>
   };
   const result = await runResourcesSmoke(client, { now: () => 1 });
   assert.equal(result.id, 7);
+  assert.deepEqual(calls.map(([method]) => method), [
+    'GET', 'POST', 'GET', 'GET', 'PUT',
+    'PATCH', 'PATCH', 'PATCH', 'PATCH',
+    'DELETE', 'GET', 'GET', 'GET'
+  ]);
   assert.equal(calls.filter(([method]) => method === 'DELETE').length, 1);
-  assert.ok(calls.some(([method, path]) => method === 'GET' && path === '/v1/resources/7'));
+  assert.equal(calls.filter(([method, path]) => method === 'GET' && path === '/v1/resources/7').length, 2);
+  assert.equal(calls.filter(([method, path]) => method === 'GET' && path.includes('/paged')).length, 3);
+  assert.ok(calls.some(([method, path, body]) => method === 'PUT' && path === '/v1/resources/7' && body.description.includes('updated')));
 });

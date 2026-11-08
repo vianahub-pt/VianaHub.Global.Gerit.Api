@@ -100,7 +100,6 @@ public static class ResourceEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPatch("/{id}/deactivate", async ([FromRoute] int id, [FromServices] IResourceAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
