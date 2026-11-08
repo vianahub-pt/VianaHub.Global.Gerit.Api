@@ -42,7 +42,6 @@ public static class ResourceEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ResourceDetailResponse>(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/paged", async ([AsParameters] PagedFilterRequest request, [FromServices] IResourceAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -86,7 +85,6 @@ public static class ResourceEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<bool>(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateResourceRequest>();
 
@@ -110,14 +108,13 @@ public static class ResourceEndpoint
             var ok = await appService.DeactivateAsync(id, ct);
             return notify.CustomResponse();
         })
-        .CustomAuthorize("Admin,BackOffice,Manager", "Resource", "Deactivate")
+        .CustomAuthorize("Admin,BackOffice,Manager", "Resources", "Deactivate")
         .WithName("DeactivateResource")
         .WithSummary("Swagger.Endpoint.Resource.Deactivate.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] IResourceAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -132,7 +129,6 @@ public static class ResourceEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         // Upload massivo de resources via CSV

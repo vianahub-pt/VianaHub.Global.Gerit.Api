@@ -4,6 +4,7 @@ using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 using VianaHub.Global.Gerit.Domain.Tools.Pagination;
+using VianaHub.Global.Gerit.Domain.Exceptions;
 
 namespace VianaHub.Global.Gerit.Domain.Services.Identity;
 
@@ -56,7 +57,39 @@ public class ResourceDomainService : IResourceDomainService
             return false;
         }
 
-        return await _repo.AddAsync(entity, ct);
+        try
+        {
+            return await _repo.AddAsync(entity, ct);
+        }
+        catch (ResourceConflictException)
+        {
+            _notify.Add("Application.Service.Resource.Create.ResourceAlreadyExists", 409);
+            return false;
+        }
+    }
+
+    public async Task<bool> CreateManyAsync(IReadOnlyCollection<ResourceEntity> entities, CancellationToken ct)
+    {
+        foreach (var entity in entities)
+        {
+            var validationResult = await _validator.ValidateForCreateAsync(entity);
+            if (!validationResult.IsValid)
+            {
+                foreach (var error in validationResult.Errors)
+                    _notify.Add(error.ErrorMessage, 400);
+                return false;
+            }
+        }
+
+        try
+        {
+            return await _repo.AddManyAsync(entities, ct);
+        }
+        catch (ResourceConflictException)
+        {
+            _notify.Add("Application.Service.Resource.Create.ResourceAlreadyExists", 409);
+            return false;
+        }
     }
     public async Task<bool> UpdateAsync(ResourceEntity entity, CancellationToken ct)
     {

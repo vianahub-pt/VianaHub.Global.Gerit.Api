@@ -91,7 +91,7 @@ Os três NON-UI têm score técnico, mas são contados separadamente dos quatro 
 | 36 | [VisitTeamEquipments](#visitteamequipments) | Child/sub-resource | 75 | 12 | 14 | 9 | 11 | 15 | 10 | 4 | 5 | CONSUME75:75 | needs product decision | Medium | 2 — VisitTeam, Equipments | Medium | Listas ignoram visitTeamId, detail/mutations verificam pai. Não filtrar no browser como workaround. Domínio ignora bool. | Remediar antes do fluxo completo |
 | 37 | [VisitTeamVehicles](#visitteamvehicles) | Child/sub-resource | 75 | 12 | 14 | 9 | 11 | 15 | 10 | 4 | 5 | CONSUME75:75 | needs product decision | Medium | 2 — VisitTeam, Vehicles | Medium | Listas ignoram visitTeamId, detail/mutations verificam pai. Domínio ignora bool; contrato contextual incompleto. | Remediar antes do fluxo completo |
 | 38 | [Plan](#plan) | Billing | 70 | 17 | 13 | 10 | 12 | 6 | 8 | 7 | 3 | AUTH70:70 | needs product decision | Medium | 0 — global/contexto auth | High | Rotas exigem Plans, seeds definem SubscriptionPlans; detail localizado, Update usa cultura corrente e fallback; sem CRUD público de todas as traduções/file-rules. | Remediar antes do fluxo completo |
-| 39 | [Resource](#resource) | Identity/Admin | 70 | 15 | 15 | 10 | 14 | 9 | 6 | 6 | 5 | AUTH70:70; CONSUME75:75 | needs product decision | Low | 0 — global/contexto auth | Medium | Description editável omitida do detail; Deactivate usa Resource no singular, seeds usam Resources. | Remediar antes do fluxo completo |
+| 39 | [Resource](#resource) | Identity/Admin | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | — | needs product decision | Low | 0 — global/contexto auth | Low | Implementação, contrato HTTP, lifecycle, bulk atómico, validação de CSV, localização e smoke preparados; produção ainda não certificada. | Executar deploy e smoke de produção |
 | 40 | [TenantAddress](#tenantaddress) | Child/sub-resource | 70 | 20 | 15 | 10 | 12 | 6 | 10 | 4 | 5 | AUTH70:70 | needs product decision | Medium | 2 — Tenants, AddressTypes | High | TenantAddress diverge do seed TenantAddresses; DTO/contexto pai utilizáveis, mas autorização bloqueia. Aba do tenant. | Remediar antes do fluxo completo |
 | 41 | [VisitTeamEmployee](#visitteamemployee) | Child/sub-resource | 70 | 15 | 14 | 10 | 11 | 6 | 10 | 4 | 5 | AUTH70:70; CONSUME75:75 | needs product decision | High | 3 — VisitTeam, Employees, VisitTeamFunctions | Medium | VisitTeamEmployees diverge do seed VisitTeamEmployee; GetAll filtra pai, GetPaged ignora visitTeamId. Não declarar vazamento entre tenants sem prova. | Remediar antes do fluxo completo |
 | 42 | [PartyType](#partytype) | Aggregate CRUD | 60 | 10 | 10 | 9 | 7 | 9 | 5 | 7 | 3 | ID75:75; PERM80:80; VALID85:85; CONSUME75:75 | needs product decision | Medium | 0 — global/contexto auth | High | Sem Translations/IDs no detail; actions de tradução ausentes; sem validators/prechecks nos sub-recursos; en-US removível; PUT raiz pt-PT; domínio ignora bool. SQL de IDs ficou SKIP. | Remediar antes do fluxo completo |
@@ -2713,11 +2713,11 @@ Schema SQL (sem execução):
 
 <a id="resource"></a>
 
-### Resource — 70% (D)
+### Resource — 100% LOCAL (produção não certificada)
 
-Description editável omitida do detail; Deactivate usa Resource no singular, seeds usam Resources.
+Implementação, contrato HTTP, lifecycle, bulk atómico, validação de CSV, localização e smoke preparados. A certificação de produção permanece pendente de deploy e execução do smoke.
 
-- A/B/C/D/E/F/G/H: `15/15/10/14/9/6/6/5`; soma=80; cap=70; final=70. Caps: AUTH70, CONSUME75.
+- A/B/C/D/E/F/G/H: `20/15/10/15/15/10/10/5`; soma=100; final local=100.
 - Category: Identity/Admin; Web complexity: Low; Business value: needs product decision.
 - Dependencies:  (0); módulos dependentes diretos=1.
 - Endpoint: [ResourceEndpoint.cs](../src/VianaHub.Global.Gerit.Api/Endpoints/Identity/ResourceEndpoint.cs); base `/v1/resources`.
@@ -2728,8 +2728,8 @@ Description editável omitida do detail; Deactivate usa Resource no singular, se
 - EF Mapping: [ResourceMapping.cs](../src/VianaHub.Global.Gerit.Infra.Data/Mappings/Identity/ResourceMapping.cs). SQL tables: `Resources`.
 - Route validators: [CreateResourceRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/Resource/CreateResourceRouteValidator.cs); [UpdateResourceRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/Resource/UpdateResourceRouteValidator.cs). WithValidation no módulo=2; conferir registro DI.
 - Domain validators: [ActivateResourceValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Resource/ActivateResourceValidator.cs); [CreateResourceValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Resource/CreateResourceValidator.cs); [DeactivateResourceValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Resource/DeactivateResourceValidator.cs); [DeleteResourceValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Resource/DeleteResourceValidator.cs); [ResourceValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Resource/ResourceValidator.cs); [UpdateResourceValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Resource/UpdateResourceValidator.cs).
-- Tests: [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [AuthorizationIdentityTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthorizationIdentityTests.cs); [AuthPermissionTokenTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthPermissionTokenTests.cs); [IdempotentStateTransitionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentStateTransitionTests.cs); [JwtBearerPipelineTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtBearerPipelineTests.cs).
-- Mapping: AutoMapper sim; complexidade Medium; culture-sensitive/resolver não identificado. [ResourceMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/ResourceMappingProfile.cs).
+- Tests: [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [AuthorizationIdentityTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthorizationIdentityTests.cs); [AuthPermissionTokenTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthPermissionTokenTests.cs); [IdempotentStateTransitionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentStateTransitionTests.cs); [JwtBearerPipelineTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtBearerPipelineTests.cs); smoke unit tests em `scripts/smoke/resources.test.mjs`.
+- Mapping: Mapperly via `ResourceMapper`; sem dependência de AutoMapper no fluxo de Resources.
 - Locale: 27 literais auditados; ausentes por locale: pt-PT=0, en-US=0, pt-BR=0, es-ES=0.
 
 <details>
@@ -2738,19 +2738,19 @@ Description editável omitida do detail; Deactivate usa Resource no singular, se
 | HTTP | Relative endpoint | Operação/handler | Status declarados ou explícitos |
 |---|---|---|---|
 | GET | / | GetAllResources; GetAllAsync | 200, 401, 403, 500 |
-| GET | /{id} | GetResourceById; GetByIdAsync | 200, 401, 403, 410, 404, 500 |
+| GET | /{id} | GetResourceById; GetByIdAsync | 200, 401, 403, 410, 500 |
 | GET | /paged | GetPagedResources; GetPagedAsync | 200, 401, 403, 500 |
 | POST | / | CreateResource; CreateAsync | 201, 401, 403, 409, 400, 500 |
-| PUT | /{id} | UpdateResource; UpdateAsync | 200, 401, 403, 410, 404, 500 |
-| PATCH | /{id}/activate | ActivateResource; ActivateAsync | 401, 403, 410, 200, 404, 500 |
-| PATCH | /{id}/deactivate | DeactivateResource; DeactivateAsync | 401, 403, 410, 200, 404, 500 |
-| DELETE | /{id} | DeleteResource; DeleteAsync | 401, 403, 410, 200, 404, 500 |
+| PUT | /{id} | UpdateResource; UpdateAsync | 200, 401, 403, 410, 500 |
+| PATCH | /{id}/activate | ActivateResource; ActivateAsync | 401, 403, 410, 200, 500 |
+| PATCH | /{id}/deactivate | DeactivateResource; DeactivateAsync | 401, 403, 410, 200, 500 |
+| DELETE | /{id} | DeleteResource; DeleteAsync | 401, 403, 410, 200, 500 |
 | POST | /bulk-upload | BulkUploadResources; BulkUploadAsync | 409, 401, 403, 200, 400, 500 |
 
 DTOs:
 
-- [ResourceResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/Resource/ResourceResponse.cs): `Id:int; Name:string?; IsActive:bool`.
-- [ResourceDetailResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/Resource/ResourceDetailResponse.cs): `Id:int; Name:string?; IsActive:bool; IsDeleted:bool; CreatedBy:int; CreatedAt:DateTime; ModifiedBy:int?; ModifiedAt:DateTime?`.
+- [ResourceResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/Resource/ResourceResponse.cs): `Id:int; Name:string; IsActive:bool`.
+- [ResourceDetailResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/Resource/ResourceDetailResponse.cs): `Id:int; Name:string; Description:string; IsActive:bool; IsDeleted:bool; CreatedBy:int; CreatedAt:DateTime; ModifiedBy:int?; ModifiedAt:DateTime?`.
 - [PagedFilterRequest.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Base/PagedFilterRequest.cs): `Search:string?; IsActive:bool?`.
 - [ListPageResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Base/ListPageResponse.cs): `Items:IEnumerable<T>; PageNumber:int; PageSize:int; TotalItems:int; TotalPages:int`.
 - [CreateResourceRequest.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Request/Identity/Resource/CreateResourceRequest.cs): `Name:string?; Description:string?`.
@@ -2764,7 +2764,7 @@ Authorization:
 - Roles `Admin,BackOffice,Manager`; resource `Resources`; action `Create`.
 - Roles `Admin,BackOffice,Manager`; resource `Resources`; action `Update`.
 - Roles `Admin,BackOffice,Manager`; resource `Resources`; action `Activate`.
-- Roles `Admin,BackOffice,Manager`; resource `Resource`; action `Deactivate`.
+- Roles `Admin,BackOffice,Manager`; resource `Resources`; action `Deactivate`.
 - Roles `Admin,BackOffice,Manager`; resource `Resources`; action `Delete`.
 - Roles `Admin,BackOffice,Manager`; resource `Resources`; action `BulkUpload`.
 

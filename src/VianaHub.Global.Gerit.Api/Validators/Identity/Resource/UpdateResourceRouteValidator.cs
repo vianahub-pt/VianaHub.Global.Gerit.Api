@@ -13,6 +13,7 @@ public class UpdateResourceRouteValidator : AbstractValidator<UpdateResourceRequ
         _localization = localization;
 
         RuleFor(x => x.Description)
+            .NotEmpty().WithMessage(_localization.GetMessage("Api.Validator.Resource.Update.Description.Required"))
             .MaximumLength(255).WithMessage(_localization.GetMessage("Api.Validator.Resource.Update.Description.MaximumLength", 255));
     }
 }
