@@ -13,6 +13,7 @@ public interface IRoleDomainService
     Task<bool> ExistsByNameAsync(int tenantId, string name, CancellationToken ct);
 
     Task<bool> CreateAsync(RoleEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<RoleEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(RoleEntity entity, CancellationToken ct);
     Task<bool> ActivateAsync(RoleEntity entity, CancellationToken ct);
     Task<bool> DeactivateAsync(RoleEntity entity, CancellationToken ct);

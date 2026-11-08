@@ -66,7 +66,8 @@ public class RoleMapping : IEntityTypeConfiguration<RoleEntity>
         // Constraints �nicos
         builder.HasIndex(x => new { x.TenantId, x.Name })
             .IsUnique()
-            .HasDatabaseName("UQ_Roles_Tenant_Name");
+            .HasFilter("[IsDeleted] = 0")
+            .HasDatabaseName("UX_Roles_Tenant_Name");
 
         // Relacionamentos
         builder.HasOne(x => x.Tenant)

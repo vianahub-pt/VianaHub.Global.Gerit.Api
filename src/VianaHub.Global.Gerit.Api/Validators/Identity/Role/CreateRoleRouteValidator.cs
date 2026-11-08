@@ -17,6 +17,7 @@ public class CreateRoleRouteValidator : AbstractValidator<CreateRoleRequest>
             .MaximumLength(100).WithMessage(_localization.GetMessage("Api.Validator.Role.Create.Name.MaximumLength", 100));
 
         RuleFor(x => x.Description)
+            .NotEmpty().WithMessage(_localization.GetMessage("Api.Validator.Role.Create.Description"))
             .MaximumLength(255).WithMessage(_localization.GetMessage("Api.Validator.Role.Create.Description.MaximumLength", 255));
     }
 }

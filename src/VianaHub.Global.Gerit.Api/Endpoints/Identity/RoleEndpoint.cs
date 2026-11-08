@@ -41,7 +41,6 @@ public static class RoleEndpoint
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<RoleDetailResponse>(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/paged", async ([AsParameters] PagedFilterRequest request, [FromServices] IRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -86,7 +85,6 @@ public static class RoleEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateRoleRequest>();
 
@@ -102,7 +100,6 @@ public static class RoleEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPatch("/{id}/deactivate", async ([FromRoute] int id, [FromServices] IRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -117,7 +114,6 @@ public static class RoleEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] IRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -132,7 +128,6 @@ public static class RoleEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         // Upload massivo de roles via CSV
