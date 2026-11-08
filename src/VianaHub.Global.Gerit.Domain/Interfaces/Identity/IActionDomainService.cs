@@ -13,6 +13,7 @@ public interface IActionDomainService
     Task<bool> ExistsByNameAsync(string name, CancellationToken ct);
 
     Task<bool> CreateAsync(ActionEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<ActionEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(ActionEntity entity, CancellationToken ct);
     Task<bool> ActivateAsync(ActionEntity entity, CancellationToken ct);
     Task<bool> DeactivateAsync(ActionEntity entity, CancellationToken ct);

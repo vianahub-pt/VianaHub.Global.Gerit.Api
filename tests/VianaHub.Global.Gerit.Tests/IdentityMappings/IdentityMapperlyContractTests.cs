@@ -58,7 +58,7 @@ public sealed class IdentityMapperlyContractTests
         var populated = new RolePermissionsEntity(1, 2, 3, 4);
         SetProperty(populated, nameof(RolePermissionsEntity.Role), new RoleEntity(1, "Admin", null, 1));
         SetProperty(populated, nameof(RolePermissionsEntity.Resource), new ResourceEntity("Clients", null, 1));
-        SetProperty(populated, nameof(RolePermissionsEntity.Action), new ActionEntity("Read", null, 1));
+        SetProperty(populated, nameof(RolePermissionsEntity.Action), new ActionEntity("Read", "Read", 1));
         var detail = RolePermissionMapper.ToDetail(populated);
 
         Assert.Equal("Admin", detail.RoleName);

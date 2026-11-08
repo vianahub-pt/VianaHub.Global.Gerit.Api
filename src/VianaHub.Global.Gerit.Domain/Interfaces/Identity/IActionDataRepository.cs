@@ -12,5 +12,6 @@ public interface IActionDataRepository
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
     Task<bool> ExistsByNameAsync(string? name, CancellationToken ct);
     Task<bool> AddAsync(ActionEntity entity, CancellationToken ct);
+    Task<bool> AddManyAsync(IReadOnlyCollection<ActionEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(ActionEntity entity, CancellationToken ct);
 }

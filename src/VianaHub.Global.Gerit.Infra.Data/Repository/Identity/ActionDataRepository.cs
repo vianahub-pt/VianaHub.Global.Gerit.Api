@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
+using VianaHub.Global.Gerit.Domain.Exceptions;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Pagination;
@@ -52,6 +54,9 @@ public class ActionDataRepository : IActionDataRepository
         var count = await query.CountAsync(ct);
 
         var orderedQuery = CreateSort.ApplyOrdering(query, request);
+        orderedQuery = string.Equals(request.SortDirection, "desc", StringComparison.OrdinalIgnoreCase)
+            ? orderedQuery.ThenByDescending(x => x.Id)
+            : orderedQuery.ThenBy(x => x.Id);
 
         var pageNumber = request.PageNumber ?? 1;
         var pageSize = request.PageSize ?? Paging.MinPageSize();
@@ -78,13 +83,52 @@ public class ActionDataRepository : IActionDataRepository
 
     public async Task<bool> ExistsByNameAsync(string? name, CancellationToken ct)
     {
-        return await _context.Set<ActionEntity>().AsNoTracking().AnyAsync(x => x.Name == name && !x.IsDeleted, ct);
+        var normalized = name?.Trim();
+        if (string.IsNullOrEmpty(normalized)) return false;
+
+        var upper = normalized.ToUpper();
+        return await _context.Set<ActionEntity>().AsNoTracking()
+            .AnyAsync(x => !x.IsDeleted && x.Name.ToUpper() == upper, ct);
     }
 
     public async Task<bool> AddAsync(ActionEntity entity, CancellationToken ct)
     {
         await _context.Set<ActionEntity>().AddAsync(entity, ct);
-        return await _context.SaveChangesAsync(ct) > 0;
+        try
+        {
+            return await _context.SaveChangesAsync(ct) > 0;
+        }
+        catch (DbUpdateException ex) when (IsNameUniqueViolation(ex))
+        {
+            throw new ActionConflictException(ex);
+        }
+    }
+
+    public async Task<bool> AddManyAsync(IReadOnlyCollection<ActionEntity> entities, CancellationToken ct)
+    {
+        if (entities.Count == 0) return false;
+
+        IDbContextTransaction? transaction = null;
+        try
+        {
+            if (_context.Database.IsRelational())
+                transaction = await _context.Database.BeginTransactionAsync(ct);
+
+            await _context.Set<ActionEntity>().AddRangeAsync(entities, ct);
+            var saved = await _context.SaveChangesAsync(ct) > 0;
+            if (transaction is not null)
+                await transaction.CommitAsync(ct);
+            return saved;
+        }
+        catch (DbUpdateException ex) when (IsNameUniqueViolation(ex))
+        {
+            if (transaction is not null) await transaction.RollbackAsync(ct);
+            throw new ActionConflictException(ex);
+        }
+        finally
+        {
+            if (transaction is not null) await transaction.DisposeAsync();
+        }
     }
 
     public async Task<bool> UpdateAsync(ActionEntity entity, CancellationToken ct)
@@ -92,4 +136,7 @@ public class ActionDataRepository : IActionDataRepository
         _context.Set<ActionEntity>().Update(entity);
         return await _context.SaveChangesAsync(ct) > 0;
     }
+
+    private static bool IsNameUniqueViolation(DbUpdateException exception) =>
+        exception.InnerException?.Message.Contains("UX_Actions_Name", StringComparison.OrdinalIgnoreCase) == true;
 }
