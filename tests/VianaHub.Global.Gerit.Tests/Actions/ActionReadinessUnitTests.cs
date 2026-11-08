@@ -102,7 +102,7 @@ public sealed class ActionReadinessUnitTests
         var localization = Localization();
         var domain = new ActionDomainService(repo.Object, new ActionValidator(localization), notify.Object);
         var app = new ActionAppService(repo.Object, domain, notify.Object, currentUser, localization,
-            NullLogger<ActionAppService>.Instance, Mock.Of<IFileValidationService>(x => x.ValidateFile(It.IsAny<IFormFile>()) == true));
+            NullLogger<ActionAppService>.Instance, Mock.Of<IFileValidationService>(x => x.ValidateFile(It.IsAny<IFormFile>())));
         return (app, currentUser);
     }
 
