@@ -2,6 +2,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
 using System.Globalization;
+using System.Text;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Role;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Role;
@@ -51,7 +52,13 @@ public class RoleAppService : IRoleAppService
     public async Task<RoleDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return entity is null ? null! : RoleMapper.ToDetail(entity);
+        if (entity is null)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Role.GetById.ResourceNotFound"), 410);
+            return null!;
+        }
+
+        return RoleMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<RoleResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
@@ -65,14 +72,16 @@ public class RoleAppService : IRoleAppService
     {
         var tenantId = _currentUser.GetTenantId();
 
-        var exists = await _repo.ExistsByNameAsync(tenantId, request.Name, ct);
+        var normalizedName = request.Name?.Trim();
+        var exists = (await _repo.GetAllAsync(ct)).Any(role =>
+            string.Equals(role.Name?.Trim(), normalizedName, StringComparison.OrdinalIgnoreCase));
         if (exists)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Role.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
-        var entity = new RoleEntity(tenantId, request.Name, request.Description, _currentUser.GetUserId());
+        var entity = new RoleEntity(tenantId, normalizedName, request.Description, _currentUser.GetUserId());
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -160,68 +169,73 @@ public class RoleAppService : IRoleAppService
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = true,
-                Delimiter = ";", // CSV usa ponto e v�rgula como delimitador
-                MissingFieldFound = null,
-                HeaderValidated = null,
-                TrimOptions = TrimOptions.Trim,
-                BadDataFound = null // Ignora linhas mal formatadas ao inv�s de lan�ar exce��o
+                Delimiter = ";",
+                TrimOptions = TrimOptions.Trim
             };
 
             using var csv = new CsvReader(reader, config);
             var records = new List<BulkUploadRoleItem>();
 
-            csv.Read();
-            csv.ReadHeader();
+            if (!csv.Read() || !csv.ReadHeader())
+            {
+                _notify.Add(_localization.GetMessage("Application.Service.Role.BulkUpload.EmptyFile"), 400);
+                return null;
+            }
 
             int rowCount = 0;
             int maxRows = DomainExtensions.GetMaxCsvRows();
 
-            while (csv.Read() && rowCount < maxRows)
+            while (csv.Read())
             {
-                try
+                if (rowCount >= maxRows)
                 {
-                    var record = csv.GetRecord<BulkUploadRoleItem>();
-                    if (record != null)
-                    {
-                        // Sanitiza e normaliza campos
-                        record.Name = record.Name?.SanitizeCsvInput().NormalizeUtf8();
-                        record.Description = record.Description?.SanitizeCsvInput().NormalizeUtf8();
-
-                        // Valida se os campos n�o cont�m conte�do perigoso
-                        if (!string.IsNullOrEmpty(record.Name) && !record.Name.IsSafeCsvValue())
-                        {
-                            _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Name.IsSafeCsvValue", rowCount + 2), 400);
-                            continue;
-                        }
-
-                        if (!string.IsNullOrEmpty(record.Description) && !record.Description.IsSafeCsvValue())
-                        {
-                            _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Description.IsSafeCsvValue", rowCount + 2), 400);
-                            continue;
-                        }
-
-                        records.Add(record);
-                    }
-                    rowCount++;
+                    _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.MaxRows", maxRows), 400);
+                    return null;
                 }
-                catch (CsvHelperException)
+
+                var record = csv.GetRecord<BulkUploadRoleItem>();
+                if (record is null)
                 {
-                    // Log linha com erro mas continua processamento
-                    _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
-                    rowCount++;
-                    continue;
+                    _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Exception"), 400);
+                    return null;
                 }
-            }
+                record.Name = record.Name?.SanitizeCsvInput().NormalizeUtf8()?.Trim();
+                record.Description = record.Description?.SanitizeCsvInput().NormalizeUtf8()?.Trim();
 
-            if (rowCount >= maxRows)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.MaxRows", maxRows), 400);
-                return null;
+                if (!string.IsNullOrEmpty(record.Name) && !record.Name.IsSafeCsvValue())
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Name.IsSafeCsvValue", rowCount + 2), 400);
+                    return null;
+                }
+
+                if (!string.IsNullOrEmpty(record.Description) && !record.Description.IsSafeCsvValue())
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Description.IsSafeCsvValue", rowCount + 2), 400);
+                    return null;
+                }
+
+                records.Add(record);
+                rowCount++;
             }
 
             return records;
         }
-        catch (Exception)
+        catch (CsvHelperException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Exception"), 400);
+            return null;
+        }
+        catch (InvalidDataException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Exception"), 400);
+            return null;
+        }
+        catch (IOException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Exception"), 400);
+            return null;
+        }
+        catch (DecoderFallbackException)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Role.ReadCsvFile.Exception"), 400);
             return null;
@@ -230,41 +244,39 @@ public class RoleAppService : IRoleAppService
 
     private async Task<bool> ProcessBulkItemsAsync(List<BulkUploadRoleItem> items, CancellationToken ct)
     {
-        var hasErrors = false;
         var tenantId = _currentUser.GetTenantId();
+        var normalizedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var entities = new List<RoleEntity>(items.Count);
 
         foreach (var item in items)
         {
             // Valida campos obrigat�rios
             if (!ValidateBulkItem(item))
             {
-                hasErrors = true;
-                continue;
+                return false;
+            }
+
+            var normalizedName = item.Name!.Trim();
+            if (!normalizedNames.Add(normalizedName))
+            {
+                _notify.Add(_localization.GetMessage("Application.Service.Role.ProcessBulkItems.ExistsByName", normalizedName), 409);
+                return false;
             }
 
             // Verifica duplicidade
-            var exists = await _repo.ExistsByNameAsync(tenantId, item.Name, ct);
+            var exists = (await _repo.GetAllAsync(ct)).Any(role =>
+                string.Equals(role.Name?.Trim(), normalizedName, StringComparison.OrdinalIgnoreCase));
             if (exists)
             {
                 _notify.Add(_localization.GetMessage("Application.Service.Role.ProcessBulkItems.ExistsByName", item.Name), 409);
-                hasErrors = true;
-                continue;
+                return false;
             }
 
             // Cria a entidade
-            var entity = new RoleEntity(tenantId, item.Name, item.Description, _currentUser.GetUserId());
-
-            // Tenta criar no dom�nio
-            var success = await _domain.CreateAsync(entity, ct);
-
-            if (!success)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.Role.ProcessBulkItems.FailedToCreate", item.Name), 400);
-                hasErrors = true;
-            }
+            entities.Add(new RoleEntity(tenantId, normalizedName, item.Description, _currentUser.GetUserId()));
         }
 
-        return !hasErrors;
+        return await _domain.CreateManyAsync(entities, ct);
     }
 
     private bool ValidateBulkItem(BulkUploadRoleItem item)

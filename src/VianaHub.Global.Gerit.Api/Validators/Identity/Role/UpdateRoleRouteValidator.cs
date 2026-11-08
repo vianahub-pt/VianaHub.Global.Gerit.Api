@@ -13,6 +13,7 @@ public class UpdateRoleRouteValidator : AbstractValidator<UpdateRoleRequest>
         _localization = localization;
 
         RuleFor(x => x.Description)
+            .NotEmpty().WithMessage(_localization.GetMessage("Api.Validator.Role.Update.Description"))
             .MaximumLength(255).WithMessage(_localization.GetMessage("Api.Validator.Role.Update.Description.MaximumLength", 255));
     }
 }
