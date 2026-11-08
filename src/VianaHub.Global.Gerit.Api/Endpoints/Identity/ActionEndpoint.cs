@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using VianaHub.Global.Gerit.Api.Endpoints.Base;
 using VianaHub.Global.Gerit.Api.Helpers;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
@@ -8,6 +9,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Action;
 using VianaHub.Global.Gerit.Application.Interfaces.Billing;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
+using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
 namespace VianaHub.Global.Gerit.Api.Endpoints.Identity;
 
@@ -43,7 +45,6 @@ public static class ActionEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ActionDetailResponse?>(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/paged", async ([AsParameters] PagedFilterRequest request, [FromServices] IActionAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -88,14 +89,13 @@ public static class ActionEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateActionRequest>();
 
         groupV1.MapPatch("/{id}/activate", async ([FromRoute] int id, [FromServices] IActionAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.ActivateAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.HasNotify() ? notify.CustomResponse() : notify.CustomResponse(ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice", "Actions", "Activate")
         .WithName("ActivateAction")
@@ -104,13 +104,12 @@ public static class ActionEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPatch("/{id}/deactivate", async ([FromRoute] int id, [FromServices] IActionAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeactivateAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.HasNotify() ? notify.CustomResponse() : notify.CustomResponse(ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice", "Actions", "Deactivate")
         .WithName("DeactivateAction")
@@ -119,13 +118,12 @@ public static class ActionEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] IActionAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var ok = await appService.DeleteAsync(id, ct);
-            return notify.CustomResponse();
+            return notify.HasNotify() ? notify.CustomResponse() : notify.CustomResponse(ok ? 200 : 400);
         })
         .CustomAuthorize("Admin,BackOffice", "Actions", "Delete")
         .WithName("DeleteAction")
@@ -134,7 +132,6 @@ public static class ActionEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
-        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         // Upload massivo de Functions via CSV
@@ -142,8 +139,8 @@ public static class ActionEndpoint
         {
             if (!request.HasFormContentType || request.Form.Files.Count == 0)
             {
-                // Utiliza chave de tradução para mensagem
-                notify.Add("Api.Upload.NoFileProvided", 400);
+                var localization = request.HttpContext.RequestServices.GetRequiredService<ILocalizationService>();
+                notify.Add(localization.GetMessage("Api.Upload.NoFileProvided"), 400);
                 return notify.CustomResponse();
             }
 

@@ -7,8 +7,8 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Identity;
 /// </summary>
 public class ActionEntity : Entity
 {
-    public string? Name { get; private set; }
-    public string? Description { get; set; }
+    public string Name { get; private set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
 
@@ -22,7 +22,7 @@ public class ActionEntity : Entity
     /// <summary>
     /// Construtor para cria��o de uma nova a��o
     /// </summary>
-    public ActionEntity(string? name, string? description, int createdBy)
+    public ActionEntity(string name, string description, int createdBy)
     {
         Name = name;
         Description = description;
@@ -31,7 +31,7 @@ public class ActionEntity : Entity
         CreatedBy = createdBy;
     }
 
-    public void Update(string? description, int modifiedBy)
+    public void Update(string description, int modifiedBy)
     {
         Description = description;
         ModifiedBy = modifiedBy;

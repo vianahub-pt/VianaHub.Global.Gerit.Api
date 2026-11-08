@@ -181,11 +181,11 @@ Infra comum: [DI](../src/VianaHub.Global.Gerit.Infra.IoC/DependencyInjection.cs)
 
 <a id="action"></a>
 
-### Action — 100% (A)
+### Action — local certification branch (A)
 
 Referência homologada fornecida no pedido; Name imutável, Description recuperável, transições repetidas200, delete repetido410.
 
-- A/B/C/D/E/F/G/H: `20/15/10/15/15/10/10/5`; soma=100; cap=100; final=100. Caps: nenhum.
+- A/B/C/D/E/F/G/H: implementação local em validação; produção ainda não certificada devido ao lifecycle soft-delete.
 - Category: Identity/Admin; Web complexity: Low; Business value: needs product decision.
 - Dependencies:  (0); módulos dependentes diretos=1.
 - Endpoint: [ActionEndpoint.cs](../src/VianaHub.Global.Gerit.Api/Endpoints/Identity/ActionEndpoint.cs); base `/v1/actions`.
@@ -196,8 +196,9 @@ Referência homologada fornecida no pedido; Name imutável, Description recuper�
 - EF Mapping: [ActionMapping.cs](../src/VianaHub.Global.Gerit.Infra.Data/Mappings/Identity/ActionMapping.cs). SQL tables: `Actions`.
 - Route validators: [CreateActionRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/Action/CreateActionRouteValidator.cs); [UpdateActionRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/Action/UpdateActionRouteValidator.cs). WithValidation no módulo=2; conferir registro DI.
 - Domain validators: [ActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/ActionValidator.cs); [ActivateActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/ActivateActionValidator.cs); [CreateActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/CreateActionValidator.cs); [DeactivateActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/DeactivateActionValidator.cs); [DeleteActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/DeleteActionValidator.cs); [UpdateActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/UpdateActionValidator.cs).
-- Tests: [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [AuthorizationIdentityTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthorizationIdentityTests.cs); [AuthPermissionTokenTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthPermissionTokenTests.cs); [CanonicalCatalogCreationTests.cs](../tests/VianaHub.Global.Gerit.Tests/CanonicalCatalogCreationTests.cs); [IdempotentActionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentActionTests.cs); [IdempotentStateTransitionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentStateTransitionTests.cs); [JwtBearerPipelineTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtBearerPipelineTests.cs); [SecurityLogInjectionTests.cs](../tests/VianaHub.Global.Gerit.Tests/SecurityLogInjectionTests.cs).
-- Mapping: AutoMapper sim; complexidade Low; culture-sensitive/resolver não identificado. [ActionMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/ActionMappingProfile.cs).
+- Tests: [ActionHttpIntegrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Actions/ActionHttpIntegrationTests.cs); [ActionReadinessUnitTests.cs](../tests/VianaHub.Global.Gerit.Tests/Actions/ActionReadinessUnitTests.cs); [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [IdempotentActionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentActionTests.cs).
+- Mapping: Mapperly; sem dependência funcional de AutoMapper. [ActionMapper.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/ActionMapper.cs).
+- Bulk: transacional e all-or-nothing; cleanup público remove apenas da visão ativa porque Actions usa soft-delete.
 - Locale: 28 literais auditados; ausentes por locale: pt-PT=0, en-US=0, pt-BR=0, es-ES=0.
 
 <details>
@@ -206,13 +207,13 @@ Referência homologada fornecida no pedido; Name imutável, Description recuper�
 | HTTP | Relative endpoint | Operação/handler | Status declarados ou explícitos |
 |---|---|---|---|
 | GET | / | GetAllActions; GetAllAsync | 200, 401, 403, 500 |
-| GET | /{id} | GetActionById; GetByIdAsync | 200, 401, 403, 410, 404, 500 |
+| GET | /{id} | GetActionById; GetByIdAsync | 200, 401, 403, 410, 500 |
 | GET | /paged | GetActionsPaged; GetPagedAsync | 200, 401, 403, 500 |
 | POST | / | CreateAction; CreateAsync | 201, 401, 403, 409, 400, 500 |
-| PUT | /{id} | UpdateAction; UpdateAsync | 200, 401, 403, 410, 400, 404, 500 |
-| PATCH | /{id}/activate | ActivateAction; ActivateAsync | 401, 403, 410, 200, 404, 500 |
-| PATCH | /{id}/deactivate | DeactivateAction; DeactivateAsync | 401, 403, 410, 200, 404, 500 |
-| DELETE | /{id} | DeleteAction; DeleteAsync | 401, 403, 410, 200, 404, 500 |
+| PUT | /{id} | UpdateAction; UpdateAsync | 200, 401, 403, 410, 400, 500 |
+| PATCH | /{id}/activate | ActivateAction; ActivateAsync | 401, 403, 410, 200, 500 |
+| PATCH | /{id}/deactivate | DeactivateAction; DeactivateAsync | 401, 403, 410, 200, 500 |
+| DELETE | /{id} | DeleteAction; DeleteAsync | 401, 403, 410, 200, 500 |
 | POST | /bulk-upload | BulkUploadAction; BulkUploadAsync | 409, 401, 403, 200, 400, 500 |
 
 DTOs:
