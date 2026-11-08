@@ -181,11 +181,11 @@ Infra comum: [DI](../src/VianaHub.Global.Gerit.Infra.IoC/DependencyInjection.cs)
 
 <a id="action"></a>
 
-### Action — local certification branch (A)
+### Action — 100% LOCAL (A)
 
 Referência homologada fornecida no pedido; Name imutável, Description recuperável, transições repetidas200, delete repetido410.
 
-- A/B/C/D/E/F/G/H: implementação local em validação; produção ainda não certificada devido ao lifecycle soft-delete.
+- A/B/C/D/E/F/G/H: implementação local completa; produção ainda não certificada porque o smoke ainda não foi executado.
 - Category: Identity/Admin; Web complexity: Low; Business value: needs product decision.
 - Dependencies:  (0); módulos dependentes diretos=1.
 - Endpoint: [ActionEndpoint.cs](../src/VianaHub.Global.Gerit.Api/Endpoints/Identity/ActionEndpoint.cs); base `/v1/actions`.
@@ -198,7 +198,9 @@ Referência homologada fornecida no pedido; Name imutável, Description recuper�
 - Domain validators: [ActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/ActionValidator.cs); [ActivateActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/ActivateActionValidator.cs); [CreateActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/CreateActionValidator.cs); [DeactivateActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/DeactivateActionValidator.cs); [DeleteActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/DeleteActionValidator.cs); [UpdateActionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/Action/UpdateActionValidator.cs).
 - Tests: [ActionHttpIntegrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Actions/ActionHttpIntegrationTests.cs); [ActionReadinessUnitTests.cs](../tests/VianaHub.Global.Gerit.Tests/Actions/ActionReadinessUnitTests.cs); [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [IdempotentActionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentActionTests.cs).
 - Mapping: Mapperly; sem dependência funcional de AutoMapper. [ActionMapper.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/ActionMapper.cs).
-- Bulk: transacional e all-or-nothing; cleanup público remove apenas da visão ativa porque Actions usa soft-delete.
+- Bulk: transacional e all-or-nothing.
+- Smoke preparado: cleanup segue `docs/PRODUCTION-SMOKE.md`; soft-delete é suficiente quando o detalhe retorna 410 e a ação desaparece dos reads normais (GET all/paged).
+- Production: NOT YET CERTIFIED; não declarar 100% CLOSED antes de deploy + smoke.
 - Locale: 28 literais auditados; ausentes por locale: pt-PT=0, en-US=0, pt-BR=0, es-ES=0.
 
 <details>

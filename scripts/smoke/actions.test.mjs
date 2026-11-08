@@ -8,7 +8,7 @@ function fixture() {
   const client = {
     async get(path) {
       calls.push(['GET', path]);
-      if (path.includes('/paged')) return { status: 200, data: { items: [{ id: 42 }] } };
+      if (path.includes('/paged')) return { status: 200, data: { items: deleted ? [] : [{ id: 42 }] } };
       if (path === '/v1/actions/') return { status: 200, data: deleted ? [] : [{ id: 42, name: 'SMOKE_ACTION_123' }] };
       return deleted ? { status: 410 } : { status: 200, data: { id: 42, name: 'SMOKE_ACTION_123' } };
     },
@@ -27,5 +27,8 @@ test('Actions smoke covers lifecycle and cleanup without touching existing recor
   const result = await runActionsSmoke(f.client, { now: () => 123 });
   assert.equal(result.id, 42);
   assert.equal(f.calls.filter(([method]) => method === 'DELETE').length, 1);
+  assert.ok(f.calls.some(([method, path]) => method === 'GET' && path === '/v1/actions/42'));
+  assert.ok(f.calls.some(([method, path]) => method === 'GET' && path === '/v1/actions/'));
+  assert.ok(f.calls.filter(([method, path]) => method === 'GET' && path.includes('/paged')).length >= 2);
   assert.ok(f.calls.every(([, path]) => path.startsWith('/v1/actions')));
 });
