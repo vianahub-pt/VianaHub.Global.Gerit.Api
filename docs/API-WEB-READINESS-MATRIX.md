@@ -80,7 +80,7 @@ Os três NON-UI têm score técnico, mas são contados separadamente dos quatro 
 | 25 | [Employee](#employee) | Aggregate CRUD | 75 | 14 | 15 | 10 | 13 | 15 | 8 | 5 | 5 | CONSUME75:75 | needs product decision | Medium | 2 — Tenants, StatusDefinitions | High | DTO próprio completo; criação exige par de status cuja relação não é retornada pelo lookup. | Remediar antes do fluxo completo |
 | 26 | [EmployeeContactPerson](#employeecontactperson) | Child/sub-resource | 75 | 14 | 14 | 10 | 12 | 15 | 5 | 4 | 5 | CONSUME75:75 | needs product decision | Low | 2 — Tenants, Employees | Medium | Update permite Email/Phone/JobTitle/Department/IsCellPhoneWhatsapp que detail omite; não apagar ao editar. | Remediar antes do fluxo completo |
 | 27 | [Equipment](#equipment) | Business CRUD | 75 | 14 | 15 | 10 | 13 | 15 | 8 | 7 | 5 | CONSUME75:75 | needs product decision | Medium | 3 — Tenants, StatusDefinitions, EquipmentTypes | High | EquipmentType é recuperável; lookup do par StatusDefinitionId/StatusDomainId está incompleto. | Remediar antes do fluxo completo |
-| 28 | [Role](#role) | Identity/Admin | 75 | 15 | 15 | 10 | 14 | 15 | 6 | 6 | 5 | CONSUME75:75 | needs product decision | Low | 1 — Tenants | Low | Update.Description não é retornada por RoleDetailResponse; Name é identidade imutável. | Remediar antes do fluxo completo |
+| 28 | [Role](#role) | Identity/Admin | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Medium | DEV/HML SQL-backed HTTP, RLS, authorization, lifecycle, validation, duplicate normalization, race conflict, bulk atomicity and dependency behavior certified; production smoke not executed. | Pronto para smoke após promoção/deploy |
 | 29 | [RolePermission](#rolepermission) | Child/sub-resource | 75 | 12 | 13 | 10 | 10 | 15 | 5 | 5 | 5 | ID75:75; CONSUME75:75 | needs product decision | High | 4 — Tenants, Roles, Resources, Actions | Medium | DELETE exige roleId/resourceId/actionId; DTO devolve nomes e Id da linha, não os três IDs. Sem Activate/Update por design não há penalidade automática. | Remediar antes do fluxo completo |
 | 30 | [Subscription](#subscription) | Billing | 75 | 15 | 14 | 9 | 10 | 10 | 9 | 5 | 5 | PERM80:80; CONSUME75:75 | needs product decision | High | 3 — Tenants, StatusDefinitions, SubscriptionPlans | High | GetActivate diverge do seed GetActive; par de status necessário; GetById só mapeia retorno sem guard410 explícito; rotas sem WithValidation apesar de validadores/domínio existentes. | Remediar antes do fluxo completo |
 | 31 | [Tenant](#tenant) | Aggregate CRUD | 75 | 10 | 14 | 10 | 12 | 15 | 5 | 6 | 5 | ID75:75; CONSUME75:75 | needs product decision | High | 2 — PartyTypes, AcquisitionSourceTypes | Low | Detail omite PartyTypeId, AcquisitionSourceTypeId, Email, Website, UrlImage e Note aceitos no Update. GetAll ainda serve como lookup de IDs. | Remediar antes do fluxo completo |
@@ -1991,11 +1991,11 @@ Schema SQL (sem execução):
 
 <a id="role"></a>
 
-### Role — 75% (C)
+### Role — 100% LOCAL / DEV-HML integration certified (produção smoke PREPARED / NOT EXECUTED)
 
 Update.Description não é retornada por RoleDetailResponse; Name é identidade imutável.
 
-- A/B/C/D/E/F/G/H: `15/15/10/14/15/6/6/5`; soma=86; cap=75; final=75. Caps: CONSUME75.
+- A/B/C/D/E/F/G/H: `20/15/10/15/15/10/10/5`; soma=100; final=100.
 - Category: Identity/Admin; Web complexity: Low; Business value: needs product decision.
 - Dependencies: Tenants (1); módulos dependentes diretos=2.
 - Endpoint: [RoleEndpoint.cs](../src/VianaHub.Global.Gerit.Api/Endpoints/Identity/RoleEndpoint.cs); base `/v1/roles`.
@@ -2009,6 +2009,9 @@ Update.Description não é retornada por RoleDetailResponse; Name é identidade 
 - Tests: [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [AuthorizationIdentityTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthorizationIdentityTests.cs); [AuthPermissionTokenTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthPermissionTokenTests.cs); [IdempotentStateTransitionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentStateTransitionTests.cs); [JwtBearerPipelineTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtBearerPipelineTests.cs).
 - Mapping: AutoMapper sim; complexidade Low; culture-sensitive/resolver não identificado. [RoleMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/RoleMappingProfile.cs).
 - Locale: 28 literais auditados; ausentes por locale: pt-PT=0, en-US=0, pt-BR=0, es-ES=0.
+- Schema drift: RESOLVED; `UX_Roles_Tenant_Name` filtered unique index aplicado no DEV/HML.
+- Certificação DEV/HML: 18 testes Roles, 3 testes SQL/RLS, 1562 testes .NET completos e 30 testes Node PASS; resíduos lógicos=0 (tombstones de soft delete preservados).
+- Produção: NOT CLOSED; production smoke PREPARED / NOT EXECUTED.
 
 <details>
 <summary>Operações, DTOs, grants e constraints</summary>

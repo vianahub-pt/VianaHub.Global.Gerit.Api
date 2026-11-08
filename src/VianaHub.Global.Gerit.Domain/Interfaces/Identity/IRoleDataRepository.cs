@@ -12,5 +12,6 @@ public interface IRoleDataRepository
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
     Task<bool> ExistsByNameAsync(int tenantId, string? name, CancellationToken ct);
     Task<bool> AddAsync(RoleEntity entity, CancellationToken ct);
+    Task<bool> AddManyAsync(IReadOnlyCollection<RoleEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(RoleEntity entity, CancellationToken ct);
 }

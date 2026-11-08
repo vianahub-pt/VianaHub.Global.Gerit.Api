@@ -9,8 +9,8 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Identity;
 public class RoleEntity : Entity
 {
     public int TenantId { get; private set; }
-    public string? Name { get; private set; }
-    public string? Description { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
 
@@ -32,8 +32,8 @@ public class RoleEntity : Entity
     public RoleEntity(int tenantId, string? name, string? description, int createdBy)
     {
         TenantId = tenantId;
-        Name = name;
-        Description = description;
+        Name = name?.Trim() ?? string.Empty;
+        Description = description?.Trim() ?? string.Empty;
         IsActive = true;
         IsDeleted = false;
         CreatedBy = createdBy;
@@ -41,7 +41,7 @@ public class RoleEntity : Entity
 
     public void Update(string? description, int modifiedBy)
     {
-        Description = description;
+        Description = description?.Trim() ?? string.Empty;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

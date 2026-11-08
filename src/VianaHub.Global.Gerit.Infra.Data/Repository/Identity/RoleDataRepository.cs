@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using System.Data.Common;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
+using VianaHub.Global.Gerit.Domain.Exceptions;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace VianaHub.Global.Gerit.Infra.Data.Repository.Identity;
 
@@ -33,6 +35,7 @@ public class RoleDataRepository : IRoleDataRepository
             .AsNoTracking()
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.Name)
+            .ThenBy(x => x.Id)
             .ToListAsync(ct);
     }
 
@@ -58,7 +61,7 @@ public class RoleDataRepository : IRoleDataRepository
 
         var count = await query.CountAsync(ct);
 
-        var orderedQuery = CreateSort.ApplyOrdering(query, request);
+        var orderedQuery = CreateSort.ApplyOrdering(query, request).ThenBy(x => x.Id);
 
         var pageNumber = request.PageNumber ?? 1;
         var pageSize = request.PageSize ?? Paging.MinPageSize();
@@ -85,14 +88,51 @@ public class RoleDataRepository : IRoleDataRepository
 
     public async Task<bool> ExistsByNameAsync(int tenantId, string? name, CancellationToken ct)
     {
-        return await _context.Set<RoleEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Name == name && !x.IsDeleted, ct);
+        var normalizedName = name?.Trim().ToUpper();
+        return await _context.Set<RoleEntity>().AsNoTracking().AnyAsync(x => x.TenantId == tenantId && x.Name.ToUpper() == normalizedName && !x.IsDeleted, ct);
     }
 
     public async Task<bool> AddAsync(RoleEntity entity, CancellationToken ct)
     {
         await _context.Set<RoleEntity>().AddAsync(entity, ct);
-        return await _context.SaveChangesAsync(ct) > 0;
+        try
+        {
+            return await _context.SaveChangesAsync(ct) > 0;
+        }
+        catch (DbUpdateException ex) when (IsNameUniqueViolation(ex))
+        {
+            throw new RoleConflictException(ex);
+        }
     }
+
+    public async Task<bool> AddManyAsync(IReadOnlyCollection<RoleEntity> entities, CancellationToken ct)
+    {
+        IDbContextTransaction? transaction = null;
+        try
+        {
+            if (_context.Database.IsRelational())
+                transaction = await _context.Database.BeginTransactionAsync(ct);
+            await _context.Set<RoleEntity>().AddRangeAsync(entities, ct);
+            var saved = await _context.SaveChangesAsync(ct);
+            if (transaction is not null)
+                await transaction.CommitAsync(ct);
+            return saved == entities.Count;
+        }
+        catch (DbUpdateException ex) when (IsNameUniqueViolation(ex))
+        {
+            if (transaction is not null)
+                await transaction.RollbackAsync(CancellationToken.None);
+            throw new RoleConflictException(ex);
+        }
+        finally
+        {
+            if (transaction is not null)
+                await transaction.DisposeAsync();
+        }
+    }
+
+    private static bool IsNameUniqueViolation(DbUpdateException exception) =>
+        exception.InnerException?.Message.Contains("UX_Roles_Tenant_Name", StringComparison.OrdinalIgnoreCase) == true;
 
     public async Task<bool> UpdateAsync(RoleEntity entity, CancellationToken ct)
     {

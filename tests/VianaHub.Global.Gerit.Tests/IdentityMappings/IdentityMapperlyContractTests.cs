@@ -42,6 +42,7 @@ public sealed class IdentityMapperlyContractTests
         SetId(entity, 3);
 
         Assert.Equal(entity.Name, RoleMapper.ToResponse(entity).Name);
+        Assert.Equal(entity.Description, RoleMapper.ToDetail(entity).Description);
         Assert.Equal(entity.IsDeleted, RoleMapper.ToDetail(entity).IsDeleted);
         Assert.Single(RoleMapper.ToPaged(new ListPage<RoleEntity>([entity], 1, 10, 1, 1)).Items);
     }
