@@ -12,7 +12,7 @@ public sealed class RoleHttpIntegrationTests : IClassFixture<GeritSqlWebApplicat
 
     public RoleHttpIntegrationTests(GeritSqlWebApplicationFactory factory) => _factory = factory;
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task SqlBackedPipelineCreatesReadsAndCleansRole()
     {
         using var client = _factory.CreateClient();
@@ -47,7 +47,7 @@ public sealed class RoleHttpIntegrationTests : IClassFixture<GeritSqlWebApplicat
 
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task SqlBackedRoleLifecycleAndPaginationAreIdempotent()
     {
         using var client = _factory.CreateClient();
@@ -98,7 +98,7 @@ public sealed class RoleHttpIntegrationTests : IClassFixture<GeritSqlWebApplicat
         }
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task ValidationDuplicateNormalizationAndAuthorizationAreEnforced()
     {
         using var client = _factory.CreateClient();
@@ -142,7 +142,7 @@ public sealed class RoleHttpIntegrationTests : IClassFixture<GeritSqlWebApplicat
         }
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public void FactoryUsesSqlServerProvider()
     {
         using var scope = _factory.Services.CreateScope();
@@ -150,7 +150,7 @@ public sealed class RoleHttpIntegrationTests : IClassFixture<GeritSqlWebApplicat
         Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", context.Database.ProviderName);
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task TemporaryTenantIsolationAndSameNameAreEnforced()
     {
         var tenants = new SqlTestTenantFixture();
@@ -200,7 +200,7 @@ public sealed class RoleHttpIntegrationTests : IClassFixture<GeritSqlWebApplicat
         }
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task ConcurrentCreateReturnsSingleSuccessAndLocalizedConflict()
     {
         var name = $"TEST_ROLE_RACE_{Guid.NewGuid():N}";

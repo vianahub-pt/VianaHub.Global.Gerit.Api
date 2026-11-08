@@ -3,18 +3,9 @@ using VianaHub.Global.Gerit.Tests.Infrastructure;
 
 namespace VianaHub.Global.Gerit.Tests.Roles;
 
-public sealed class RoleSqlServerFactAttribute : FactAttribute
-{
-    public RoleSqlServerFactAttribute()
-    {
-        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING")))
-            Skip = "GERIT_RLS_TEST_CONNECTIONSTRING unavailable";
-    }
-}
-
 public sealed class RoleSqlIntegrationTests
 {
-    [RoleSqlServerFact]
+    [SqlServerIntegrationFact]
     public async Task RolesSchemaIndexesForeignKeysAndRlsArePresent()
     {
         await using var db = new SqlConnection(Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING"));
@@ -30,7 +21,7 @@ public sealed class RoleSqlIntegrationTests
         Assert.Equal(1, await ScalarAsync<int>(db, "SELECT COUNT(*) FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID(N'dbo.UserRoles') AND referenced_object_id = OBJECT_ID(N'dbo.Roles')"));
     }
 
-    [RoleSqlServerFact]
+    [SqlServerIntegrationFact]
     public async Task TenantSessionContextIsolatesRoleRowsAcrossTenants()
     {
         var tenants = new SqlTestTenantFixture();
@@ -62,7 +53,7 @@ public sealed class RoleSqlIntegrationTests
         }
     }
 
-    [RoleSqlServerFact]
+    [SqlServerIntegrationFact]
     public async Task RoleDependenciesRemainOnSoftDeleteAndBlockPhysicalDelete()
     {
         var connectionString = Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING");

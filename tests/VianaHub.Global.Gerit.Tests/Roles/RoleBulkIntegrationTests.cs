@@ -13,7 +13,7 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
 
     public RoleBulkIntegrationTests(GeritSqlWebApplicationFactory factory) => _factory = factory;
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task ValidBatchPersistsRowsAndCleanupRemovesThemFromReads()
     {
         using var client = _factory.CreateClient();
@@ -31,7 +31,7 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
         Assert.DoesNotContain(prefix, await client.GetStringAsync($"/v1/roles/paged?PageNumber=1&PageSize=10&Search={prefix}"), StringComparison.Ordinal);
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task DuplicateAndMalformedBatchesPersistNothing()
     {
         using var client = _factory.CreateClient();
@@ -53,7 +53,7 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
         Assert.DoesNotContain(prefix, await client.GetStringAsync($"/v1/roles/paged?PageNumber=1&PageSize=10&Search={prefix}"), StringComparison.Ordinal);
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task MissingDescriptionIsRejected()
     {
         using var client = _factory.CreateClient();
@@ -63,7 +63,7 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync("/v1/roles/bulk-upload", content)).StatusCode);
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task ExistingDuplicateRejectsWholeBatchWithoutPersistingValidRow()
     {
         using var client = _factory.CreateClient();
@@ -94,7 +94,7 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
         }
     }
 
-    [Fact]
+    [SqlServerIntegrationFact]
     public async Task ConcurrentBulkConflictRollsBackTheLosingBatch()
     {
         using var clientA = _factory.CreateClient();
@@ -108,9 +108,13 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
         using var batchB = new MultipartFormDataContent();
         batchB.Add(new StringContent($"Name;Description\n{prefix}_SHARED;B\n{prefix}_ONLY_B;B\n", Encoding.UTF8), "file", "roles-b.csv");
 
-        var responses = await Task.WhenAll(clientA.PostAsync("/v1/roles/bulk-upload", batchA), clientB.PostAsync("/v1/roles/bulk-upload", batchB));
         try
         {
+            var firstRequest = clientA.PostAsync("/v1/roles/bulk-upload", batchA);
+            var secondRequest = clientB.PostAsync("/v1/roles/bulk-upload", batchB);
+            using var responseA = await firstRequest;
+            using var responseB = await secondRequest;
+            var responses = new[] { responseA, responseB };
             Assert.Contains(responses, response => response.StatusCode == HttpStatusCode.OK);
             Assert.Contains(responses, response => response.StatusCode == HttpStatusCode.Conflict);
             var page = await clientA.GetStringAsync($"/v1/roles/paged?PageNumber=1&PageSize=20&Search={prefix}");
@@ -121,8 +125,6 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
         }
         finally
         {
-            foreach (var response in responses)
-                response.Dispose();
             await CleanupBySearchAsync(clientA, prefix);
         }
     }
@@ -134,12 +136,10 @@ public sealed class RoleBulkIntegrationTests : IClassFixture<GeritSqlWebApplicat
         if (!payload.RootElement.TryGetProperty("items", out var items))
             return;
 
-        foreach (var item in items.EnumerateArray())
+        foreach (var item in items.EnumerateArray().Where(item => item.TryGetProperty("id", out _)))
         {
-            if (item.TryGetProperty("id", out var id))
-            {
-                using var deleted = await client.DeleteAsync($"/v1/roles/{id.GetInt32()}");
-            }
+            var id = item.GetProperty("id").GetInt32();
+            using var deleted = await client.DeleteAsync($"/v1/roles/{id}");
         }
     }
 }

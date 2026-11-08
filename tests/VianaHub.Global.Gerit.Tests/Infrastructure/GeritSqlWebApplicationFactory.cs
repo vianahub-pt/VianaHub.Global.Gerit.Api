@@ -18,7 +18,7 @@ public sealed class GeritSqlWebApplicationFactory : WebApplicationFactory<VianaH
         _previousServiceProvider = ServiceProviderHolder.ServiceProvider;
         var connectionString = Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING");
         if (string.IsNullOrWhiteSpace(connectionString))
-            throw new InvalidOperationException("GERIT_RLS_TEST_CONNECTIONSTRING is required for SQL-backed HTTP tests.");
+            return;
 
         SetEnvironment("ConnectionStrings__DefaultConnection", connectionString);
         SetEnvironment("ConnectionStrings__HangfireConnection", connectionString);
@@ -39,7 +39,9 @@ public sealed class GeritSqlWebApplicationFactory : WebApplicationFactory<VianaH
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        var connectionString = Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING")!;
+        var connectionString = Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("GERIT_RLS_TEST_CONNECTIONSTRING is required for SQL-backed HTTP tests.");
 
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration((_, configuration) =>
