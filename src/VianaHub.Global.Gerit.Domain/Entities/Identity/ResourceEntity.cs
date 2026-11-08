@@ -7,8 +7,8 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Identity;
 /// </summary>
 public class ResourceEntity : Entity
 {
-    public string? Name { get; private set; }
-    public string? Description { get; set; }
+    public string Name { get; private set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public bool IsActive { get; private set; }
     public bool IsDeleted { get; private set; }
 
@@ -24,8 +24,8 @@ public class ResourceEntity : Entity
     /// </summary>
     public ResourceEntity(string? name, string? description, int createdBy)
     {
-        Name = name;
-        Description = description;
+        Name = name?.Trim() ?? string.Empty;
+        Description = description?.Trim() ?? string.Empty;
         IsActive = true;
         IsDeleted = false;
         CreatedBy = createdBy;
@@ -33,7 +33,7 @@ public class ResourceEntity : Entity
 
     public void Update(string? description, int modifiedBy)
     {
-        Description = description;
+        Description = description?.Trim() ?? string.Empty;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

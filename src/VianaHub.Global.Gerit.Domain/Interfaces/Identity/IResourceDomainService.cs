@@ -13,6 +13,7 @@ public interface IResourceDomainService
     Task<bool> ExistsByNameAsync(string name, CancellationToken ct);
 
     Task<bool> CreateAsync(ResourceEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<ResourceEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(ResourceEntity entity, CancellationToken ct);
     Task<bool> ActivateAsync(ResourceEntity entity, CancellationToken ct);
     Task<bool> DeactivateAsync(ResourceEntity entity, CancellationToken ct);

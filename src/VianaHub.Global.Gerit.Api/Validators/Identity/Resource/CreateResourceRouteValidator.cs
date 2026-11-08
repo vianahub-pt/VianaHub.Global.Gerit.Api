@@ -17,6 +17,7 @@ public class CreateResourceRouteValidator : AbstractValidator<CreateResourceRequ
             .MaximumLength(100).WithMessage(_localization.GetMessage("Api.Validator.Resource.Create.Name.MaximumLength", 100));
 
         RuleFor(x => x.Description)
+            .NotEmpty().WithMessage(_localization.GetMessage("Api.Validator.Resource.Create.Description.Required"))
             .MaximumLength(255).WithMessage(_localization.GetMessage("Api.Validator.Resource.Create.Description.MaximumLength", 255));
     }
 }

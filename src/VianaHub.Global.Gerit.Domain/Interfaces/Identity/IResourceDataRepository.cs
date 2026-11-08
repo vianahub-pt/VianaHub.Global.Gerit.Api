@@ -12,5 +12,6 @@ public interface IResourceDataRepository
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
     Task<bool> ExistsByNameAsync(string? name, CancellationToken ct);
     Task<bool> AddAsync(ResourceEntity entity, CancellationToken ct);
+    Task<bool> AddManyAsync(IReadOnlyCollection<ResourceEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(ResourceEntity entity, CancellationToken ct);
 }
