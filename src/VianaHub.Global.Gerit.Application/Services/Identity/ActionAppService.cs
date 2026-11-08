@@ -3,6 +3,7 @@ using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
+using System.IO;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Action;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Action;
@@ -56,7 +57,7 @@ public class ActionAppService : IActionAppService
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null || entity.IsDeleted)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.Action.Update.ResourceNotFound"), 410);
+            _notify.Add(_localization.GetMessage("Application.Service.Action.GetById.ResourceNotFound"), 410);
             return null;
         }
         return ActionMapper.ToDetail(entity);
@@ -71,14 +72,15 @@ public class ActionAppService : IActionAppService
 
     public async Task<int> CreateAsync(CreateActionRequest request, CancellationToken ct)
     {
-        var exists = await _repo.ExistsByNameAsync(request.Name, ct);
+        var normalizedName = request.Name?.Trim() ?? string.Empty;
+        var exists = await _repo.ExistsByNameAsync(normalizedName, ct);
         if (exists)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Action.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
-        var entity = new ActionEntity(request.Name, request.Description, _currentUser.GetUserId());
+        var entity = new ActionEntity(normalizedName, request.Description ?? string.Empty, _currentUser.GetUserId());
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -91,7 +93,7 @@ public class ActionAppService : IActionAppService
             return false;
         }
 
-        entity.Update(request.Description, _currentUser.GetUserId());
+        entity.Update(request.Description ?? string.Empty, _currentUser.GetUserId());
         return await _domain.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(int id, CancellationToken ct)
@@ -163,10 +165,14 @@ public class ActionAppService : IActionAppService
             {
                 HasHeaderRecord = true,
                 Delimiter = ";", // CSV usa ponto e vírgula como delimitador
-                MissingFieldFound = null,
-                HeaderValidated = null,
+                HeaderValidated = args =>
+                {
+                    if (args.InvalidHeaders is { Length: > 0 })
+                        throw new InvalidDataException("CSV header is invalid.");
+                },
                 TrimOptions = TrimOptions.Trim,
-                BadDataFound = null // Ignora linhas mal formatadas ao invés de lançar exceção
+                BadDataFound = _ => throw new InvalidDataException("CSV row is malformed."),
+                MissingFieldFound = _ => throw new InvalidDataException("CSV field is missing.")
             };
 
             using var csv = new CsvReader(reader, config);
@@ -178,70 +184,75 @@ public class ActionAppService : IActionAppService
             int rowCount = 0;
             int maxRows = DomainExtensions.GetMaxCsvRows();
 
-            while (csv.Read() && rowCount < maxRows)
+            while (csv.Read())
             {
-                try
+                rowCount++;
+                if (rowCount > maxRows)
                 {
-                    var record = csv.GetRecord<BulkUploadActionItem>();
-                    if (record != null)
-                    {
-                        // Sanitiza e normaliza campos
-                        record.Name = record.Name?.SanitizeCsvInput().NormalizeUtf8();
-                        record.Description = record.Description?.SanitizeCsvInput().NormalizeUtf8();
-
-                        // Valida se os campos não contêm conteúdo perigoso
-                        if (!string.IsNullOrEmpty(record.Name) && !record.Name.IsSafeCsvValue())
-                        {
-                            _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Name.IsSafeCsvValue", rowCount + 2), 400);
-                            continue;
-                        }
-
-                        if (!string.IsNullOrEmpty(record.Description) && !record.Description.IsSafeCsvValue())
-                        {
-                            _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Description.IsSafeCsvValue", rowCount + 2), 400);
-                            continue;
-                        }
-
-                        records.Add(record);
-                    }
-                    rowCount++;
+                    _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.MaxRows", maxRows), 400);
+                    return null;
                 }
-                catch (CsvHelperException ex)
-                {
-                    // Log linha com erro mas continua processamento
-                    _logger.LogWarning("Erro ao processar linha {RowNumber} do CSV de Actions | Exception: {ExceptionDetails}", rowCount + 2, LogValueSanitizer.ExceptionDetails(ex));
-                    _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
-                    rowCount++;
-                    continue;
-                }
-            }
 
-            if (rowCount >= maxRows)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.MaxRows", maxRows), 400);
-                return null;
+                var record = csv.GetRecord<BulkUploadActionItem>();
+                if (record is null) continue;
+
+                record.Name = record.Name?.SanitizeCsvInput().NormalizeUtf8().Trim();
+                record.Description = record.Description?.SanitizeCsvInput().NormalizeUtf8();
+
+                if (!string.IsNullOrEmpty(record.Name) && !record.Name.IsSafeCsvValue())
+                    throw new InvalidDataException(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Name.IsSafeCsvValue", rowCount + 1));
+
+                if (!string.IsNullOrEmpty(record.Description) && !record.Description.IsSafeCsvValue())
+                    throw new InvalidDataException(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Description.IsSafeCsvValue", rowCount + 1));
+
+                records.Add(record);
             }
 
             return records;
         }
-        catch (Exception ex)
+        catch (CsvHelperException ex)
         {
-            _logger.LogError("Erro ao ler arquivo CSV de Actions: {Message} | Exception: {ExceptionDetails}", LogValueSanitizer.Sanitize(ex.Message), LogValueSanitizer.ExceptionDetails(ex));
+            _logger.LogWarning("Erro ao ler CSV de Actions | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
+            _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Exception"), 400);
+            return null;
+        }
+        catch (InvalidDataException ex)
+        {
+            _logger.LogWarning("CSV inválido de Actions | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
+            _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Exception"), 400);
+            return null;
+        }
+        catch (IOException ex)
+        {
+            _logger.LogError("Erro de IO ao ler CSV de Actions | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
+            _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Exception"), 400);
+            return null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError("Erro de formato ao ler CSV de Actions | Exception: {ExceptionDetails}", LogValueSanitizer.ExceptionDetails(ex));
             _notify.Add(_localization.GetMessage("Application.Service.Action.ReadCsvFile.Exception"), 400);
             return null;
         }
     }
     private async Task<bool> ProcessBulkItemsAsync(List<BulkUploadActionItem> items, CancellationToken ct)
     {
-        var hasErrors = false;
+        var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var entities = new List<ActionEntity>(items.Count);
 
         foreach (var item in items)
         {
             // Valida campos obrigatórios
             if (!ValidateBulkItem(item))
             {
-                hasErrors = true;
-                continue;
+                return false;
+            }
+
+            item.Name = item.Name!.Trim();
+            if (!seenNames.Add(item.Name))
+            {
+                _notify.Add(_localization.GetMessage("Application.Service.Action.Create.ResourceAlreadyExists"), 409);
+                return false;
             }
 
             // Verifica duplicidade
@@ -249,24 +260,13 @@ public class ActionAppService : IActionAppService
             if (exists)
             {
                 _notify.Add(_localization.GetMessage("Application.Service.Action.ProcessBulkItems.ExistsByName", item.Name), 409);
-                hasErrors = true;
-                continue;
+                return false;
             }
 
-            // Cria a entidade
-            var entity = new ActionEntity(item.Name, item.Description, _currentUser.GetUserId());
-
-            // Tenta criar no domínio
-            var success = await _domain.CreateAsync(entity, ct);
-
-            if (!success)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.Action.ProcessBulkItems.FailedToCreate", item.Name), 400);
-                hasErrors = true;
-            }
+            entities.Add(new ActionEntity(item.Name, item.Description ?? string.Empty, _currentUser.GetUserId()));
         }
 
-        return !hasErrors;
+        return await _domain.CreateManyAsync(entities, ct);
     }
     private bool ValidateBulkItem(BulkUploadActionItem item)
     {
