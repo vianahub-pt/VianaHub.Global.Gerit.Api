@@ -36,7 +36,7 @@ public sealed class RolePermissionHttpIntegrationTests : IClassFixture<GeritSqlW
 
             var list = await client.GetFromJsonAsync<List<Dictionary<string, JsonElement>>>("/v1/role-permissions");
             Assert.NotNull(list);
-            var item = Assert.Single(list!, x => x["roleId"].GetInt32() == roleId && x["resourceId"].GetInt32() == resourceId && x["actionId"].GetInt32() == actionId);
+            Assert.Single(list!, x => x["roleId"].GetInt32() == roleId && x["resourceId"].GetInt32() == resourceId && x["actionId"].GetInt32() == actionId);
 
             var detailPath = $"/v1/role-permissions/roles/{roleId}/resources/{resourceId}/actions/{actionId}";
             using var detail = await client.GetAsync(detailPath);
