@@ -265,7 +265,7 @@ NON-UI: login/register/refresh/logout. Lifecycle de entidade não aplicável. Te
 - Route validators: [LoginRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/Auth/LoginRouteValidator.cs); [RefreshRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/Auth/RefreshRouteValidator.cs); [RegisterRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/Auth/RegisterRouteValidator.cs). WithValidation no módulo=4; conferir registro DI.
 - Domain validators: [ActivateUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/ActivateUserValidator.cs); [CreateUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/CreateUserValidator.cs); [DeactivateUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/DeactivateUserValidator.cs); [DeleteUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/DeleteUserValidator.cs); [UpdateUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/UpdateUserValidator.cs); [UserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/UserValidator.cs).
 - Tests: [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [AuthPermissionTokenTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthPermissionTokenTests.cs); [JwtBearerPipelineTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtBearerPipelineTests.cs); [JwtKeySigningTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtKeySigningTests.cs); [IdempotentStateTransitionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentStateTransitionTests.cs).
-- Mapping: AutoMapper sim; complexidade Medium; culture-sensitive/resolver não identificado. [UserMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/UserMappingProfile.cs).
+- Mapping: [UserMapper.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/UserMapper.cs) usa Mapperly para lista, detalhe e paginação.
 - Locale: 46 literais auditados; ausentes por locale: pt-PT=9, en-US=9, pt-BR=9, es-ES=9. Ausentes: `Application.Service.Auth.Register.EmailRequired, Application.Service.Auth.Login.EmailRequired, Application.Service.Auth.Login.EmailInvalid, Application.Service.Auth.Login.PasswordRequired, Application.Service.Auth.Refresh.TokenRequired, Application.Service.Auth.Register.NameRequired, Application.Service.Auth.Register.EmailInvalid, Application.Service.Auth.Register.PasswordRequired, Application.Service.Auth.Register.PasswordTooShort`.
 
 <details>
@@ -992,7 +992,7 @@ Create/senha/edição são operações diferentes; não retornar password. GetBy
 - Repositories: [UserDataRepository.cs](../src/VianaHub.Global.Gerit.Infra.Data/Repository/Identity/UserDataRepository.cs). Interfaces: `IUserDataRepository`.
 - Entities: [UserEntity.cs](../src/VianaHub.Global.Gerit.Domain/Entities/Identity/UserEntity.cs).
 - EF Mapping: [UserMapping.cs](../src/VianaHub.Global.Gerit.Infra.Data/Mappings/Identity/UserMapping.cs). SQL tables: `Users`.
-- Route validators: [CreateUserRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/User/CreateUserRouteValidator.cs); [UpdatePasswordRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/User/UpdatePasswordRouteValidator.cs); [UpdateUserRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/User/UpdateUserRouteValidator.cs). WithValidation no módulo=2; conferir registro DI.
+- Route validators: [CreateUserRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/User/CreateUserRouteValidator.cs); [UpdatePasswordRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/User/UpdatePasswordRouteValidator.cs); [UpdateUserRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/User/UpdateUserRouteValidator.cs). WithValidation no módulo=3.
 - Domain validators: [ActivateUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/ActivateUserValidator.cs); [CreateUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/CreateUserValidator.cs); [DeactivateUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/DeactivateUserValidator.cs); [DeleteUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/DeleteUserValidator.cs); [UpdateUserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/UpdateUserValidator.cs); [UserValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/User/UserValidator.cs).
 - Tests: [AuthorizationIdentityTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthorizationIdentityTests.cs); [AuthPermissionTokenTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthPermissionTokenTests.cs); [IdempotentStateTransitionTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdempotentStateTransitionTests.cs); [ClientRepositoryTests.cs](../tests/VianaHub.Global.Gerit.Tests/Infra/Data/Repository/Business/ClientRepositoryTests.cs); [JwtBearerPipelineTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtBearerPipelineTests.cs); [JwtKeySigningTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtKeySigningTests.cs); [JwtTenantContextTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtTenantContextTests.cs).
 - Mapping: AutoMapper sim; complexidade Medium; culture-sensitive/resolver não identificado. [UserMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/UserMappingProfile.cs).
@@ -1004,15 +1004,17 @@ Create/senha/edição são operações diferentes; não retornar password. GetBy
 | HTTP | Relative endpoint | Operação/handler | Status declarados ou explícitos |
 |---|---|---|---|
 | GET | / | GetAllUsers; GetAllAsync | 200, 401, 403, 500 |
-| GET | /{id} | GetUserById; GetByIdAsync | 200, 401, 403, 404, 500 |
+| GET | /{id} | GetUserById; GetByIdAsync | 200, 401, 403, 404, 410, 500 |
 | GET | /paged | GetUsersPaged; GetPagedAsync | 200, 401, 403, 500 |
-| POST | / | CreateUser; CreateAsync | 201, 401, 403, 400, 500 |
-| PUT | /{id} | UpdateUser; UpdateAsync | 200, 401, 403, 410, 400, 404, 500 |
-| PATCH | /{id}/password | UpdateUserPassword; UpdatePasswordAsync | 401, 403, 410, 200, 400, 404, 500 |
-| PATCH | /{id}/activate | ActivateUser; ActivateAsync | 401, 403, 410, 200, 404, 500 |
-| PATCH | /{id}/deactivate | DeactivateUser; DeactivateAsync | 401, 403, 410, 200, 404, 500 |
-| DELETE | /{id} | DeleteUser; DeleteAsync | 401, 403, 410, 200, 404, 500 |
-| POST | /bulk-upload | BulkUploadUsers; BulkUploadAsync | 401, 403, 200, 400, 500 |
+| POST | / | CreateUser; CreateAsync | 201, 401, 403, 400, 409, 500 |
+| PUT | /{id} | UpdateUser; UpdateAsync | 200, 401, 403, 410, 400, 404, 409, 500 |
+| PATCH | /{id}/password | UpdateUserPassword; UpdatePasswordAsync | 401, 403, 410, 200, 400, 404, 409, 500 |
+| PATCH | /{id}/activate | ActivateUser; ActivateAsync | 401, 403, 410, 200, 404, 409, 500 |
+| PATCH | /{id}/deactivate | DeactivateUser; DeactivateAsync | 401, 403, 410, 200, 404, 409, 500 |
+| DELETE | /{id} | DeleteUser; DeleteAsync | 401, 403, 410, 200, 404, 409, 500 |
+| POST | /bulk-upload | BulkUploadUsers; BulkUploadAsync | 401, 403, 200, 400, 409, 500 |
+
+`UpdatePassword = authenticated self-service, not RBAC Users.Update`
 
 DTOs:
 

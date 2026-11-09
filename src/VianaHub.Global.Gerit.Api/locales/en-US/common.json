@@ -1127,6 +1127,7 @@
   "Application.Service.User.ReadCsvFile.MaxRows": "CSV file exceeds the maximum limit of {0} lines",
   "Application.Service.User.ReadCsvFile.Name.IsSafeCsvValue": "Name on line {0} contains dangerous content",
   "Application.Service.User.Update.ResourceNotFound": "User not found",
+  "Application.Service.User.UpdatePassword.OtherUser": "You can only change your own password",
   "Application.Service.User.UpdatePassword.InvalidCurrentPassword": "Current password is incorrect",
   "Application.Service.User.UpdatePassword.ResourceNotFound": "User not found",
   "Application.Service.User.ValidateBulkItem.Email": "Email is required in bulk upload",

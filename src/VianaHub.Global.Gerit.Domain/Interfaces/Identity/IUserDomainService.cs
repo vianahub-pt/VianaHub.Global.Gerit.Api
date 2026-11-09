@@ -12,6 +12,7 @@ public interface IUserDomainService
     Task<bool> ExistsByIdAsync(int id, CancellationToken ct);
 
     Task<bool> CreateAsync(UserEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<UserEntity> entities, CancellationToken ct);
     Task<bool> UpdateAsync(UserEntity entity, CancellationToken ct);
     Task<bool> ActivateAsync(UserEntity entity, CancellationToken ct);
     Task<bool> DeactivateAsync(UserEntity entity, CancellationToken ct);

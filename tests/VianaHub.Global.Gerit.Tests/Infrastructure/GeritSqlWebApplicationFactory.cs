@@ -8,8 +8,10 @@ using VianaHub.Global.Gerit.Api.Helpers;
 
 namespace VianaHub.Global.Gerit.Tests.Infrastructure;
 
-public sealed class GeritSqlWebApplicationFactory : WebApplicationFactory<VianaHub.Global.Gerit.Api.Program>
+public class GeritSqlWebApplicationFactory : WebApplicationFactory<VianaHub.Global.Gerit.Api.Program>
 {
+    protected virtual bool UseSimulatedAuthentication => true;
+    private readonly string _encryptionKey = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
     private readonly Dictionary<string, string?> _previousEnvironment = new();
     private readonly IServiceProvider? _previousServiceProvider;
 
@@ -22,7 +24,7 @@ public sealed class GeritSqlWebApplicationFactory : WebApplicationFactory<VianaH
 
         SetEnvironment("ConnectionStrings__DefaultConnection", connectionString);
         SetEnvironment("ConnectionStrings__HangfireConnection", connectionString);
-        SetEnvironment("JwtKeyManagement__EncryptionKey", new string('t', 64));
+        SetEnvironment("JwtKeyManagement__EncryptionKey", _encryptionKey);
         SetEnvironment("JwtSettings__Issuer", "roles-sql-tests");
         SetEnvironment("JwtSettings__Audience", "roles-sql-tests");
         SetEnvironment("JwtSettings__AccessTokenExpirationMinutes", "5");
@@ -50,7 +52,7 @@ public sealed class GeritSqlWebApplicationFactory : WebApplicationFactory<VianaH
             {
                 ["ConnectionStrings:DefaultConnection"] = connectionString,
                 ["ConnectionStrings:HangfireConnection"] = connectionString,
-                ["JwtKeyManagement:EncryptionKey"] = new string('t', 64),
+                ["JwtKeyManagement:EncryptionKey"] = _encryptionKey,
                 ["JwtSettings:Issuer"] = "roles-sql-tests",
                 ["JwtSettings:Audience"] = "roles-sql-tests",
                 ["JwtSettings:AccessTokenExpirationMinutes"] = "5",
@@ -62,17 +64,20 @@ public sealed class GeritSqlWebApplicationFactory : WebApplicationFactory<VianaH
 
         builder.ConfigureServices(services =>
         {
-            services.AddAuthentication(options =>
+            if (UseSimulatedAuthentication)
             {
-                options.DefaultAuthenticateScheme = "Test";
-                options.DefaultChallengeScheme = "Test";
-            }).AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>("Test", _ => { });
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = "Test";
+                    options.DefaultChallengeScheme = "Test";
+                }).AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>("Test", _ => { });
 
-            services.PostConfigure<Microsoft.AspNetCore.Authentication.AuthenticationOptions>(options =>
-            {
-                options.DefaultAuthenticateScheme = "Test";
-                options.DefaultChallengeScheme = "Test";
-            });
+                services.PostConfigure<Microsoft.AspNetCore.Authentication.AuthenticationOptions>(options =>
+                {
+                    options.DefaultAuthenticateScheme = "Test";
+                    options.DefaultChallengeScheme = "Test";
+                });
+            }
 
             foreach (var descriptor in services.Where(x =>
                          x.ServiceType == typeof(IHostedService) &&
