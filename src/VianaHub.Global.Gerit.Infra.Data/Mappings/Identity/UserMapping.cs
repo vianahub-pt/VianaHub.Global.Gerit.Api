@@ -91,6 +91,7 @@ public class UserMapping : IEntityTypeConfiguration<UserEntity>
 
         builder.Property(x => x.ModifiedAt)
             .HasColumnType("DATETIME2(7)")
+            .IsConcurrencyToken()
             .IsRequired(false);
 
         // Constraints �nicos
@@ -98,20 +99,15 @@ public class UserMapping : IEntityTypeConfiguration<UserEntity>
         builder.HasAlternateKey(x => new { x.Id, x.TenantId })
             .HasName("UQ_Users_Id_Tenant");
 
-        builder.HasIndex(x => new { x.TenantId, x.Email })
-            .IsUnique()
-            .HasFilter("[IsDeleted] = 0")
-            .HasDatabaseName("UQ_Users_Tenant_Email");
-
         builder.HasIndex(x => new { x.TenantId, x.NormalizedEmail })
             .IsUnique()
             .HasFilter("[IsDeleted] = 0")
-            .HasDatabaseName("UQ_Users_Tenant_NormalizedEmail");
+            .HasDatabaseName("UX_Users_Tenant_NormalizedEmail");
 
         // �ndices
-        builder.HasIndex(x => new { x.TenantId, x.Email })
+        builder.HasIndex(x => x.NormalizedEmail)
             .HasDatabaseName("IX_Users_Login")
-            .IncludeProperties(x => new { x.Id, x.IsActive })
+            .IncludeProperties(x => new { x.Id, x.TenantId, x.IsActive })
             .HasFilter("[IsDeleted] = 0");
 
         // Relacionamentos
