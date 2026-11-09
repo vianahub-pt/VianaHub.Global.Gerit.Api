@@ -6,6 +6,7 @@ using VianaHub.Global.Gerit.Api.Helpers;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.User;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
+using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
 namespace VianaHub.Global.Gerit.Api.Endpoints.Identity;
@@ -42,6 +43,7 @@ public static class UserEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<UserDetailResponse>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/paged", async ([AsParameters] PagedFilterRequest request, [FromServices] IUserAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -69,6 +71,7 @@ public static class UserEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<CreateUserRequest>();
 
@@ -86,6 +89,7 @@ public static class UserEndpoint
         .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
         .WithValidation<UpdateUserRequest>();
 
@@ -94,7 +98,6 @@ public static class UserEndpoint
             var updated = await appService.UpdatePasswordAsync(id, request, ct);
             return notify.CustomResponse();
         })
-        .CustomAuthorize("Admin,BackOffice,Manager,User", "Users", "Update")
         .WithName("UpdateUserPassword")
         .WithSummary("Swagger.Endpoint.User.UpdatePassword.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
@@ -103,7 +106,9 @@ public static class UserEndpoint
         .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
-        .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
+        .WithValidation<UpdatePasswordRequest>();
 
         groupV1.MapPatch("/{id}/activate", async ([FromRoute] int id, [FromServices] IUserAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
@@ -118,6 +123,7 @@ public static class UserEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapPatch("/{id}/deactivate", async ([FromRoute] int id, [FromServices] IUserAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -133,6 +139,7 @@ public static class UserEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapDelete("/{id}", async ([FromRoute] int id, [FromServices] IUserAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -148,13 +155,14 @@ public static class UserEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
-        groupV1.MapPost("/bulk-upload", async (HttpRequest request, [FromServices] IUserAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
+        groupV1.MapPost("/bulk-upload", async (HttpRequest request, [FromServices] IUserAppService appService, [FromServices] INotify notify, [FromServices] ILocalizationService localization, CancellationToken ct) =>
         {
             if (!request.HasFormContentType || request.Form.Files.Count == 0)
             {
-                notify.Add("Nenhum arquivo foi enviado", 400);
+                notify.Add(localization.GetMessage("Api.Upload.NoFileProvided"), 400);
                 return notify.CustomResponse();
             }
 
@@ -171,6 +179,7 @@ public static class UserEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }
 }

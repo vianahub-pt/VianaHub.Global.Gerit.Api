@@ -1,5 +1,7 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
+using VianaHub.Global.Gerit.Domain.Exceptions;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Pagination;
@@ -19,7 +21,6 @@ public class UserDataRepository : IUserDataRepository
     public async Task<UserEntity?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await _context.Set<UserEntity>()
-            .AsNoTracking()
             .Include(x => x.Tenant)
             .Include(x => x.UserRoles)
             .ThenInclude(ur => ur.Role)
@@ -30,7 +31,6 @@ public class UserDataRepository : IUserDataRepository
     {
         var normalizedEmail = email?.ToUpperInvariant();
         return await _context.Set<UserEntity>()
-            .AsNoTracking()
             .Include(x => x.Tenant)
             .Include(x => x.UserRoles)
             .ThenInclude(ur => ur.Role)
@@ -46,6 +46,7 @@ public class UserDataRepository : IUserDataRepository
             .ThenInclude(ur => ur.Role)
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.Name)
+            .ThenBy(x => x.Id)
             .ToListAsync(ct);
     }
 
@@ -76,7 +77,7 @@ public class UserDataRepository : IUserDataRepository
 
         var count = await query.CountAsync(ct);
 
-        var orderedQuery = CreateSort.ApplyOrdering(query, request);
+        var orderedQuery = CreateSort.ApplyOrdering(query, request).ThenBy(x => x.Id);
 
         var pageNumber = request.PageNumber ?? 1;
         var pageSize = request.PageSize ?? Paging.MinPageSize();
@@ -111,6 +112,10 @@ public class UserDataRepository : IUserDataRepository
             .AnyAsync(x => x.NormalizedEmail == normalizedEmail && !x.IsDeleted, ct);
     }
 
+    public Task<bool> IsDeletedAsync(int id, int tenantId, CancellationToken ct) =>
+        _context.Set<UserEntity>().IgnoreQueryFilters()
+            .AnyAsync(user => user.Id == id && user.TenantId == tenantId && user.IsDeleted, ct);
+
     public async Task<bool> ExistsByEmailAsync(string? email, int excludeId, CancellationToken ct)
     {
         var normalizedEmail = email?.ToUpperInvariant();
@@ -122,28 +127,54 @@ public class UserDataRepository : IUserDataRepository
     public async Task<bool> CreateAsync(UserEntity entity, CancellationToken ct)
     {
         await _context.Set<UserEntity>().AddAsync(entity, ct);
-        return await _context.SaveChangesAsync(ct) > 0;
+        try
+        {
+            return await _context.SaveChangesAsync(ct) > 0;
+        }
+        catch (DbUpdateException exception) when (IsEmailConflict(exception))
+        {
+            _context.Entry(entity).State = EntityState.Detached;
+            throw new UserEmailConflictException(exception);
+        }
     }
+
+    public async Task<bool> CreateManyAsync(IReadOnlyCollection<UserEntity> entities, CancellationToken ct)
+    {
+        await _context.Set<UserEntity>().AddRangeAsync(entities, ct);
+        try
+        {
+            return await _context.SaveChangesAsync(ct) > 0;
+        }
+        catch (DbUpdateException exception) when (IsEmailConflict(exception))
+        {
+            foreach (var entity in entities)
+                _context.Entry(entity).State = EntityState.Detached;
+
+            throw new UserEmailConflictException(exception);
+        }
+    }
+
+    private static bool IsEmailConflict(DbUpdateException exception) =>
+        exception.InnerException is SqlException { Number: 2601 or 2627 } sqlException &&
+        sqlException.Message.Contains("'UX_Users_Tenant_NormalizedEmail'", StringComparison.Ordinal);
 
     public async Task<bool> UpdateAsync(UserEntity entity, CancellationToken ct)
     {
         var entry = _context.Entry(entity);
         if (entry.State == EntityState.Detached)
+            throw new InvalidOperationException("User updates require a tracked entity.");
+
+        try
         {
-            _context.Set<UserEntity>().Attach(entity);
+            return await _context.SaveChangesAsync(ct) > 0;
         }
-        entry.State = EntityState.Modified;
-        return await _context.SaveChangesAsync(ct) > 0;
+        catch (DbUpdateConcurrencyException exception) when (
+            exception.Entries.Count == 1 && ReferenceEquals(exception.Entries[0].Entity, entity))
+        {
+            entry.State = EntityState.Detached;
+            return false;
+        }
     }
 
-    public async Task<bool> DeleteAsync(UserEntity entity, CancellationToken ct)
-    {
-        var entry = _context.Entry(entity);
-        if (entry.State == EntityState.Detached)
-        {
-            _context.Set<UserEntity>().Attach(entity);
-        }
-        entry.State = EntityState.Modified;
-        return await _context.SaveChangesAsync(ct) > 0;
-    }
+    public Task<bool> DeleteAsync(UserEntity entity, CancellationToken ct) => UpdateAsync(entity, ct);
 }

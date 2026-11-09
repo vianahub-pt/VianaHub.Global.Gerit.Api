@@ -9,6 +9,7 @@ using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
+using VianaHub.Global.Gerit.Domain.Exceptions;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
@@ -25,7 +26,6 @@ public class UserAppService : IUserAppService
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly IFileValidationService _fileValidation;
-    private readonly IRequestTenantContext _requestTenantContext;
 
     public UserAppService(
         IUserDataRepository repo,
@@ -33,8 +33,7 @@ public class UserAppService : IUserAppService
         INotify notify,
         ICurrentUserService currentUser,
         ILocalizationService localization,
-        IFileValidationService fileValidation,
-        IRequestTenantContext requestTenantContext)
+        IFileValidationService fileValidation)
     {
         _repo = repo;
         _domain = domain;
@@ -42,7 +41,6 @@ public class UserAppService : IUserAppService
         _currentUser = currentUser;
         _localization = localization;
         _fileValidation = fileValidation;
-        _requestTenantContext = requestTenantContext;
     }
 
     public async Task<IEnumerable<UserResponse>> GetAllAsync(CancellationToken ct)
@@ -54,7 +52,14 @@ public class UserAppService : IUserAppService
     public async Task<UserDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return entity is null ? null! : UserMapper.ToDetail(entity);
+        if (entity is null)
+        {
+            var deleted = await _repo.IsDeletedAsync(id, _currentUser.GetTenantId(), ct);
+            _notify.Add(_localization.GetMessage("Application.Service.User.GetById.ResourceNotFound"), deleted ? 410 : 404);
+            return null!;
+        }
+
+        return UserMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<UserResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
@@ -69,7 +74,7 @@ public class UserAppService : IUserAppService
         var exists = await _repo.ExistsByEmailAsync(request.Email, ct);
         if (exists)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.User.Create.ResourceAlreadyExists"), 400);
+            _notify.Add(_localization.GetMessage("Application.Service.User.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
 
@@ -77,8 +82,15 @@ public class UserAppService : IUserAppService
         var tenantId = _currentUser.GetTenantId();
         var entity = new UserEntity(tenantId, request.Name, request.Email, passwordHash, null, _currentUser.GetUserId());
 
-        var success = await _domain.CreateAsync(entity, ct);
-        return success ? entity.Id : 0;
+        try
+        {
+            return await _domain.CreateAsync(entity, ct) ? entity.Id : 0;
+        }
+        catch (UserEmailConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.User.Create.ResourceAlreadyExists"), 409);
+            return 0;
+        }
     }
 
     public async Task<bool> UpdateAsync(int id, UpdateUserRequest request, CancellationToken ct)
@@ -96,6 +108,13 @@ public class UserAppService : IUserAppService
 
     public async Task<bool> UpdatePasswordAsync(int id, UpdatePasswordRequest request, CancellationToken ct)
     {
+        var currentUserId = _currentUser.GetUserId();
+        if (currentUserId <= 0 || id != currentUserId)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.User.UpdatePassword.OtherUser"), 403);
+            return false;
+        }
+
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null)
         {
@@ -112,7 +131,7 @@ public class UserAppService : IUserAppService
 
         // A valida��o de senha forte j� � feita no validador de rota (UpdatePasswordRouteValidator)
         var newPasswordHash = DomainExtensions.HashClientSecret(request.NewPassword);
-        entity.UpdatePassword(newPasswordHash, _currentUser.GetUserId());
+        entity.UpdatePassword(newPasswordHash, currentUserId);
 
         return await _domain.UpdateAsync(entity, ct);
     }
@@ -179,150 +198,99 @@ public class UserAppService : IUserAppService
 
     private List<BulkUploadUserItem>? ReadCsvFile(IFormFile file)
     {
+        var maxRows = DomainExtensions.GetMaxCsvRows();
         try
         {
-            // Cria StreamReader com encoding UTF-8 for�ado
-            using var reader = file.OpenReadStream().CreateUtf8StreamReader();
-
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            using var reader = new StreamReader(file.OpenReadStream(), new System.Text.UTF8Encoding(true, true), false);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                HasHeaderRecord = true,
-                Delimiter = ";", // CSV usa ponto e v�rgula como delimitador
-                MissingFieldFound = null,
-                HeaderValidated = null,
-                TrimOptions = TrimOptions.Trim,
-                BadDataFound = null // Ignora linhas mal formatadas ao inv�s de lan�ar exce��o
-            };
+                Delimiter = ";",
+                DetectColumnCountChanges = true,
+                IgnoreBlankLines = false,
+                ExceptionMessagesContainRawData = false
+            });
 
-            using var csv = new CsvReader(reader, config);
-            var records = new List<BulkUploadUserItem>();
+            if (!csv.Read())
+                return [];
 
-            csv.Read();
             csv.ReadHeader();
-
-            int rowCount = 0;
-            int maxRows = DomainExtensions.GetMaxCsvRows();
-
-            while (csv.Read() && rowCount < maxRows)
+            string[] expected = ["Name", "Email", "Password", "PhoneNumber"];
+            if (csv.HeaderRecord is not { } header || !header.SequenceEqual(expected))
             {
-                try
-                {
-                    var record = csv.GetRecord<BulkUploadUserItem>();
-                    if (record != null)
-                    {
-                        // Sanitiza e normaliza campos
-                        record.Name = record.Name?.SanitizeCsvInput().NormalizeUtf8();
-                        record.Email = record.Email?.SanitizeCsvInput().NormalizeUtf8();
-                        record.Password = record.Password?.SanitizeCsvInput().NormalizeUtf8();
-                        record.PhoneNumber = record.PhoneNumber?.SanitizeCsvInput().NormalizeUtf8();
-
-                        // Valida se os campos n�o cont�m conte�do perigoso
-                        if (!string.IsNullOrEmpty(record.Name) && !record.Name.IsSafeCsvValue())
-                        {
-                            _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.Name.IsSafeCsvValue", rowCount + 2), 400);
-                            continue;
-                        }
-
-                        if (!string.IsNullOrEmpty(record.Email) && !record.Email.IsSafeCsvValue())
-                        {
-                            _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.Email.IsSafeCsvValue", rowCount + 2), 400);
-                            continue;
-                        }
-
-                        records.Add(record);
-                    }
-                    rowCount++;
-                }
-                catch (CsvHelperException)
-                {
-                    // Log linha com erro mas continua processamento
-                    _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
-                    rowCount++;
-                    continue;
-                }
+                _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.Exception"), 400);
+                return null;
             }
 
-            if (rowCount >= maxRows)
+            var records = new List<BulkUploadUserItem>();
+            while (csv.Read())
             {
-                _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.MaxRows", maxRows), 400);
-                return null;
+                if (records.Count == maxRows)
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.MaxRows", maxRows), 400);
+                    return null;
+                }
+
+                var name = csv.GetField(0)?.Trim();
+                var email = csv.GetField(1)?.Trim();
+                var password = csv.GetField(2);
+                var phone = csv.GetField(3)?.Trim();
+                if (string.IsNullOrWhiteSpace(name) || !IsSafeCsvField(name) ||
+                    string.IsNullOrWhiteSpace(email) || !IsSafeCsvField(email) ||
+                    !IsSafeCsvPhone(phone) ||
+                    !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email) ||
+                    password is null || !System.Text.RegularExpressions.Regex.IsMatch(
+                        password, @"\A(?=[\s\S]{8,100}\z)(?=[\s\S]*[A-Z])(?=[\s\S]*[a-z])(?=[\s\S]*[0-9])(?=[\s\S]*[^a-zA-Z0-9])"))
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.CsvHelperException", csv.Parser.Row), 400);
+                    return null;
+                }
+
+                records.Add(new BulkUploadUserItem { Name = name, Email = email, Password = password, PhoneNumber = phone });
             }
 
             return records;
         }
-        catch (Exception)
+        catch (Exception exception) when (exception is CsvHelperException or System.Text.DecoderFallbackException)
         {
             _notify.Add(_localization.GetMessage("Application.Service.User.ReadCsvFile.Exception"), 400);
             return null;
         }
     }
 
+    private static bool IsSafeCsvField(string? value) =>
+        string.IsNullOrWhiteSpace(value) ||
+        (value.IsSafeCsvValue() && !value.Any(character =>
+            char.IsControl(character) || char.GetUnicodeCategory(character) == UnicodeCategory.Format));
+
+    private static bool IsSafeCsvPhone(string? value) =>
+        value?.StartsWith('+') == true
+            ? System.Text.RegularExpressions.Regex.IsMatch(value, @"\A\+[0-9][0-9 ().-]*\z")
+            : IsSafeCsvField(value);
+
     private async Task<bool> ProcessBulkItemsAsync(List<BulkUploadUserItem> items, CancellationToken ct)
     {
-        var hasErrors = false;
         var tenantId = _currentUser.GetTenantId();
-        _requestTenantContext.SetTenantId(tenantId);
-
+        var userId = _currentUser.GetUserId();
+        var emails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var item in items)
         {
-            // Valida campos obrigat�rios
-            if (!ValidateBulkItem(item))
+            if (!emails.Add(item.Email!) || await _repo.ExistsByEmailAsync(item.Email, ct))
             {
-                hasErrors = true;
-                continue;
-            }
-
-            // Verifica duplicidade
-            var exists = await _repo.ExistsByEmailAsync(item.Email, ct);
-            if (exists)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.User.ProcessBulkItems.ExistsByEmail", item.Email), 400);
-                hasErrors = true;
-                continue;
-            }
-
-            // Cria a entidade usando hash PBKDF2
-            var passwordHash = DomainExtensions.HashClientSecret(item.Password);
-            var entity = new UserEntity(tenantId, item.Name, item.Email, passwordHash, item.PhoneNumber, _currentUser.GetUserId());
-
-            // Tenta criar no dom�nio
-            var success = await _domain.CreateAsync(entity, ct);
-
-            if (!success)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.User.ProcessBulkItems.FailedToCreate", item.Email), 400);
-                hasErrors = true;
+                _notify.Add(_localization.GetMessage("Application.Service.User.Create.ResourceAlreadyExists"), 409);
+                return false;
             }
         }
 
-        return !hasErrors;
-    }
-
-    private bool ValidateBulkItem(BulkUploadUserItem item)
-    {
-        if (string.IsNullOrWhiteSpace(item.Name))
+        var entities = items.Select(item => new UserEntity(
+            tenantId, item.Name, item.Email, DomainExtensions.HashClientSecret(item.Password), item.PhoneNumber, userId)).ToArray();
+        try
         {
-            _notify.Add(_localization.GetMessage("Application.Service.User.ValidateBulkItem.Name", item.Email ?? ""), 400);
+            return await _domain.CreateManyAsync(entities, ct);
+        }
+        catch (UserEmailConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.User.Create.ResourceAlreadyExists"), 409);
             return false;
         }
-
-        if (string.IsNullOrWhiteSpace(item.Email))
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.User.ValidateBulkItem.Email", item.Email ?? ""), 400);
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(item.Password))
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.User.ValidateBulkItem.Password", item.Email), 400);
-            return false;
-        }
-
-        // A valida��o de senha forte deveria ser feita aqui, mas como bulk upload
-        // n�o passa pelos validadores de rota, precisamos validar manualmente
-        // Por ora, apenas validamos se a senha n�o est� vazia
-        // TODO: Considerar adicionar valida��o de senha forte aqui ou criar um validador compartilhado
-
-        return true;
     }
 }

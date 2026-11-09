@@ -1126,6 +1126,7 @@
   "Application.Service.User.ReadCsvFile.MaxRows": "O arquivo CSV excede o limite máximo de {0} linhas",
   "Application.Service.User.ReadCsvFile.Name.IsSafeCsvValue": "O nome na linha {0} contém conteúdo perigoso",
   "Application.Service.User.Update.ResourceNotFound": "usuário não encontrado",
+  "Application.Service.User.UpdatePassword.OtherUser": "Você só pode alterar a sua própria senha",
   "Application.Service.User.UpdatePassword.InvalidCurrentPassword": "A senha atual está incorreta",
   "Application.Service.User.UpdatePassword.ResourceNotFound": "usuário não encontrado",
   "Application.Service.User.ValidateBulkItem.Email": "O e-mail é obrigatório no carregamento em massa",

@@ -1,5 +1,6 @@
 using VianaHub.Global.Gerit.Domain.Base;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
+using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
@@ -16,15 +17,18 @@ public class UserDomainService : IUserDomainService
     private readonly IUserDataRepository _repo;
     private readonly IEntityDomainValidator<UserEntity> _validator;
     private readonly INotify _notify;
+    private readonly ILocalizationService _localization;
 
     public UserDomainService(
         IUserDataRepository repo,
         INotify notify,
-        IEntityDomainValidator<UserEntity> validator)
+        IEntityDomainValidator<UserEntity> validator,
+        ILocalizationService localization)
     {
         _repo = repo;
         _notify = notify;
         _validator = validator;
+        _localization = localization;
     }
 
     public async Task<UserEntity?> GetByIdAsync(int id, CancellationToken ct)
@@ -46,6 +50,22 @@ public class UserDomainService : IUserDomainService
 
     public async Task<bool> CreateAsync(UserEntity entity, CancellationToken ct)
     {
+        return await ValidateCreateAsync(entity) && await _repo.CreateAsync(entity, ct);
+    }
+
+    public async Task<bool> CreateManyAsync(IReadOnlyCollection<UserEntity> entities, CancellationToken ct)
+    {
+        foreach (var entity in entities)
+        {
+            if (!await ValidateCreateAsync(entity))
+                return false;
+        }
+
+        return await _repo.CreateManyAsync(entities, ct);
+    }
+
+    private async Task<bool> ValidateCreateAsync(UserEntity entity)
+    {
         var validationResult = await _validator.ValidateForCreateAsync(entity);
         if (!validationResult.IsValid)
         {
@@ -56,7 +76,7 @@ public class UserDomainService : IUserDomainService
             return false;
         }
 
-        return await _repo.CreateAsync(entity, ct);
+        return true;
     }
     public async Task<bool> UpdateAsync(UserEntity entity, CancellationToken ct)
     {
@@ -70,7 +90,7 @@ public class UserDomainService : IUserDomainService
             return false;
         }
 
-        return await _repo.UpdateAsync(entity, ct);
+        return await SaveChangesAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(UserEntity entity, CancellationToken ct)
     {
@@ -84,7 +104,7 @@ public class UserDomainService : IUserDomainService
             return false;
         }
 
-        return await _repo.UpdateAsync(entity, ct);
+        return await SaveChangesAsync(entity, ct);
     }
     public async Task<bool> DeactivateAsync(UserEntity entity, CancellationToken ct)
     {
@@ -98,7 +118,7 @@ public class UserDomainService : IUserDomainService
             return false;
         }
 
-        return await _repo.UpdateAsync(entity, ct);
+        return await SaveChangesAsync(entity, ct);
     }
     public async Task<bool> DeleteAsync(UserEntity entity, CancellationToken ct)
     {
@@ -112,6 +132,15 @@ public class UserDomainService : IUserDomainService
             return false;
         }
 
-        return await _repo.UpdateAsync(entity, ct);
+        return await SaveChangesAsync(entity, ct);
+    }
+
+    private async Task<bool> SaveChangesAsync(UserEntity entity, CancellationToken ct)
+    {
+        if (await _repo.UpdateAsync(entity, ct))
+            return true;
+
+        _notify.Add(_localization.GetMessage("Api.Helpers.NotifyExtensions.Error.Conflict"), 409);
+        return false;
     }
 }
