@@ -34,17 +34,8 @@ public class UserRolesMapping : IEntityTypeConfiguration<UserRolesEntity>
 
         // Índices
         // Unique constraint: nao pode duplicar (Tenant, User, Role)
-        builder.HasIndex(x => new { x.TenantId, x.UserId, x.RoleId })
-            .IsUnique()
-            .HasDatabaseName("UQ_UserRoles");
-
-        builder.HasIndex(x => x.UserId)
-            .HasDatabaseName("IX_UserRoles_UserId")
-            .IncludeProperties(x => new { x.TenantId, x.RoleId });
-
-        builder.HasIndex(x => x.RoleId)
-            .HasDatabaseName("IX_UserRoles_RoleId")
-            .IncludeProperties(x => new { x.TenantId, x.UserId });
+        builder.HasAlternateKey(x => new { x.TenantId, x.UserId, x.RoleId })
+            .HasName("UQ_UserRoles");
 
         // Relacionamentos
         builder.HasOne(x => x.Tenant)

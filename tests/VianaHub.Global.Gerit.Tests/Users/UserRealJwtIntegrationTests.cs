@@ -32,6 +32,8 @@ public sealed class UserRealJwtIntegrationTests
         await using var command = connection.CreateCommand();
         command.CommandText = "EXEC sys.sp_set_session_context @key=N'IsSuperAdmin', @value=1";
         await command.ExecuteNonQueryAsync();
+        await using var seedTransaction = (SqlTransaction)await connection.BeginTransactionAsync();
+        command.Transaction = seedTransaction;
         var suffix = Guid.NewGuid().ToString("N");
         var tenantName = $"TEST_TENANT_USERS_JWT_{suffix}";
         var email = $"jwt-{suffix}@example.invalid";
@@ -76,11 +78,14 @@ public sealed class UserRealJwtIntegrationTests
             Assert.True(key.IsValidForSigning());
             var options = new DbContextOptionsBuilder<GeritDbContext>().UseSqlServer(connection).Options;
             await using var context = new GeritDbContext(options);
+            await context.Database.UseTransactionAsync(seedTransaction);
             var user = new UserEntity(tenant, "JWT owner", email, DomainExtensions.HashClientSecret(initial), null, 1);
             var other = new UserEntity(tenant, "JWT other", $"other-{suffix}@example.invalid",
                 DomainExtensions.HashClientSecret(initial), null, 1);
             context.AddRange(key, user, other);
             await context.SaveChangesAsync();
+            await seedTransaction.CommitAsync();
+            command.Transaction = null;
             command.CommandText = "SELECT COUNT(*) FROM dbo.UserRoles WHERE TenantId=@tenant";
             Assert.Equal(0, Assert.IsType<int>(await command.ExecuteScalarAsync()));
 
@@ -118,8 +123,10 @@ public sealed class UserRealJwtIntegrationTests
                     SELECT @tenant, @role, r.Id, a.Id FROM dbo.Resources r CROSS JOIN dbo.Actions a
                     WHERE r.Name=N'Users' AND r.IsActive=1 AND r.IsDeleted=0
                       AND a.Name IN (N'GetBy', N'Update') AND a.IsActive=1 AND a.IsDeleted=0;
+                    SELECT @role;
                     """;
-                Assert.Equal(4, await command.ExecuteNonQueryAsync());
+                var assignedRoleId = Assert.IsType<int>(await command.ExecuteScalarAsync());
+                command.Parameters.AddWithValue("@assignedRole", assignedRoleId);
                 var adminToken = await LoginAsync(client, other.Email!, initial);
                 var adminJwt = new JwtSecurityTokenHandler().ReadJwtToken(adminToken);
                 Assert.Contains(adminJwt.Claims, claim => claim.Type == "role" && claim.Value == "admin");
@@ -131,10 +138,35 @@ public sealed class UserRealJwtIntegrationTests
                 using var forbidden = await client.PatchAsJsonAsync($"/v1/users/{user.Id}/password",
                     new { currentPassword = replacement, newPassword = initial });
                 Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+
+                client.DefaultRequestHeaders.Authorization = null;
+                command.CommandText = "UPDATE dbo.Roles SET IsActive=0 WHERE Id=@assignedRole AND TenantId=@tenant";
+                Assert.Equal(1, await command.ExecuteNonQueryAsync());
+                await AssertNoGrantsAsync(client, other.Email!, initial);
+
+                command.CommandText = "UPDATE dbo.Roles SET IsActive=1 WHERE Id=@assignedRole AND TenantId=@tenant";
+                Assert.Equal(1, await command.ExecuteNonQueryAsync());
+                var reactivated = new JwtSecurityTokenHandler().ReadJwtToken(await LoginAsync(client, other.Email!, initial));
+                Assert.Contains(reactivated.Claims, claim => claim.Type == "role" && claim.Value == "admin");
+                Assert.Contains(reactivated.Claims, claim => claim.Type == "permissions");
+
+                command.CommandText = "UPDATE dbo.Roles SET IsActive=0, IsDeleted=1 WHERE Id=@assignedRole AND TenantId=@tenant";
+                Assert.Equal(1, await command.ExecuteNonQueryAsync());
+                await AssertNoGrantsAsync(client, other.Email!, initial);
+
+                command.CommandText = """
+                    UPDATE dbo.Roles SET IsActive=1, IsDeleted=0 WHERE Id=@assignedRole AND TenantId=@tenant;
+                    DELETE FROM dbo.UserRoles WHERE TenantId=@tenant AND UserId=@adminUser AND RoleId=@assignedRole;
+                    """;
+                Assert.Equal(2, await command.ExecuteNonQueryAsync());
+                await AssertNoGrantsAsync(client, other.Email!, initial);
             }
         }
         finally
         {
+            if (seedTransaction.Connection is not null)
+                await seedTransaction.RollbackAsync();
+            command.Transaction = null;
             command.CommandText = """
                 DELETE FROM dbo.RefreshTokens WHERE TenantId=@tenant;
                 DELETE FROM dbo.RolePermissions WHERE TenantId=@tenant;
@@ -157,6 +189,12 @@ public sealed class UserRealJwtIntegrationTests
             Assert.True(await residual.ReadAsync());
             Assert.Equal(new int[7], Enumerable.Range(0, 7).Select(residual.GetInt32));
         }
+    }
+
+    private static async Task AssertNoGrantsAsync(HttpClient client, string email, string password)
+    {
+        var token = new JwtSecurityTokenHandler().ReadJwtToken(await LoginAsync(client, email, password));
+        Assert.DoesNotContain(token.Claims, claim => claim.Type is "role" or "roles" or ClaimTypes.Role or "permissions");
     }
 
     private static async Task<string> LoginAsync(HttpClient client, string email, string password)
