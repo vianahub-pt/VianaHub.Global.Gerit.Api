@@ -52,6 +52,128 @@ public sealed class RolePermissionBulkIntegrationTests : IClassFixture<GeritSqlW
         }
     }
 
+    [SqlServerIntegrationFact]
+    public async Task ExistingDuplicateRejectsWholeBatchWithoutPartialWrite()
+    {
+        using var client = CreateClient();
+        var roleId = await CreateRoleAsync();
+        var (resourceA, resourceB, actionId) = await ReadCatalogIdsAsync();
+        try
+        {
+            using var create = await client.PostAsJsonAsync("/v1/role-permissions", new { roleId, resourceId = resourceA, actionId });
+            Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+
+            using var response = await PostCsvAsync(client, $"RoleId;ResourceId;ActionId\n{roleId};{resourceA};{actionId}\n{roleId};{resourceB};{actionId}\n");
+            Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+            Assert.DoesNotContain("Application.Service.RolePermission", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+
+            var rows = await client.GetStringAsync($"/v1/role-permissions/role/{roleId}");
+            Assert.Contains($"\"resourceId\":{resourceA}", rows, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain($"\"resourceId\":{resourceB}", rows, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            await CleanupPermissionAsync(client, roleId, resourceA, actionId);
+            await CleanupPermissionAsync(client, roleId, resourceB, actionId);
+            await CleanupRoleAsync(roleId);
+        }
+    }
+
+    [SqlServerIntegrationFact]
+    public async Task MalformedCsvRejectsWithoutPersistence()
+    {
+        using var client = CreateClient();
+        var roleId = await CreateRoleAsync();
+        try
+        {
+            using var response = await PostCsvAsync(client, "RoleId;ResourceId;ActionId\n1;2;\"unterminated\n");
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.DoesNotContain($"\"roleId\":{roleId}", await client.GetStringAsync($"/v1/role-permissions/role/{roleId}"), StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            await CleanupRoleAsync(roleId);
+        }
+    }
+
+    [InlineData("ResourceId;ActionId", "1;2")]
+    [InlineData("RoleId;WrongId;ActionId", "1;2;3")]
+    [InlineData("RoleId;ResourceId;ActionId;Unexpected", "1;2;3;4")]
+    [SqlServerIntegrationTheory]
+    public async Task InvalidHeadersRejectWithoutPersistence(string header, string row)
+    {
+        using var client = CreateClient();
+        var roleId = await CreateRoleAsync();
+        try
+        {
+            using var response = await PostCsvAsync(client, $"{header}\n{row}\n");
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.DoesNotContain($"\"roleId\":{roleId}", await client.GetStringAsync($"/v1/role-permissions/role/{roleId}"), StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            await CleanupRoleAsync(roleId);
+        }
+    }
+
+    [InlineData(0, 1, 1)]
+    [InlineData(1, 0, 1)]
+    [InlineData(1, 1, 0)]
+    [SqlServerIntegrationTheory]
+    public async Task InvalidIdsRejectWithoutPersistence(int roleId, int resourceId, int actionId)
+    {
+        using var client = CreateClient();
+        using var response = await PostCsvAsync(client, $"RoleId;ResourceId;ActionId\n{roleId};{resourceId};{actionId}\n");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.DoesNotContain("Application.Service.RolePermission", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+    }
+
+    [InlineData(999999999, 1, 1)]
+    [InlineData(1, 999999999, 1)]
+    [InlineData(1, 1, 999999999)]
+    [SqlServerIntegrationTheory]
+    public async Task InvalidForeignKeysRejectWithoutPersistence(int roleId, int resourceId, int actionId)
+    {
+        using var client = CreateClient();
+        using var response = await PostCsvAsync(client, $"RoleId;ResourceId;ActionId\n{roleId};{resourceId};{actionId}\n");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.DoesNotContain("Application.Service.RolePermission", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+    }
+
+    [SqlServerIntegrationFact]
+    public async Task CrossTenantRoleIsRejectedWithoutPersistence()
+    {
+        var tenants = new SqlTestTenantFixture();
+        var (tenantB, _) = await tenants.CreateAsync();
+        var roleId = 0;
+        using var client = CreateClient();
+        var (resourceId, _, actionId) = await ReadCatalogIdsAsync();
+        try
+        {
+            using var tenantClient = _factory.CreateClient();
+            tenantClient.DefaultRequestHeaders.Add("X-Test-Tenant", tenantB.ToString());
+            tenantClient.DefaultRequestHeaders.Add("X-Test-Permissions", "Create,Delete");
+            using var roleResponse = await tenantClient.PostAsJsonAsync("/v1/roles/", new { name = $"TEST_ROLE_PERMISSION_CROSS_{Guid.NewGuid():N}", description = "RolePermissions cross-tenant test" });
+            Assert.Equal(HttpStatusCode.Created, roleResponse.StatusCode);
+            roleId = (await roleResponse.Content.ReadFromJsonAsync<Dictionary<string, int>>())!["id"];
+
+            using var response = await PostCsvAsync(client, $"RoleId;ResourceId;ActionId\n{roleId};{resourceId};{actionId}\n");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+        finally
+        {
+            if (roleId > 0)
+            {
+                using var tenantClient = _factory.CreateClient();
+                tenantClient.DefaultRequestHeaders.Add("X-Test-Tenant", tenantB.ToString());
+                tenantClient.DefaultRequestHeaders.Add("X-Test-Permissions", "Delete");
+                _ = await tenantClient.DeleteAsync($"/v1/roles/{roleId}");
+            }
+
+            await tenants.DeleteAsync(tenantB);
+        }
+    }
+
     private HttpClient CreateClient()
     {
         var client = _factory.CreateClient();

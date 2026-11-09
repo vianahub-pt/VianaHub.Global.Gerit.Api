@@ -62,6 +62,45 @@ public sealed class RolePermissionSqlIntegrationTests
         }
     }
 
+    [SqlServerIntegrationFact]
+    public async Task BulkPersistenceRollsBackWhenSecondInsertConflicts()
+    {
+        await using var db = await OpenAsync();
+        var roleId = 0;
+        try
+        {
+            var resourceId = await ScalarAsync<int>(db, "SELECT TOP (1) Id FROM dbo.Resources WHERE IsDeleted=0 ORDER BY Id");
+            var actionId = await ScalarAsync<int>(db, "SELECT TOP (1) Id FROM dbo.Actions WHERE IsDeleted=0 ORDER BY Id");
+            roleId = await InsertRoleAsync(db, 1, $"TEST_ROLE_PERMISSION_ROLLBACK_{Guid.NewGuid():N}");
+            await SetTenantAsync(db, 1);
+
+            using var transaction = db.BeginTransaction();
+            try
+            {
+                await ExecuteAsync(db, transaction, "INSERT INTO dbo.RolePermissions (TenantId,RoleId,ResourceId,ActionId) VALUES (1,@role,@resource,@action)", ("@role", roleId), ("@resource", resourceId), ("@action", actionId));
+                await ExecuteAsync(db, transaction, "INSERT INTO dbo.RolePermissions (TenantId,RoleId,ResourceId,ActionId) VALUES (1,@role,@resource,@action)", ("@role", roleId), ("@resource", resourceId), ("@action", actionId));
+                await transaction.CommitAsync();
+                Assert.Fail("Expected the second insert to violate UQ_RolePermissions.");
+            }
+            catch (SqlException)
+            {
+                await transaction.RollbackAsync();
+            }
+
+            await SetSuperAdminAsync(db);
+            Assert.Equal(0, await ScalarAsync<int>(db, "SELECT COUNT(*) FROM dbo.RolePermissions WHERE RoleId=@role", ("@role", roleId)));
+        }
+        finally
+        {
+            await SetSuperAdminAsync(db);
+            if (roleId > 0)
+            {
+                await ExecuteAsync(db, "DELETE FROM dbo.RolePermissions WHERE RoleId=@role", ("@role", roleId));
+                await ExecuteAsync(db, "DELETE FROM dbo.Roles WHERE Id=@role", ("@role", roleId));
+            }
+        }
+    }
+
     private static async Task<SqlConnection> OpenAsync()
     {
         var db = new SqlConnection(Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING"));
@@ -109,6 +148,16 @@ public sealed class RolePermissionSqlIntegrationTests
     private static async Task ExecuteAsync(SqlConnection db, string sql, params (string Name, object Value)[] parameters)
     {
         await using var command = db.CreateCommand();
+        command.CommandText = sql;
+        foreach (var (name, value) in parameters)
+            command.Parameters.AddWithValue(name, value);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task ExecuteAsync(SqlConnection db, SqlTransaction transaction, string sql, params (string Name, object Value)[] parameters)
+    {
+        await using var command = db.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText = sql;
         foreach (var (name, value) in parameters)
             command.Parameters.AddWithValue(name, value);

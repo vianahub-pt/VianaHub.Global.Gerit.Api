@@ -2062,7 +2062,7 @@ Schema SQL (sem execução):
 
 ### RolePermission — 100% LOCAL / DEV-HML integration certified
 
-RolePermissions is a tenant-scoped association with physical delete by composite key. Read responses expose `RoleId`, `ResourceId` and `ActionId`, allowing a new session to delete the exact association without guessing identifiers. Production smoke remains pending.
+RolePermissions is a tenant-scoped association with physical delete by composite key. Read responses expose `RoleId`, `ResourceId` and `ActionId`, allowing a new session to delete the exact association without guessing identifiers. The prepared production smoke creates its own temporary Role and never targets a pre-existing Role. Production smoke remains pending.
 
 - A/B/C/D/E/F/G/H: `20/15/10/15/15/10/10/5`; soma=100; final=100.
 - Category: Child/sub-resource; Web complexity: High; Business value: needs product decision.

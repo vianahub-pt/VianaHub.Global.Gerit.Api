@@ -62,16 +62,18 @@ public class RolePermissionDomainService : IRolePermissionDomainService
 
     public async Task<bool> CreateManyAsync(IReadOnlyCollection<RolePermissionsEntity> entities, CancellationToken ct)
     {
-        foreach (var entity in entities)
+        var validatedEntities = entities.Select(entity =>
         {
             var validation = _validator.Validate(entity);
             if (!validation.IsValid)
                 throw new ValidationException(validation.Errors);
-        }
+
+            return entity;
+        }).ToArray();
 
         try
         {
-            return await _repository.CreateManyAsync(entities, ct);
+            return await _repository.CreateManyAsync(validatedEntities, ct);
         }
         catch (RolePermissionConflictException)
         {

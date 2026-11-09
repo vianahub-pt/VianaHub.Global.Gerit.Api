@@ -1,8 +1,4 @@
-using CsvHelper;
-using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
-using System.Globalization;
-using System.Text;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.RolePermission;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.RolePermission;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
@@ -155,73 +151,17 @@ public class RolePermissionAppService : IRolePermissionAppService
 
     private List<BulkUploadRolePermissionItem>? ReadCsvFile(IFormFile file)
     {
-        try
-        {
-            using var reader = file.OpenReadStream().CreateUtf8StreamReader();
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = true,
-                Delimiter = ";",
-                TrimOptions = TrimOptions.Trim
-            };
+        using var stream = file.OpenReadStream();
+        var result = RolePermissionBulkCsvParser.Parse(stream, DomainExtensions.GetMaxCsvRows());
+        if (result.IsSuccess)
+            return result.Items;
 
-            using var csv = new CsvReader(reader, config);
-            if (!csv.Read() || !csv.ReadHeader() || csv.HeaderRecord is null)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.RolePermission.BulkUpload.EmptyFile"), 400);
-                return null;
-            }
-
-            var expectedHeaders = new[] { "RoleId", "ResourceId", "ActionId" };
-            if (csv.HeaderRecord.Length != expectedHeaders.Length ||
-                !expectedHeaders.SequenceEqual(csv.HeaderRecord, StringComparer.OrdinalIgnoreCase))
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.RolePermission.ReadCsvFile.InvalidHeader"), 400);
-                return null;
-            }
-
-            var records = new List<BulkUploadRolePermissionItem>();
-            var rowCount = 0;
-            var maxRows = DomainExtensions.GetMaxCsvRows();
-
-            while (csv.Read())
-            {
-                if (rowCount >= maxRows)
-                {
-                    _notify.Add(_localization.GetMessage("Application.Service.RolePermission.ReadCsvFile.MaxRows", maxRows), 400);
-                    return null;
-                }
-
-                var record = csv.GetRecord<BulkUploadRolePermissionItem>();
-                if (record is null || !ValidateIds(record.RoleId, record.ResourceId, record.ActionId, rowCount + 2))
-                    return null;
-
-                records.Add(record);
-                rowCount++;
-            }
-
-            return records;
-        }
-        catch (CsvHelperException)
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.RolePermission.ReadCsvFile.Exception"), 400);
-            return null;
-        }
-        catch (InvalidDataException)
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.RolePermission.ReadCsvFile.Exception"), 400);
-            return null;
-        }
-        catch (IOException)
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.RolePermission.ReadCsvFile.Exception"), 400);
-            return null;
-        }
-        catch (DecoderFallbackException)
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.RolePermission.ReadCsvFile.Exception"), 400);
-            return null;
-        }
+        var key = $"Application.Service.RolePermission.{result.ErrorKey}";
+        var message = result.ErrorArgument is null
+            ? _localization.GetMessage(key)
+            : _localization.GetMessage(key, result.ErrorArgument);
+        _notify.Add(message, 400);
+        return null;
     }
 
     private async Task<bool> ProcessBulkItemsAsync(List<BulkUploadRolePermissionItem> items, CancellationToken ct)
