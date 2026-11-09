@@ -15,11 +15,6 @@ public static partial class RolePermissionMapper
     [MapProperty(nameof(RolePermissionsEntity.Role), nameof(RolePermissionDetailResponse.RoleName), Use = nameof(RoleName))]
     [MapProperty(nameof(RolePermissionsEntity.Resource), nameof(RolePermissionDetailResponse.ResourceName), Use = nameof(ResourceName))]
     [MapProperty(nameof(RolePermissionsEntity.Action), nameof(RolePermissionDetailResponse.ActionName), Use = nameof(ActionName))]
-    [MapperIgnoreTarget(nameof(RolePermissionDetailResponse.IsDeleted))]
-    [MapperIgnoreTarget(nameof(RolePermissionDetailResponse.CreatedBy))]
-    [MapperIgnoreTarget(nameof(RolePermissionDetailResponse.CreatedAt))]
-    [MapperIgnoreTarget(nameof(RolePermissionDetailResponse.ModifiedBy))]
-    [MapperIgnoreTarget(nameof(RolePermissionDetailResponse.ModifiedAt))]
     public static partial RolePermissionDetailResponse ToDetail(RolePermissionsEntity source);
 
     public static IList<RolePermissionResponse> ToResponses(IEnumerable<RolePermissionsEntity> source) => source.Select(ToResponse).ToList();

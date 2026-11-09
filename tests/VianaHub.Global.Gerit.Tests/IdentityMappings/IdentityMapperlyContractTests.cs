@@ -52,6 +52,9 @@ public sealed class IdentityMapperlyContractTests
     {
         var nullNavigation = new RolePermissionsEntity(1, 2, 3, 4);
         var nullResponse = RolePermissionMapper.ToResponse(nullNavigation);
+        Assert.Equal(2, nullResponse.RoleId);
+        Assert.Equal(3, nullResponse.ResourceId);
+        Assert.Equal(4, nullResponse.ActionId);
         Assert.Equal(string.Empty, nullResponse.RoleName);
         Assert.Equal(string.Empty, nullResponse.ResourceName);
         Assert.Equal(string.Empty, nullResponse.ActionName);
@@ -62,6 +65,9 @@ public sealed class IdentityMapperlyContractTests
         SetProperty(populated, nameof(RolePermissionsEntity.Action), new ActionEntity("Read", "Read", 1));
         var detail = RolePermissionMapper.ToDetail(populated);
 
+        Assert.Equal(2, detail.RoleId);
+        Assert.Equal(3, detail.ResourceId);
+        Assert.Equal(4, detail.ActionId);
         Assert.Equal("Admin", detail.RoleName);
         Assert.Equal("Clients", detail.ResourceName);
         Assert.Equal("Read", detail.ActionName);
