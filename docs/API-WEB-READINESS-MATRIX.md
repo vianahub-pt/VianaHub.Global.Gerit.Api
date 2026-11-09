@@ -81,7 +81,7 @@ Os três NON-UI têm score técnico, mas são contados separadamente dos quatro 
 | 26 | [EmployeeContactPerson](#employeecontactperson) | Child/sub-resource | 75 | 14 | 14 | 10 | 12 | 15 | 5 | 4 | 5 | CONSUME75:75 | needs product decision | Low | 2 — Tenants, Employees | Medium | Update permite Email/Phone/JobTitle/Department/IsCellPhoneWhatsapp que detail omite; não apagar ao editar. | Remediar antes do fluxo completo |
 | 27 | [Equipment](#equipment) | Business CRUD | 75 | 14 | 15 | 10 | 13 | 15 | 8 | 7 | 5 | CONSUME75:75 | needs product decision | Medium | 3 — Tenants, StatusDefinitions, EquipmentTypes | High | EquipmentType é recuperável; lookup do par StatusDefinitionId/StatusDomainId está incompleto. | Remediar antes do fluxo completo |
 | 28 | [Role](#role) | Identity/Admin | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | Low | 1 — Tenants | Medium | DEV/HML SQL-backed HTTP, RLS, authorization, lifecycle, validation, duplicate normalization, race conflict, bulk atomicity and dependency behavior certified; production smoke not executed. | Pronto para smoke após promoção/deploy |
-| 29 | [RolePermission](#rolepermission) | Child/sub-resource | 75 | 12 | 13 | 10 | 10 | 15 | 5 | 5 | 5 | ID75:75; CONSUME75:75 | needs product decision | High | 4 — Tenants, Roles, Resources, Actions | Medium | DELETE exige roleId/resourceId/actionId; DTO devolve nomes e Id da linha, não os três IDs. Sem Activate/Update por design não há penalidade automática. | Remediar antes do fluxo completo |
+| 29 | [RolePermission](#rolepermission) | Child/sub-resource | 100 | 20 | 15 | 10 | 15 | 15 | 10 | 10 | 5 | nenhum | needs product decision | High | 4 — Tenants, Roles, Resources, Actions | Medium | DEV/HML SQL-backed HTTP, RLS, authorization, composite IDs, deterministic reads, duplicate/race conflict, strict bulk atomicity and cleanup certified; production smoke not executed. | Pronto para smoke após promoção/deploy |
 | 30 | [Subscription](#subscription) | Billing | 75 | 15 | 14 | 9 | 10 | 10 | 9 | 5 | 5 | PERM80:80; CONSUME75:75 | needs product decision | High | 3 — Tenants, StatusDefinitions, SubscriptionPlans | High | GetActivate diverge do seed GetActive; par de status necessário; GetById só mapeia retorno sem guard410 explícito; rotas sem WithValidation apesar de validadores/domínio existentes. | Remediar antes do fluxo completo |
 | 31 | [Tenant](#tenant) | Aggregate CRUD | 75 | 10 | 14 | 10 | 12 | 15 | 5 | 6 | 5 | ID75:75; CONSUME75:75 | needs product decision | High | 2 — PartyTypes, AcquisitionSourceTypes | Low | Detail omite PartyTypeId, AcquisitionSourceTypeId, Email, Website, UrlImage e Note aceitos no Update. GetAll ainda serve como lookup de IDs. | Remediar antes do fluxo completo |
 | 32 | [UserRole](#userrole) | Child/sub-resource | 75 | 12 | 14 | 10 | 11 | 15 | 5 | 5 | 5 | ID75:75; CONSUME75:75 | needs product decision | Medium | 3 — Tenants, Users, Roles | Medium | DELETE exige userId/roleId; detail traz nomes e Id da associação, sem par de IDs. Não inferir por nome/posição. | Remediar antes do fluxo completo |
@@ -2060,11 +2060,11 @@ Schema SQL (sem execução):
 
 <a id="rolepermission"></a>
 
-### RolePermission — 75% (C)
+### RolePermission — 100% LOCAL / DEV-HML integration certified
 
-DELETE exige roleId/resourceId/actionId; DTO devolve nomes e Id da linha, não os três IDs. Sem Activate/Update por design não há penalidade automática.
+RolePermissions is a tenant-scoped association with physical delete by composite key. Read responses expose `RoleId`, `ResourceId` and `ActionId`, allowing a new session to delete the exact association without guessing identifiers. Production smoke remains pending.
 
-- A/B/C/D/E/F/G/H: `12/13/10/10/15/5/5/5`; soma=75; cap=75; final=75. Caps: ID75, CONSUME75.
+- A/B/C/D/E/F/G/H: `20/15/10/15/15/10/10/5`; soma=100; final=100.
 - Category: Child/sub-resource; Web complexity: High; Business value: needs product decision.
 - Dependencies: Tenants, Roles, Resources, Actions (4); módulos dependentes diretos=0.
 - Endpoint: [RolePermissionEndpoint.cs](../src/VianaHub.Global.Gerit.Api/Endpoints/Identity/RolePermissionEndpoint.cs); base `/v1/role-permissions`.
@@ -2073,10 +2073,10 @@ DELETE exige roleId/resourceId/actionId; DTO devolve nomes e Id da linha, não o
 - Repositories: [RolePermissionDataRepository.cs](../src/VianaHub.Global.Gerit.Infra.Data/Repository/Identity/RolePermissionDataRepository.cs); [RoleDataRepository.cs](../src/VianaHub.Global.Gerit.Infra.Data/Repository/Identity/RoleDataRepository.cs); [ResourceDataRepository.cs](../src/VianaHub.Global.Gerit.Infra.Data/Repository/Identity/ResourceDataRepository.cs); [ActionDataRepository.cs](../src/VianaHub.Global.Gerit.Infra.Data/Repository/Identity/ActionDataRepository.cs). Interfaces: `IRolePermissionDataRepository, IRoleDataRepository, IResourceDataRepository, IActionDataRepository`.
 - Entities: [RolePermissionsEntity.cs](../src/VianaHub.Global.Gerit.Domain/Entities/Identity/RolePermissionsEntity.cs).
 - EF Mapping: [RolePermissionsMapping.cs](../src/VianaHub.Global.Gerit.Infra.Data/Mappings/Identity/RolePermissionsMapping.cs). SQL tables: `RolePermissions`.
-- Route validators: Não identificado por tipo no índice; conferir DI/contratos compartilhados antes de concluir ausência.. WithValidation no módulo=0; conferir registro DI.
+- Route validator: [CreateRolePermissionRouteValidator.cs](../src/VianaHub.Global.Gerit.Api/Validators/Identity/RolePermission/CreateRolePermissionRouteValidator.cs), registered through `WithValidation<CreateRolePermissionRequest>()`.
 - Domain validators: [RolePermissionValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/RolePermission/RolePermissionValidator.cs).
-- Tests: [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [AuthorizationIdentityTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthorizationIdentityTests.cs); [AuthPermissionTokenTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthPermissionTokenTests.cs); [JwtBearerPipelineTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtBearerPipelineTests.cs).
-- Mapping: AutoMapper sim; complexidade Medium; culture-sensitive/resolver não identificado. [RolePermissionMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/RolePermissionMappingProfile.cs).
+- Tests: [RolePermissionSqlIntegrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/RolePermissions/RolePermissionSqlIntegrationTests.cs); [RolePermissionHttpIntegrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/RolePermissions/RolePermissionHttpIntegrationTests.cs); [RolePermissionBulkIntegrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/RolePermissions/RolePermissionBulkIntegrationTests.cs); [RolePermissionBulkBoundaryTests.cs](../tests/VianaHub.Global.Gerit.Tests/RolePermissions/RolePermissionBulkBoundaryTests.cs); [IdentityMapperlyContractTests.cs](../tests/VianaHub.Global.Gerit.Tests/IdentityMappings/IdentityMapperlyContractTests.cs).
+- Mapping: Mapperly; composite IDs and navigation names covered by contract tests.
 - Locale: 21 literais auditados; ausentes por locale: pt-PT=0, en-US=0, pt-BR=0, es-ES=0.
 
 <details>
@@ -2085,17 +2085,17 @@ DELETE exige roleId/resourceId/actionId; DTO devolve nomes e Id da linha, não o
 | HTTP | Relative endpoint | Operação/handler | Status declarados ou explícitos |
 |---|---|---|---|
 | GET | / | GetAllRolePermissions; GetAllAsync | 200, 401, 403, 500 |
-| GET | /roles/{roleId}/resources/{resourceId}/actions/{actionId} | GetRolePermissionById; GetByIdAsync | 401, 403, 200, 404, 500 |
+| GET | /roles/{roleId}/resources/{resourceId}/actions/{actionId} | GetRolePermissionById; GetByIdAsync | 401, 403, 200, 410, 500 |
 | GET | /role/{roleId} | GetRolePermissionsByRole; GetByRoleAsync | 200, 401, 403, 500 |
 | GET | /resource/{resourceId} | GetRolePermissionsByResource; GetByResourceAsync | 200, 401, 403, 500 |
-| POST | / | CreateRolePermission; CreateAsync | 201, 401, 403, 404, 400, 500 |
+| POST | / | CreateRolePermission; CreateAsync | 201, 401, 403, 404, 409, 400, 500 |
 | DELETE | /roles/{roleId}/resources/{resourceId}/actions/{actionId} | DeleteRolePermission; DeleteAsync | 401, 403, 410, 200, 404, 500 |
-| POST | /bulk-upload | BulkUploadRolePermission; BulkUploadAsync | 401, 403, 200, 400, 500 |
+| POST | /bulk-upload | BulkUploadRolePermission; BulkUploadAsync | 401, 403, 200, 400, 409, 500 |
 
 DTOs:
 
-- [RolePermissionResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/RolePermission/RolePermissionResponse.cs): `Id:int; RoleName:string?; ResourceName:string?; ActionName:string?`.
-- [RolePermissionDetailResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/RolePermission/RolePermissionDetailResponse.cs): `Id:int; RoleName:string?; ResourceName:string?; ActionName:string?; IsDeleted:bool; CreatedBy:int; CreatedAt:DateTime; ModifiedBy:int?; ModifiedAt:DateTime?`.
+- [RolePermissionResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/RolePermission/RolePermissionResponse.cs): `Id:int; RoleId:int; ResourceId:int; ActionId:int; RoleName:string?; ResourceName:string?; ActionName:string?`.
+- [RolePermissionDetailResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/RolePermission/RolePermissionDetailResponse.cs): `Id:int; RoleId:int; ResourceId:int; ActionId:int; RoleName:string?; ResourceName:string?; ActionName:string?`.
 - [CreateRolePermissionRequest.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Request/Identity/RolePermission/CreateRolePermissionRequest.cs): `RoleId:int; ResourceId:int; ActionId:int`.
 
 Authorization:

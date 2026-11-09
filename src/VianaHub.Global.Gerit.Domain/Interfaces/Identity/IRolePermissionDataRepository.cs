@@ -10,5 +10,6 @@ public interface IRolePermissionDataRepository
     Task<IList<RolePermissionsEntity>> GetAllAsync(int tenantId, CancellationToken ct);
     Task<bool> ExistsAsync(int tenantId, int roleId, int resourceId, int actionId, CancellationToken ct);
     Task<bool> CreateAsync(RolePermissionsEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<RolePermissionsEntity> entities, CancellationToken ct);
     Task<bool> DeleteAsync(int tenantId, int roleId, int resourceId, int actionId, CancellationToken ct);
 }

@@ -22,12 +22,13 @@ public sealed class TestAuthenticationHandler : AuthenticationHandler<Authentica
         var tenantId = Request.Headers["X-Test-Tenant"].FirstOrDefault() ?? "1";
         var permissions = (Request.Headers["X-Test-Permissions"].FirstOrDefault() ?? string.Empty)
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var permissionResource = Request.Headers["X-Test-Permission-Resource"].FirstOrDefault() ?? "Roles";
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, "-9001"),
             new(ClaimTypes.Role, "BackOffice"),
             new("tenant_id", tenantId),
-            new("permissions", JsonSerializer.Serialize(new Dictionary<string, string[]> { ["Roles"] = permissions }))
+            new("permissions", JsonSerializer.Serialize(new Dictionary<string, string[]> { [permissionResource] = permissions }))
         };
 
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(

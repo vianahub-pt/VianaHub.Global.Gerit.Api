@@ -41,7 +41,7 @@ public static class RolePermissionEndpoint
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<RolePermissionDetailResponse>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/role/{roleId}", async ([FromRoute] int roleId, [FromServices] IRolePermissionAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -81,9 +81,11 @@ public static class RolePermissionEndpoint
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<GenericResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
-        .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
+        .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
+        .WithValidation<CreateRolePermissionRequest>();
 
         groupV1.MapDelete("/roles/{roleId}/resources/{resourceId}/actions/{actionId}", async ([FromRoute] int roleId, [FromRoute] int resourceId, [FromRoute] int actionId, [FromServices] IRolePermissionAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
@@ -105,7 +107,7 @@ public static class RolePermissionEndpoint
         {
             if (!request.HasFormContentType || request.Form.Files.Count == 0)
             {
-                notify.Add("Nenhum arquivo foi enviado", 400);
+                notify.Add("Application.Service.RolePermission.BulkUpload.EmptyFile", 400);
                 return notify.CustomResponse();
             }
 
@@ -120,6 +122,7 @@ public static class RolePermissionEndpoint
         .Accepts<IFormFile>("multipart/form-data")
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
