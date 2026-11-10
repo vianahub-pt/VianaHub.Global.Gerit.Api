@@ -63,6 +63,7 @@ export async function createAuthenticatedSmokeClient({
   token = auth.data.accessToken;
   // Refresh token não é retido, exposto ou persistido; não há retry/refresh automático.
   const client = {
+    tenantId: auth.data.tenantId,
     get: (path, options) => request('GET', path, options),
     post: (path, body, options) => request('POST', path, { ...options, body }),
     postMultipart: (path, formData, options) => request('POST', path, { ...options, formData }),
