@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Services.Identity;
-using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
@@ -23,8 +22,6 @@ public sealed class UserRoleBulkBoundaryTests
         var fileValidation = new Mock<IFileValidationService>();
         fileValidation.Setup(service => service.ValidateFile(file)).Returns(true);
         var users = new Mock<IUserDataRepository>();
-        users.Setup(repository => repository.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserEntity?)null);
         var assignments = new Mock<IUserRoleDataRepository>(MockBehavior.Strict);
         var service = new UserRoleAppService(Mock.Of<IUserRoleDomainService>(), assignments.Object,
             Mock.Of<IRoleDataRepository>(), users.Object, Mock.Of<INotify>(), Mock.Of<ILocalizationService>(),
