@@ -2,13 +2,13 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
 using System.Globalization;
-using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.User;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.UserRole;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.UserRole;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
+using VianaHub.Global.Gerit.Domain.Exceptions;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
@@ -21,6 +21,7 @@ public class UserRoleAppService : IUserRoleAppService
     private readonly IUserRoleDomainService _domain;
     private readonly IUserRoleDataRepository _repository;
     private readonly IRoleDataRepository _roleRepository;
+    private readonly IUserDataRepository _userRepository;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -30,6 +31,7 @@ public class UserRoleAppService : IUserRoleAppService
         IUserRoleDomainService domain,
         IUserRoleDataRepository repository,
         IRoleDataRepository roleRepository,
+        IUserDataRepository userRepository,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -38,6 +40,7 @@ public class UserRoleAppService : IUserRoleAppService
         _domain = domain;
         _repository = repository;
         _roleRepository = roleRepository;
+        _userRepository = userRepository;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -48,7 +51,11 @@ public class UserRoleAppService : IUserRoleAppService
     {
         var tenantId = _currentUser.GetTenantId();
         var entity = await _repository.GetByIdAsync(tenantId, userId, roleId, ct);
-        return entity is null ? null! : UserRoleMapper.ToDetail(entity);
+        if (entity is not null)
+            return UserRoleMapper.ToDetail(entity);
+
+        _notify.Add(_localization.GetMessage("Application.Service.UserRole.GetById.ResourceNotFound"), 410);
+        return null!;
     }
 
     public async Task<IList<UserRoleResponse>> GetByUserAsync(int userId, CancellationToken ct)
@@ -79,189 +86,162 @@ public class UserRoleAppService : IUserRoleAppService
     {
         var tenantId = _currentUser.GetTenantId();
 
-        // Verifica duplicidade
-        var existing = await _repository.GetByUserAsync(tenantId, request.UserId, ct);
-        if (existing != null && existing.Any(x => x.RoleId == request.RoleId))
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.UserRole.Create.ResourceAlreadyExists"), 400);
+        if (!await ValidateParentsAsync(tenantId, request.UserId, request.RoleId, ct))
             return null;
-        }
 
-        // Valida se o Role existe
-        var roleExists = await _roleRepository.ExistsByIdAsync(request.RoleId, CancellationToken.None);
-        if (!roleExists)
+        if (await _repository.ExistsAsync(tenantId, request.UserId, request.RoleId, ct))
         {
-            _notify.Add(_localization.GetMessage("Application.Service.UserRole.Create.RoleNotFound"), 404);
+            NotifyConflict();
             return null;
         }
 
         var entity = new UserRolesEntity(tenantId, request.UserId, request.RoleId);
-        await _domain.CreateAsync(entity, ct);
-        return UserRoleMapper.ToResponse(entity);
+        try
+        {
+            if (!await _domain.CreateAsync(entity, ct))
+            {
+                if (!_notify.HasNotify())
+                    NotifyUnavailableParents();
+                return null;
+            }
+
+            var created = await _repository.GetByIdAsync(tenantId, request.UserId, request.RoleId, ct);
+            return UserRoleMapper.ToResponse(created ?? entity);
+        }
+        catch (UserRoleConflictException)
+        {
+            NotifyConflict();
+            return null;
+        }
     }
 
+    private void NotifyConflict() =>
+        _notify.Add(_localization.GetMessage("Application.Service.UserRole.Create.ResourceAlreadyExists"), 409);
+
+    private void NotifyUnavailableParents() =>
+        _notify.Add(_localization.GetMessage("Application.Service.UserRole.GetById.ResourceNotFound"), 404);
+
+    private async Task<bool> ValidateParentsAsync(int tenantId, int userId, int roleId, CancellationToken ct)
+    {
+        if (userId <= 0 || roleId <= 0)
+        {
+            _notify.Add(_localization.GetMessage(userId <= 0 ? "Domain.User.InvalidId" : "Domain.Role.InvalidId"), 400);
+            return false;
+        }
+
+        var user = await _userRepository.GetByIdAsync(userId, ct);
+        if (user is null || user.TenantId != tenantId || user.IsDeleted)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.User.GetById.ResourceNotFound"), 404);
+            return false;
+        }
+
+        var role = await _roleRepository.GetByIdAsync(roleId, ct);
+        if (role is null || role.TenantId != tenantId || role.IsDeleted || !role.IsActive)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.UserRole.Create.RoleNotFound"), 404);
+            return false;
+        }
+
+        return true;
+    }
 
     public async Task DeleteAsync(int userId, int roleId, CancellationToken ct)
     {
         var tenantId = _currentUser.GetTenantId();
-        var entity = await _repository.GetByIdAsync(tenantId, userId, roleId, ct);
-        if (entity == null)
-        {
-            // Not found -> notify with 410 Gone
+        if (!await _domain.DeleteAsync(tenantId, userId, roleId, ct))
             _notify.Add(_localization.GetMessage("Application.Service.UserRole.Delete.ResourceNotFound"), 410);
-            return;
-        }
-
-        await _repository.DeleteAsync(tenantId, userId, roleId, ct);
     }
 
 
     public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
-        // Valida arquivo usando servi�o centralizado
         if (!_fileValidation.ValidateFile(file))
             return false;
 
-        // L� itens do CSV
-        var items = ReadCsvFile(file);
-        if (items == null)
-            return false;
+        var tenantId = _currentUser.GetTenantId();
+        var entities = new List<UserRolesEntity>();
+        var keys = new HashSet<(int UserId, int RoleId)>();
+        try
+        {
+            using var reader = new StreamReader(file.OpenReadStream(), new System.Text.UTF8Encoding(true, true), false);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                Delimiter = ";",
+                DetectColumnCountChanges = true,
+                IgnoreBlankLines = false,
+                ExceptionMessagesContainRawData = false
+            });
+            if (!csv.Read() || !csv.ReadHeader() || csv.HeaderRecord is not ["UserId", "RoleId"])
+            {
+                _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.Exception"), 400);
+                return false;
+            }
 
-        if (!items.Any())
+            var maxRows = DomainExtensions.GetMaxCsvRows();
+            while (csv.Read())
+            {
+                ct.ThrowIfCancellationRequested();
+                if (entities.Count == maxRows)
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.MaxRows", maxRows), 400);
+                    return false;
+                }
+
+                if (!int.TryParse(csv.GetField(0), NumberStyles.None, CultureInfo.InvariantCulture, out var userId) || userId <= 0)
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.UserRole.ValidateBulkItem.UserId", csv.Parser.Row), 400);
+                    return false;
+                }
+                if (!int.TryParse(csv.GetField(1), NumberStyles.None, CultureInfo.InvariantCulture, out var roleId) || roleId <= 0)
+                {
+                    _notify.Add(_localization.GetMessage("Application.Service.UserRole.ValidateBulkItem.RoleId", csv.Parser.Row), 400);
+                    return false;
+                }
+
+                if (!keys.Add((userId, roleId)))
+                {
+                    NotifyConflict();
+                    return false;
+                }
+                entities.Add(new UserRolesEntity(tenantId, userId, roleId));
+            }
+        }
+        catch (Exception exception) when (exception is CsvHelperException or System.Text.DecoderFallbackException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.Exception"), 400);
+            return false;
+        }
+
+        if (entities.Count == 0)
         {
             _notify.Add(_localization.GetMessage("Application.Service.UserRole.BulkUpload.EmptyFile"), 400);
             return false;
         }
 
-        // Processa cada item
-        return await ProcessBulkItemsAsync(items, ct);
-    }
+        foreach (var entity in entities)
+        {
+            if (!await ValidateParentsAsync(tenantId, entity.UserId, entity.RoleId, ct))
+                return false;
+            if (await _repository.ExistsAsync(tenantId, entity.UserId, entity.RoleId, ct))
+            {
+                NotifyConflict();
+                return false;
+            }
+        }
 
-    private List<BulkUploadUserRoleItem>? ReadCsvFile(IFormFile file)
-    {
         try
         {
-            // Cria StreamReader com encoding UTF-8 for�ado
-            using var reader = file.OpenReadStream().CreateUtf8StreamReader();
+            if (await _repository.CreateManyAsync(entities, ct))
+                return true;
 
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = true,
-                Delimiter = ";", // CSV usa ponto e v�rgula como delimitador
-                MissingFieldFound = null,
-                HeaderValidated = null,
-                TrimOptions = TrimOptions.Trim,
-                BadDataFound = null // Ignora linhas mal formatadas ao inv�s de lan�ar exce��o
-            };
-
-            using var csv = new CsvReader(reader, config);
-            var records = new List<BulkUploadUserRoleItem>();
-
-            csv.Read();
-            csv.ReadHeader();
-
-            int rowCount = 0;
-            int maxRows = DomainExtensions.GetMaxCsvRows();
-
-            while (csv.Read() && rowCount < maxRows)
-            {
-                try
-                {
-                    var record = csv.GetRecord<BulkUploadUserRoleItem>();
-                    if (record != null)
-                    {
-                        // Valida se os campos n�o cont�m conte�do perigoso
-                        if (record.UserId <= 0)
-                        {
-                            _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.UserId.IsSafeCsvValue", rowCount + 2), 400);
-                            continue;
-                        }
-
-                        if (record.RoleId <= 0)
-                        {
-                            _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.RoleId.IsSafeCsvValue", rowCount + 2), 400);
-                            continue;
-                        }
-
-                        records.Add(record);
-                    }
-                    rowCount++;
-                }
-                catch (CsvHelperException)
-                {
-                    // Log linha com erro mas continua processamento
-                    _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.CsvHelperException", rowCount + 2), 400);
-                    rowCount++;
-                    continue;
-                }
-            }
-
-            if (rowCount >= maxRows)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.MaxRows", maxRows), 400);
-                return null;
-            }
-
-            return records;
-        }
-        catch (Exception)
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.UserRole.ReadCsvFile.Exception"), 400);
-            return null;
-        }
-    }
-
-    private async Task<bool> ProcessBulkItemsAsync(List<BulkUploadUserRoleItem> items, CancellationToken ct)
-    {
-        var hasErrors = false;
-        var tenantId = _currentUser.GetTenantId();
-
-        foreach (var item in items)
-        {
-            // Valida campos obrigat�rios
-            if (!ValidateBulkItem(item))
-            {
-                hasErrors = true;
-                continue;
-            }
-
-            // Verifica duplicidade
-            var exists = await _repository.ExistsAsync(tenantId, item.UserId, item.RoleId, ct);
-            if (exists)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.UserRole.ProcessBulkItems.ExistsByEmail"), 400);
-                hasErrors = true;
-                continue;
-            }
-
-            var entity = new UserRolesEntity(tenantId, item.UserId, item.RoleId);
-
-            // Tenta criar no dom�nio
-            var success = await _domain.CreateAsync(entity, ct);
-
-            if (!success)
-            {
-                _notify.Add(_localization.GetMessage("Application.Service.UserRole.ProcessBulkItems.FailedToCreate"), 400);
-                hasErrors = true;
-            }
-        }
-
-        return !hasErrors;
-    }
-
-    private bool ValidateBulkItem(BulkUploadUserRoleItem item)
-    {
-        if (item.UserId <= 0)
-        {
-            _notify.Add(_localization.GetMessage("Application.Service.UserRole.ValidateBulkItem.UserId", item.UserId), 400);
+            NotifyUnavailableParents();
             return false;
         }
-        if (item.RoleId <= 0)
+        catch (UserRoleConflictException)
         {
-            _notify.Add(_localization.GetMessage("Application.Service.UserRole.ValidateBulkItem.RoleId", item.RoleId), 400);
+            NotifyConflict();
             return false;
         }
-
-        return true;
     }
 }

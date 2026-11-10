@@ -117,7 +117,8 @@ public class UserMapping : IEntityTypeConfiguration<UserEntity>
 
         builder.HasMany(x => x.UserRoles)
             .WithOne(ur => ur.User)
-            .HasForeignKey(ur => ur.UserId)
+            .HasForeignKey(ur => new { ur.UserId, ur.TenantId })
+            .HasPrincipalKey(user => new { user.Id, user.TenantId })
             .HasConstraintName("FK_UserRoles_User")
             .OnDelete(DeleteBehavior.Restrict);
     }

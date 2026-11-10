@@ -26,8 +26,12 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Identity;
 
 public class AuthPermissionTokenTests
 {
-    [Fact]
-    public async Task GeneratedRsaToken_PreservesSemanticPermissionsAndAuthorizesEndpoint()
+    [Theory]
+    [InlineData("active")]
+    [InlineData("inactive")]
+    [InlineData("deleted")]
+    [InlineData("reactivated")]
+    public async Task GeneratedRsaToken_GrantsClaimsOnlyForEffectiveRoles(string state)
     {
         var user = new UserEntity(7, "Operator", "operator@example.test", "unused", null, 1);
         var role = new RoleEntity(7, "Admin", "Administrator", 1);
@@ -44,6 +48,12 @@ public class AuthPermissionTokenTests
         typeof(RolePermissionsEntity).GetProperty("Action")!.SetValue(permission, action);
         // Atualizações de apresentação não mudam os identificadores usados no token.
         role.Update("Updated administrator", 1);
+        if (state is "inactive" or "reactivated")
+            role.Deactivate(1);
+        if (state == "deleted")
+            role.Delete(1);
+        if (state == "reactivated")
+            role.Activate(1);
         resource.Update("Updated resource", 1);
         action.Update("Updated action", 1);
 
@@ -103,6 +113,13 @@ public class AuthPermissionTokenTests
         var jwt = Assert.IsType<JsonWebToken>(validation.SecurityToken);
         Assert.Equal(SecurityAlgorithms.RsaSha256, jwt.Alg);
         using var payload = JsonDocument.Parse(Base64UrlEncoder.Decode(jwt.EncodedPayload));
+        if (state is "inactive" or "deleted")
+        {
+            Assert.False(payload.RootElement.TryGetProperty("permissions", out _));
+            Assert.DoesNotContain(jwt.Claims, claim => claim.Type is ClaimTypes.Role or "role");
+            permissions.Verify(repo => repo.GetByRoleAsync(20, 7, It.IsAny<CancellationToken>()), Times.Never);
+            return;
+        }
         Assert.Equal("getby", payload.RootElement.GetProperty("permissions").GetProperty("actions")[0].GetString());
         Assert.Contains(principal.Claims, claim => claim.Type == ClaimTypes.Role && claim.Value == "admin");
         Assert.Contains(jwt.Claims, claim => claim.Type == "role" && claim.Value == "admin");

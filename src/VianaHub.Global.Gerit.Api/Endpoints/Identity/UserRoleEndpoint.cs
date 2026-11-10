@@ -33,7 +33,7 @@ public static class UserRoleEndpoint
         groupV1.MapGet("/users/{userId}/roles/{roleId}", async ([FromRoute] int userId, [FromRoute] int roleId, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var result = await appService.GetByIdAsync(userId, roleId, ct);
-            return notify.CustomResponse(result, result != null ? 200 : 404);
+            return notify.CustomResponse(result, 200);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "UserRoles", "GetBy")
         .WithName("GetUserRoleById")
@@ -41,7 +41,7 @@ public static class UserRoleEndpoint
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<UserRoleDetailResponse>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status410Gone)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapGet("/user/{userId}", async ([FromRoute] int userId, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
@@ -49,7 +49,7 @@ public static class UserRoleEndpoint
             var result = await appService.GetByUserAsync(userId, ct);
             return notify.CustomResponse(result, 200);
         })
-        .CustomAuthorize("Admin,BackOffice,Manager,User", "UserRoles", "GetBy")
+        .CustomAuthorize("Admin,BackOffice,Manager", "UserRoles", "GetBy")
         .WithName("GetUserRolesByUser")
         .WithSummary("Swagger.Endpoint.UserRole.GetByUser.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
@@ -62,7 +62,7 @@ public static class UserRoleEndpoint
             var result = await appService.GetByRoleAsync(roleId, ct);
             return notify.CustomResponse(result, 200);
         })
-        .CustomAuthorize("Admin,BackOffice,Manager,User", "UserRoles", "GetBy")
+        .CustomAuthorize("Admin,BackOffice,Manager", "UserRoles", "GetBy")
         .WithName("GetUserRolesByRole")
         .WithSummary("Swagger.Endpoint.UserRole.GetByRole.Summary")
         .Produces(StatusCodes.Status401Unauthorized)
@@ -73,7 +73,7 @@ public static class UserRoleEndpoint
         groupV1.MapPost("/", async ([FromBody] CreateUserRoleRequest request, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
             var result = await appService.CreateAsync(request, ct);
-            return notify.CustomResponse(result == null ? null : new GenericResponse { Id = result.Id }, 201);
+            return notify.CustomResponse(result, 201);
         })
         .CustomAuthorize("Admin,BackOffice,Manager", "UserRoles", "Create")
         .WithName("CreateUserRole")
@@ -81,10 +81,10 @@ public static class UserRoleEndpoint
         .Produces(StatusCodes.Status401Unauthorized)
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces(StatusCodes.Status404NotFound)
-        .Produces<GenericResponse>(StatusCodes.Status201Created)
+        .Produces<UserRoleResponse>(StatusCodes.Status201Created)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
-        .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError)
-        .WithValidation<CreateUserRoleRequest>();
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
+        .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
 
         groupV1.MapDelete("/users/{userId}/roles/{roleId}", async ([FromRoute] int userId, [FromRoute] int roleId, [FromServices] IUserRoleAppService appService, [FromServices] INotify notify, CancellationToken ct) =>
         {
@@ -129,6 +129,8 @@ public static class UserRoleEndpoint
         .Produces<ErrorResponse>(StatusCodes.Status403Forbidden)
         .Produces<bool>(StatusCodes.Status200OK)
         .Produces<ErrorResponse>(StatusCodes.Status400BadRequest)
+        .Produces<ErrorResponse>(StatusCodes.Status404NotFound)
+        .Produces<ErrorResponse>(StatusCodes.Status409Conflict)
         .Produces<ErrorResponse>(StatusCodes.Status500InternalServerError);
     }
 }

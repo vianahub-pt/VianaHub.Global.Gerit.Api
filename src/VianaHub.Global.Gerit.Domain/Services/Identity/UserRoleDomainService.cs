@@ -1,6 +1,7 @@
 using FluentValidation;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
+using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 
 namespace VianaHub.Global.Gerit.Domain.Services.Identity;
 
@@ -8,11 +9,13 @@ public class UserRoleDomainService : IUserRoleDomainService
 {
     private readonly IUserRoleDataRepository _repository;
     private readonly IValidator<UserRolesEntity> _validator;
+    private readonly INotify _notify;
 
-    public UserRoleDomainService(IUserRoleDataRepository repository, IValidator<UserRolesEntity> validator)
+    public UserRoleDomainService(IUserRoleDataRepository repository, IValidator<UserRolesEntity> validator, INotify notify)
     {
         _repository = repository;
         _validator = validator;
+        _notify = notify;
     }
 
     public async Task<IList<UserRolesEntity>> GetAllAsync(int tenantId, CancellationToken ct)
@@ -38,12 +41,15 @@ public class UserRoleDomainService : IUserRoleDomainService
 
     public async Task<bool> CreateAsync(UserRolesEntity entity, CancellationToken ct)
     {
-        var validation = _validator.Validate(entity);
+        var validation = await _validator.ValidateAsync(entity, ct);
         if (!validation.IsValid)
-            throw new ValidationException(validation.Errors);
+        {
+            foreach (var error in validation.Errors)
+                _notify.Add(error.ErrorMessage, 400);
+            return false;
+        }
 
-        await _repository.CreateAsync(entity, ct);
-        return true;
+        return await _repository.CreateAsync(entity, ct);
     }
     public async Task<bool> DeleteAsync(int tenantId, int userId, int roleId, CancellationToken ct)
     {

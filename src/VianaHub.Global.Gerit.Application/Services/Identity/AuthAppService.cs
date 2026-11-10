@@ -364,15 +364,18 @@ public class AuthAppService : IAuthAppService
         {
             // Buscar roles do usu�rio
             var userRoles = await _userRoleRepo.GetByUserAsync(user.TenantId, user.Id, ct);
+            var effectiveRoles = userRoles?
+                .Where(assignment => assignment.Role is { IsActive: true, IsDeleted: false } role &&
+                    role.TenantId == user.TenantId)
+                .ToArray() ?? [];
 
-            var roleNames = userRoles?
-                .Where(r => r?.Role != null)
+            var roleNames = effectiveRoles
                 .Select(r => r.Role?.Name?.Trim())
                 .OfType<string>()
                 .Where(n => !string.IsNullOrWhiteSpace(n))
                 .Select(n => n.ToLower())
                 .Distinct()
-                .ToList() ?? new List<string>();
+                .ToList();
 
             foreach (var roleName in roleNames)
             {
@@ -384,7 +387,7 @@ public class AuthAppService : IAuthAppService
             // Coletar permiss�es de cada role agrupadas por recurso
             var permissionsByResource = new Dictionary<string, HashSet<string>>();
 
-            foreach (var role in userRoles ?? Enumerable.Empty<UserRolesEntity>())
+            foreach (var role in effectiveRoles)
             {
                 if (role?.Role == null) continue;
                 var roleId = role.Role.Id;

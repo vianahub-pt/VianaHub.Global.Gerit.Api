@@ -84,7 +84,8 @@ public class RoleMapping : IEntityTypeConfiguration<RoleEntity>
 
         builder.HasMany(x => x.UserRoles)
             .WithOne(ur => ur.Role)
-            .HasForeignKey(ur => ur.RoleId)
+            .HasForeignKey(ur => new { ur.RoleId, ur.TenantId })
+            .HasPrincipalKey(role => new { role.Id, role.TenantId })
             .HasConstraintName("FK_UserRoles_Role")
             .OnDelete(DeleteBehavior.Restrict);
     }

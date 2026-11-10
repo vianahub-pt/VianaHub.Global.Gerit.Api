@@ -2669,7 +2669,7 @@
   "Application.Service.Tenant.ProcessBulkItems.ExistsBylName": "ExistsBylName",
   "Application.Service.Tenant.ValidateBulkItem.Name": "Name",
   "Application.Service.User.ValidateBulkItem.Password": "Password",
-  "Application.Service.UserRole.Create.RoleNotFound": "RoleNotFound",
+  "Application.Service.UserRole.Create.RoleNotFound": "Role not found",
   "Application.Service.UserRole.ProcessBulkItems.ExistsByEmail": "ExistsByEmail",
   "Application.Service.UserRole.ReadCsvFile.RoleId.IsSafeCsvValue": "IsSafeCsvValue",
   "Application.Service.UserRole.ReadCsvFile.UserId.IsSafeCsvValue": "IsSafeCsvValue",
