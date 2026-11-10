@@ -11,5 +11,6 @@ public interface IUserRoleDataRepository
     Task<bool> ExistsAsync(int tenantId, int userId, int roleId, CancellationToken ct);
 
     Task<bool> CreateAsync(UserRolesEntity entity, CancellationToken ct);
+    Task<bool> CreateManyAsync(IReadOnlyCollection<UserRolesEntity> entities, CancellationToken ct);
     Task<bool> DeleteAsync(int tenantId, int userId, int roleId, CancellationToken ct);
 }

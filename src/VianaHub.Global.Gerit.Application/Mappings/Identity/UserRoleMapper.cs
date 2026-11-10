@@ -13,11 +13,6 @@ public static partial class UserRoleMapper
 
     [MapProperty(nameof(UserRolesEntity.User), nameof(UserRoleDetailResponse.UserName), Use = nameof(UserName))]
     [MapProperty(nameof(UserRolesEntity.Role), nameof(UserRoleDetailResponse.RoleName), Use = nameof(RoleName))]
-    [MapperIgnoreTarget(nameof(UserRoleDetailResponse.IsDeleted))]
-    [MapperIgnoreTarget(nameof(UserRoleDetailResponse.CreatedBy))]
-    [MapperIgnoreTarget(nameof(UserRoleDetailResponse.CreatedAt))]
-    [MapperIgnoreTarget(nameof(UserRoleDetailResponse.ModifiedBy))]
-    [MapperIgnoreTarget(nameof(UserRoleDetailResponse.ModifiedAt))]
     public static partial UserRoleDetailResponse ToDetail(UserRolesEntity source);
 
     public static IList<UserRoleResponse> ToResponses(IEnumerable<UserRolesEntity> source) => source.Select(ToResponse).ToList();

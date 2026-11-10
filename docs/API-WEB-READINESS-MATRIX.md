@@ -2265,6 +2265,17 @@ Schema SQL (sem execução):
 
 ### UserRole — 75% (C)
 
+Contrato em revisão. As respostas de criação, lista e detalhe passam a incluir
+`userId` e `roleId`. A remoção de `isDeleted`, `createdBy`, `createdAt`,
+`modifiedBy` e `modifiedAt` do detalhe é uma alteração de OpenAPI. A tabela de
+associação não guarda esses campos e a exclusão é física.
+
+As consultas por utilizador e por perfil são administrativas e continuam a
+exigir `UserRoles.GetBy`. Não foi encontrado um consumidor Web para auto-consulta.
+A criação mantém a associação a um utilizador inativo quando ainda existe no
+tenant. A atribuição a um perfil inativo é rejeitada. Apenas perfis ativos e
+visíveis contribuem para os perfis e permissões de um JWT novo.
+
 DELETE exige userId/roleId; detail traz nomes e Id da associação, sem par de IDs. Não inferir por nome/posição.
 
 - A/B/C/D/E/F/G/H: `12/14/10/11/15/5/5/5`; soma=77; cap=75; final=75. Caps: ID75, CONSUME75.
@@ -2276,10 +2287,10 @@ DELETE exige userId/roleId; detail traz nomes e Id da associação, sem par de I
 - Repositories: [UserRoleDataRepository.cs](../src/VianaHub.Global.Gerit.Infra.Data/Repository/Identity/UserRoleDataRepository.cs); [RoleDataRepository.cs](../src/VianaHub.Global.Gerit.Infra.Data/Repository/Identity/RoleDataRepository.cs). Interfaces: `IUserRoleDataRepository, IRoleDataRepository`.
 - Entities: [UserRolesEntity.cs](../src/VianaHub.Global.Gerit.Domain/Entities/Identity/UserRolesEntity.cs).
 - EF Mapping: [UserRolesMapping.cs](../src/VianaHub.Global.Gerit.Infra.Data/Mappings/Identity/UserRolesMapping.cs). SQL tables: `UserRoles`.
-- Route validators: Não identificado por tipo no índice; conferir DI/contratos compartilhados antes de concluir ausência.. WithValidation no módulo=1; conferir registro DI.
+- Validação de entrada e dos pais no serviço de aplicação.
 - Domain validators: [UserRoleValidator.cs](../src/VianaHub.Global.Gerit.Domain/Validators/Identity/UserRole/UserRoleValidator.cs).
 - Tests: [EndpointsRegistrationTests.cs](../tests/VianaHub.Global.Gerit.Tests/Api/Endpoints/EndpointsRegistrationTests.cs); [AuthPermissionTokenTests.cs](../tests/VianaHub.Global.Gerit.Tests/AuthPermissionTokenTests.cs); [JwtBearerPipelineTests.cs](../tests/VianaHub.Global.Gerit.Tests/JwtBearerPipelineTests.cs).
-- Mapping: AutoMapper sim; complexidade Medium; culture-sensitive/resolver não identificado. [UserRoleMappingProfile.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/UserRoleMappingProfile.cs).
+- Mapping: [UserRoleMapper.cs](../src/VianaHub.Global.Gerit.Application/Mappings/Identity/UserRoleMapper.cs) usa Mapperly.
 - Locale: 16 literais auditados; ausentes por locale: pt-PT=0, en-US=0, pt-BR=0, es-ES=0.
 
 <details>
@@ -2288,24 +2299,23 @@ DELETE exige userId/roleId; detail traz nomes e Id da associação, sem par de I
 | HTTP | Relative endpoint | Operação/handler | Status declarados ou explícitos |
 |---|---|---|---|
 | GET | / | GetAllUserRoles; GetAllAsync | 200, 401, 403, 500 |
-| GET | /users/{userId}/roles/{roleId} | GetUserRoleById; GetByIdAsync | 401, 403, 200, 404, 500 |
+| GET | /users/{userId}/roles/{roleId} | GetUserRoleById; GetByIdAsync | 401, 403, 200, 410, 500 |
 | GET | /user/{userId} | GetUserRolesByUser; GetByUserAsync | 200, 401, 403, 500 |
 | GET | /role/{roleId} | GetUserRolesByRole; GetByRoleAsync | 200, 401, 403, 500 |
-| POST | / | CreateUserRole; CreateAsync | 201, 401, 403, 404, 400, 500 |
+| POST | / | CreateUserRole; CreateAsync | 201, 401, 403, 404, 400, 409, 500 |
 | DELETE | /users/{userId}/roles/{roleId} | DeleteUserRole; DeleteAsync | 401, 403, 410, 200, 404, 500 |
-| POST | /bulk-upload | BulkUploadUserRole; ReadFormAsync, BulkUploadAsync | 401, 403, 200, 400, 500 |
+| POST | /bulk-upload | BulkUploadUserRole; ReadFormAsync, BulkUploadAsync | 401, 403, 200, 400, 404, 409, 500 |
 
 DTOs:
 
-- [UserRoleResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/UserRole/UserRoleResponse.cs): `Id:int; UserName:string?; RoleName:string?`.
-- [UserRoleDetailResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/UserRole/UserRoleDetailResponse.cs): `Id:int; UserName:string?; RoleName:string?; IsDeleted:bool; CreatedBy:int; CreatedAt:DateTime; ModifiedBy:int?; ModifiedAt:DateTime?`.
+- [UserRoleResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/UserRole/UserRoleResponse.cs): `Id:int; UserId:int; RoleId:int; UserName:string?; RoleName:string?`.
+- [UserRoleDetailResponse.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Response/Identity/UserRole/UserRoleDetailResponse.cs): `Id:int; UserId:int; RoleId:int; UserName:string?; RoleName:string?`.
 - [CreateUserRoleRequest.cs](../src/VianaHub.Global.Gerit.Application/Dtos/Request/Identity/UserRole/CreateUserRoleRequest.cs): `UserId:int; RoleId:int`.
 
 Authorization:
 
 - Roles `Admin,BackOffice,Manager`; resource `UserRoles`; action `GetAll`.
 - Roles `Admin,BackOffice,Manager`; resource `UserRoles`; action `GetBy`.
-- Roles `Admin,BackOffice,Manager,User`; resource `UserRoles`; action `GetBy`.
 - Roles `Admin,BackOffice,Manager`; resource `UserRoles`; action `Create`.
 - Roles `Admin,BackOffice,Manager`; resource `UserRoles`; action `Delete`.
 - Roles `Admin,BackOffice`; resource `UserRoles`; action `BulkUpload`.
