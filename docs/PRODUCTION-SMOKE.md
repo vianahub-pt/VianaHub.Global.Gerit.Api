@@ -65,3 +65,45 @@ produtivas para fabricar um 403. Este mecanismo não inicia nenhum resource smok
 Arquivos .env, .env.local, .env.smoke, *.smoke.env e .smoke-secrets.* são ignorados.
 Nunca adicionar com git add -f. Logs devem limitar-se a método, status, locale,
 resultado e IDs temporários necessários para cleanup. Nenhum segredo é versionado.
+
+## Segunda identidade para UserRoles
+
+Use dois tenants dedicados a smoke em produção. Confirme com o operador responsável
+se já existe um segundo tenant controlado e quem pode administrá-lo. O arquivo
+ignorado local e a configuração do primeiro cliente não identificam um segundo tenant.
+
+Se for necessário um novo tenant, o operador de produção deve provisioná-lo pelo
+fluxo administrativo autorizado. A API expõe `POST /v1/tenants/` para operadores
+com `Tenants.Create`. Confirme que o tenant está ativo, com subscrição que permite
+login e chave JWT de assinatura válida, conforme [ciclo de chaves](JWT-KEY-LIFECYCLE.md).
+O repositório não define um bootstrap operacional completo para criar do zero um
+administrador no novo tenant. Essa etapa depende do operador do ambiente e da
+operação de provisionamento revisada descrita em [operações de banco](DATABASE-OPERATIONS.md).
+O registro público em `/v1/auth/register` cria um usuário sem atribuir papel.
+
+Com um administrador autorizado já operando no tenant secundário:
+
+1. Crie um usuário dedicado por `POST /v1/users/` e use uma senha gerada e armazenada
+   pelo mecanismo de segredos do ambiente.
+2. Use um papel ativo do tenant cujo nome satisfaça a política de UserRoles. Para uma
+   identidade dedicada, use `Manager` com somente as permissões abaixo. Se esse
+   papel já existir com outros grants ou usuários, preserve-o e peça ao operador um
+   tenant dedicado com a configuração mínima. O nome do papel também é validado
+   pela API.
+3. Resolva os IDs do recurso `UserRoles` e das ações `GetAll`, `GetBy`, `Create`
+   e `Delete` pelo catálogo do ambiente. Configure os quatro vínculos por
+   `POST /v1/role-permissions/` e associe o usuário ao papel por
+   `POST /v1/user-roles/`, sempre no contexto do tenant secundário.
+4. Disponibilize o login secundário por `GERIT_SMOKE_SECONDARY_EMAIL` e
+   `GERIT_SMOKE_SECONDARY_PASSWORD` no ambiente do processo ou em `.env.smoke`.
+   O primário continua usando `GERIT_SMOKE_EMAIL` e `GERIT_SMOKE_PASSWORD`.
+   Ambos usam `GERIT_SMOKE_BASE_URL`. Mantenha esses valores fora de logs, Git e
+   histórico do terminal.
+
+Após confirmação do provisionamento, execute
+`node --env-file=.env.smoke scripts/smoke/user-roles.mjs --isolation`.
+O modo exige dois logins com tenants distintos antes de criar fixtures. Usa o
+segundo cliente para verificar que as listagens retornam 200 sem o vínculo, o
+detalhe e a exclusão retornam 410 e a criação é recusada com 404. Confirma que o
+vínculo original permanece íntegro e executa o cleanup mesmo se uma asserção falhar.
+O modo padrão de uma identidade continua disponível.

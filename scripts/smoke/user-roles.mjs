@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { createAuthenticatedSmokeClient, SmokeError } from './client.mjs';
 
-export async function runUserRolesSmoke(admin) {
+export async function runUserRolesSmoke(admin, secondary) {
   return admin.run(async client => {
     const suffix = randomUUID();
     const userName = `SMOKE_USER_ROLE_USER_${suffix}`;
@@ -15,6 +15,12 @@ export async function runUserRolesSmoke(admin) {
       return response.data;
     };
     const validId = id => Number.isSafeInteger(id) && id > 0;
+    if (secondary) {
+      if (!validId(client.tenantId) || !validId(secondary.tenantId) || client.tenantId === secondary.tenantId) {
+        throw new SmokeError('UserRoles isolation requires distinct authenticated tenants');
+      }
+      expect(await secondary.get(root + '/'), 200, 'secondary preflight');
+    }
     expect(await client.get(root + '/'), 200, 'preflight');
 
     async function createParent(resource, name, request, verifyExtra = async () => {}) {
@@ -75,6 +81,33 @@ export async function runUserRolesSmoke(admin) {
     verifyAssociation(association);
     verifyAssociation(expect(await client.get(path), 200, 'association detail'));
     await verifyLists(true);
+    if (secondary) {
+      for (const listPath of [root + '/', `${root}/user/${userId}`, `${root}/role/${roleId}`]) {
+        const items = expect(await secondary.get(listPath), 200, 'secondary list');
+        if (!Array.isArray(items) || items.some(matches)) throw new SmokeError('UserRoles isolation visibility mismatch');
+      }
+      expect(await secondary.get(path), 410, 'secondary detail');
+      const secondaryCreate = await secondary.post(root + '/', { userId, roleId });
+      if (secondaryCreate.status === 201) {
+        client.deferCleanup(async () => {
+          const detail = await secondary.get(path);
+          if (detail.status === 200) {
+            const item = detail.data;
+            if (!matches(item) || !validId(item.id) || item.id !== secondaryCreate.data?.id ||
+                item.userName !== userName || item.roleName !== roleName) {
+              throw new SmokeError('UserRoles secondary cleanup identity mismatch');
+            }
+            expect(await secondary.delete(path), 200, 'secondary cleanup delete');
+          } else {
+            expect(detail, 410, 'secondary cleanup gone');
+          }
+          expect(await secondary.get(path), 410, 'verify secondary cleanup');
+        });
+      }
+      expect(secondaryCreate, 404, 'secondary create');
+      expect(await secondary.delete(path), 410, 'secondary delete');
+      verifyAssociation(expect(await client.get(path), 200, 'primary detail after secondary checks'));
+    }
     expect(await client.delete(path), 200, 'delete association');
     expect(await client.get(path), 410, 'association gone');
     await verifyLists(false);
@@ -82,9 +115,28 @@ export async function runUserRolesSmoke(admin) {
   });
 }
 
+export async function runUserRolesIsolationSmoke(options = {}) {
+  const { env = process.env } = options;
+  for (const key of ['GERIT_SMOKE_SECONDARY_EMAIL', 'GERIT_SMOKE_SECONDARY_PASSWORD']) {
+    if (!env[key]?.trim()) throw new SmokeError(`Missing required environment variable: ${key}`);
+  }
+  const secondary = await createAuthenticatedSmokeClient({
+    ...options,
+    env: {
+      ...env,
+      GERIT_SMOKE_EMAIL: env.GERIT_SMOKE_SECONDARY_EMAIL,
+      GERIT_SMOKE_PASSWORD: env.GERIT_SMOKE_SECONDARY_PASSWORD,
+    },
+  });
+  return secondary.run(async client => runUserRolesSmoke(await createAuthenticatedSmokeClient(options), client));
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    console.log(JSON.stringify(await runUserRolesSmoke(await createAuthenticatedSmokeClient())));
+    const result = process.argv.includes('--isolation')
+      ? await runUserRolesIsolationSmoke()
+      : await runUserRolesSmoke(await createAuthenticatedSmokeClient());
+    console.log(JSON.stringify(result));
   } catch (error) {
     console.error(error instanceof SmokeError ? error.message : 'UserRoles smoke failed');
     process.exitCode = 1;
