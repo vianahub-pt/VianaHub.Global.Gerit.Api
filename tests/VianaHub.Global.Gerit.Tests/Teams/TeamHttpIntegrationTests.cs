@@ -52,6 +52,65 @@ public class TeamHttpIntegrationTests(ITestOutputHelper output)
 {
     private static readonly string[] Actions = ["GetAll", "GetBy", "GetPaged", "Create", "Update", "Activate", "Deactivate", "Delete"];
 
+    [Theory]
+    [InlineData(null, 2)]
+    [InlineData("true", 1)]
+    [InlineData("false", 1)]
+    public async Task Paged_StatusFilter_SupportsAllActiveAndInactive(string? status, int expectedCount)
+    {
+        await using var host = await Host.StartAsync();
+        using var client = host.Client(Actions);
+        var activeId = await Create(client, "Alpha active");
+        var inactiveId = await Create(client, "Beta inactive");
+        Assert.Equal(HttpStatusCode.OK, (await client.PatchAsync($"/v1/teams/{inactiveId}/deactivate", null)).StatusCode);
+        var deletedId = await Create(client, "Gamma deleted");
+        Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync($"/v1/teams/{deletedId}")).StatusCode);
+
+        var query = "/v1/teams/paged?PageNumber=1&PageSize=10&SortBy=Name&SortDirection=asc";
+        if (status is not null) query += "&IsActive=" + status;
+        using var response = await client.GetAsync(query);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var page = await response.Content.ReadFromJsonAsync<ListPageResponse<TeamResponse>>();
+        Assert.NotNull(page);
+        Assert.Equal(expectedCount, page.TotalItems);
+        Assert.Equal(1, page.PageNumber);
+        Assert.Equal(10, page.PageSize);
+        Assert.Equal(1, page.TotalPages);
+        var expectedIds = status switch
+        {
+            "true" => new[] { activeId },
+            "false" => new[] { inactiveId },
+            _ => new[] { activeId, inactiveId }
+        };
+        Assert.Equal(expectedIds, page.Items.Select(item => item.Id));
+        Assert.All(page.Items, item => Assert.Equal(item.Id == activeId, item.IsActive));
+
+        if (status is null)
+        {
+            var secondPage = await client.GetFromJsonAsync<ListPageResponse<TeamResponse>>(
+                "/v1/teams/paged?PageNumber=2&PageSize=1&SortBy=Name&SortDirection=asc");
+            Assert.NotNull(secondPage);
+            Assert.Equal(2, secondPage.TotalItems);
+            Assert.Equal(2, secondPage.TotalPages);
+            Assert.Equal(2, secondPage.PageNumber);
+            Assert.Equal(1, secondPage.PageSize);
+            Assert.Equal(inactiveId, Assert.Single(secondPage.Items).Id);
+        }
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("invalid")]
+    [InlineData("null")]
+    [InlineData("1")]
+    public async Task Paged_InvalidStatusFilter_RemainsBadRequest(string status)
+    {
+        await using var host = await Host.StartAsync();
+        using var client = host.Client(Actions);
+        using var response = await client.GetAsync("/v1/teams/paged?IsActive=" + status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     [Fact]
     public async Task CrudJourney_PreservesContractAndIdempotency()
     {
