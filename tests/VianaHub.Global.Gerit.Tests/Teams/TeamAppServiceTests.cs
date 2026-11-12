@@ -92,28 +92,32 @@ public class TeamAppServiceTests
         Assert.True(detail.IsActive);
     }
 
-    [Fact]
-    public async Task GetPaged_ForwardsFiltersAndPreservesMetadata()
+    [Theory]
+    [InlineData(null)]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetPaged_ForwardsFiltersAndPreservesMetadata(bool? isActive)
     {
         var fixture = new Fixture();
         fixture.Repository.Setup(x => x.GetPagedAsync(It.IsAny<PagedFilter>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ListPage<TeamEntity>([fixture.Team!], 2, 3, 7, 3));
-        var result = await fixture.App.GetPagedAsync(new PagedFilterRequest
+        var request = new PagedFilterRequest
         {
             Search = "Crew",
-            IsActive = true,
             PageNumber = 2,
             PageSize = 3,
             SortBy = "Name",
             SortDirection = "desc"
-        }, default);
+        };
+        if (isActive.HasValue) request.IsActive = isActive;
+        var result = await fixture.App.GetPagedAsync(request, default);
         Assert.Single(result.Items);
         Assert.Equal(7, result.TotalItems);
         Assert.Equal(2, result.PageNumber);
         Assert.Equal(3, result.PageSize);
         Assert.Equal(3, result.TotalPages);
         fixture.Repository.Verify(x => x.GetPagedAsync(It.Is<PagedFilter>(f => f.Search == "Crew" &&
-            f.IsActive == true && f.PageNumber == 2 && f.PageSize == 3 && f.SortBy == "Name" && f.SortDirection == "desc"),
+            f.IsActive == isActive && f.PageNumber == 2 && f.PageSize == 3 && f.SortBy == "Name" && f.SortDirection == "desc"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
