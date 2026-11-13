@@ -21,7 +21,8 @@ public sealed class SqlTestTenantFixture
     {
         var suffix = Guid.NewGuid().ToString("N");
         var name = $"TEST_TENANT_{suffix}";
-        await using var db = new SqlConnection(_connectionString);
+        var connectionSettings = new SqlConnectionStringBuilder(_connectionString) { Encrypt = true };
+        await using var db = new SqlConnection(connectionSettings.ConnectionString);
         await db.OpenAsync();
         try
         {
@@ -46,7 +47,8 @@ public sealed class SqlTestTenantFixture
         if (!_createdTenants.TryGetValue(tenantId, out var expectedName))
             throw new InvalidOperationException("Only tenants created by this fixture instance can be deleted.");
 
-        await using var db = new SqlConnection(_connectionString);
+        var connectionSettings = new SqlConnectionStringBuilder(_connectionString) { Encrypt = true };
+        await using var db = new SqlConnection(connectionSettings.ConnectionString);
         await db.OpenAsync();
         try
         {

@@ -70,13 +70,13 @@ public sealed class UserWriteContractHttpSqlTests(GeritSqlWebApplicationFactory 
         Assert.Equal(original.PasswordHash, afterOmission.PasswordHash);
         Assert.Equal(tenant, afterOmission.TenantId);
 
-        using var cleared = await client.PutAsJsonAsync($"/v1/users/{id}", new
+        using var cleared = await client.PutAsJsonAsync($"/v1/users/{id}", new Dictionary<string, object?>
         {
-            name = "Cleared",
-            phoneNumber = (string?)null,
-            urlImage = (string?)null,
-            phoneNumberProvided = false,
-            urlImageProvided = false
+            ["name"] = "Cleared",
+            ["phoneNumber"] = null,
+            ["urlImage"] = null,
+            ["phoneNumberProvided"] = false,
+            ["urlImageProvided"] = false
         });
         Assert.Equal(HttpStatusCode.OK, cleared.StatusCode);
         var afterClear = await ReadAsync(tenant, id);
