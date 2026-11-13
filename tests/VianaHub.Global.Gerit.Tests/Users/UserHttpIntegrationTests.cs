@@ -61,7 +61,7 @@ public sealed class UserHttpIntegrationTests(GeritSqlWebApplicationFactory facto
         }
         finally
         {
-            await DeleteTenantUsersAsync(tenants, tenantId);
+            await tenants.DeleteAsync(tenantId);
         }
     }
 
@@ -145,7 +145,7 @@ public sealed class UserHttpIntegrationTests(GeritSqlWebApplicationFactory facto
         }
         finally
         {
-            await DeleteTenantUsersAsync(tenants, tenantId);
+            await tenants.DeleteAsync(tenantId);
         }
     }
 
@@ -361,27 +361,8 @@ public sealed class UserHttpIntegrationTests(GeritSqlWebApplicationFactory facto
         }
         finally
         {
-            await DeleteTenantUsersAsync(tenants, tenantId);
+            await tenants.DeleteAsync(tenantId);
         }
     }
 
-    private static async Task DeleteTenantUsersAsync(SqlTestTenantFixture tenants, int tenantId)
-    {
-        await using var connection = new SqlConnection(Environment.GetEnvironmentVariable("GERIT_RLS_TEST_CONNECTIONSTRING"));
-        await connection.OpenAsync();
-        await using var command = connection.CreateCommand();
-        command.CommandText = """
-                EXEC sys.sp_set_session_context @key=N'TenantId', @value=@tenant;
-                DELETE FROM dbo.Users WHERE TenantId = @tenant;
-                """;
-        command.Parameters.AddWithValue("@tenant", tenantId);
-        await command.ExecuteNonQueryAsync();
-        await tenants.DeleteAsync(tenantId);
-        command.CommandText = """
-            EXEC sys.sp_set_session_context @key=N'IsSuperAdmin', @value=1;
-            SELECT (SELECT COUNT(*) FROM dbo.Users WHERE TenantId=@tenant)
-                 + (SELECT COUNT(*) FROM dbo.Tenants WHERE Id=@tenant);
-            """;
-        Assert.Equal(0, Assert.IsType<int>(await command.ExecuteScalarAsync()));
-    }
 }

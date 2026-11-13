@@ -33,7 +33,7 @@ public class UserEntity : Entity
     /// <summary>
     /// Construtor para cria��o de um novo usu�rio
     /// </summary>
-    public UserEntity(int tenantId, string? name, string? email, string? passwordHash, string? phoneNumber, int createdBy)
+    public UserEntity(int tenantId, string? name, string? email, string? passwordHash, string? phoneNumber, int createdBy, string? urlImage = null)
     {
         TenantId = tenantId;
         Name = name;
@@ -41,6 +41,7 @@ public class UserEntity : Entity
         NormalizedEmail = email?.ToUpperInvariant();
         PasswordHash = passwordHash;
         PhoneNumber = phoneNumber;
+        UrlImage = urlImage;
         EmailConfirmed = false;
         PhoneNumberConfirmed = false;
         IsActive = true;
@@ -49,9 +50,20 @@ public class UserEntity : Entity
     }
 
     public void Update(string? name, string? phoneNumber, int modifiedBy)
+        => Update(name, Email, phoneNumber, UrlImage, modifiedBy);
+
+    public void Update(string? name, string? email, string? phoneNumber, string? urlImage, int modifiedBy)
     {
         Name = name;
+        var normalizedEmail = email?.ToUpperInvariant();
+        if (!string.Equals(NormalizedEmail, normalizedEmail, StringComparison.Ordinal))
+            EmailConfirmed = false;
+        Email = email;
+        NormalizedEmail = normalizedEmail;
+        if (!string.Equals(PhoneNumber, phoneNumber, StringComparison.Ordinal))
+            PhoneNumberConfirmed = false;
         PhoneNumber = phoneNumber;
+        UrlImage = urlImage;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }
