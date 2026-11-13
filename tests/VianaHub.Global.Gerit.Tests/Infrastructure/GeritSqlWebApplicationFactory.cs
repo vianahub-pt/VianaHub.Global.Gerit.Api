@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Hangfire;
+using Moq;
 using VianaHub.Global.Gerit.Api.Helpers;
 
 namespace VianaHub.Global.Gerit.Tests.Infrastructure;
@@ -81,10 +83,17 @@ public class GeritSqlWebApplicationFactory : WebApplicationFactory<VianaHub.Glob
 
             foreach (var descriptor in services.Where(x =>
                          x.ServiceType == typeof(IHostedService) &&
-                         x.ImplementationType?.FullName?.Contains("Hangfire", StringComparison.OrdinalIgnoreCase) == true).ToList())
+                         (x.ImplementationType?.FullName?.Contains("Hangfire", StringComparison.OrdinalIgnoreCase) == true ||
+                          x.ImplementationType == typeof(VianaHub.Global.Gerit.Infra.Job.HostedServices.JobSyncHostedService))).ToList())
             {
                 services.Remove(descriptor);
             }
+
+            // O dashboard resolve JobStorage no startup; não inicializar storage SQL compartilhado.
+            foreach (var descriptor in services.Where(service =>
+                         service.ServiceType.Namespace?.StartsWith("Hangfire", StringComparison.Ordinal) == true).ToList())
+                services.Remove(descriptor);
+            services.AddHangfire(configuration => configuration.UseStorage(Mock.Of<JobStorage>()));
         });
     }
 

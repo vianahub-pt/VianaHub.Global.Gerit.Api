@@ -97,15 +97,7 @@ public sealed class UserBulkIntegrationTests
             command.Parameters.AddWithValue("@tenant", tenantId);
             await command.ExecuteNonQueryAsync();
             var options = new DbContextOptionsBuilder<GeritDbContext>().UseSqlServer(connection).Options;
-            try
-            {
-                await test(options, tenantId);
-            }
-            finally
-            {
-                command.CommandText = "DELETE FROM dbo.Users WHERE TenantId = @tenant";
-                await command.ExecuteNonQueryAsync();
-            }
+            await test(options, tenantId);
         }
         finally
         {

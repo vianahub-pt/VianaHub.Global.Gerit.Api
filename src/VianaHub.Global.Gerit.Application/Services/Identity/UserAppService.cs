@@ -80,7 +80,7 @@ public class UserAppService : IUserAppService
 
         var passwordHash = DomainExtensions.HashClientSecret(request.Password);
         var tenantId = _currentUser.GetTenantId();
-        var entity = new UserEntity(tenantId, request.Name, request.Email, passwordHash, null, _currentUser.GetUserId());
+        var entity = new UserEntity(tenantId, request.Name, request.Email, passwordHash, request.PhoneNumber, _currentUser.GetUserId(), request.UrlImage);
 
         try
         {
@@ -102,8 +102,25 @@ public class UserAppService : IUserAppService
             return false;
         }
 
-        entity.Update(request.Name, request.PhoneNumber, _currentUser.GetUserId());
-        return await _domain.UpdateAsync(entity, ct);
+        var email = request.EmailProvided ? request.Email : entity.Email;
+        if (await _repo.ExistsByEmailAsync(email, id, ct))
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.User.Update.ResourceAlreadyExists"), 409);
+            return false;
+        }
+
+        entity.Update(request.Name, email,
+            request.PhoneNumberProvided ? request.PhoneNumber : entity.PhoneNumber,
+            request.UrlImageProvided ? request.UrlImage : entity.UrlImage, _currentUser.GetUserId());
+        try
+        {
+            return await _domain.UpdateAsync(entity, ct);
+        }
+        catch (UserEmailConflictException)
+        {
+            _notify.Add(_localization.GetMessage("Application.Service.User.Update.ResourceAlreadyExists"), 409);
+            return false;
+        }
     }
 
     public async Task<bool> UpdatePasswordAsync(int id, UpdatePasswordRequest request, CancellationToken ct)
