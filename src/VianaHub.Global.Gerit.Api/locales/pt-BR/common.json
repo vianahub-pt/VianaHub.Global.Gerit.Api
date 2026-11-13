@@ -1,4 +1,7 @@
 {
+  "Domain.User.UrlImageMaxLength": "A URL da imagem não pode exceder {0} caracteres",
+  "Domain.User.UrlImageInvalid": "A URL da imagem deve ser uma URL absoluta HTTP ou HTTPS sem credenciais",
+  "Application.Service.User.Update.ResourceAlreadyExists": "Já existe um usuário com este e-mail",
   "Domain.UserPreferences.CurrencyCodeRequired": "O código da moeda é obrigatório",
   "Domain.UserPreferences.CurrencyCodeMaxLength": "O código da moeda deve ter no máximo 3 caracteres",
   "Domain.UserPreferences.DayStartFormat": "O horário inicial é obrigatório no formato HH:mm",

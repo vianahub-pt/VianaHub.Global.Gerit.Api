@@ -32,7 +32,10 @@ public class UpdateUserValidator : AbstractValidator<UserEntity>
 
         RuleFor(x => x.PhoneNumber)
             .MaximumLength(50)
-            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber))
             .WithMessage(localization.GetMessage("Domain.User.PhoneNumberMaxLength", 50));
+
+        RuleFor(x => x.UrlImage)
+            .MaximumLength(500).WithMessage(localization.GetMessage("Domain.User.UrlImageMaxLength", 500))
+            .Must(UserProfileRules.IsValidImageUrl).WithMessage(localization.GetMessage("Domain.User.UrlImageInvalid"));
     }
 }

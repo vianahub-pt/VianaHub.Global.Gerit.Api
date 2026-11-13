@@ -168,6 +168,11 @@ public class UserDataRepository : IUserDataRepository
         {
             return await _context.SaveChangesAsync(ct) > 0;
         }
+        catch (DbUpdateException exception) when (IsEmailConflict(exception))
+        {
+            entry.State = EntityState.Detached;
+            throw new UserEmailConflictException(exception);
+        }
         catch (DbUpdateConcurrencyException exception) when (
             exception.Entries.Count == 1 && ReferenceEquals(exception.Entries[0].Entity, entity))
         {
