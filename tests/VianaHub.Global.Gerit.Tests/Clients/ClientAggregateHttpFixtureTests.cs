@@ -55,7 +55,8 @@ public sealed class ClientAggregateHttpFixtureTests
             name = "Stateful aggregate client",
             email = "stateful@example.test",
             birthDate = "1990-01-01",
-            gender = "M",
+            // O contrato de criação passou a exigir o código canónico, sem alias legado.
+            gender = "male",
             nationality = "PT"
         });
         var createBody = await create.Content.ReadAsStringAsync();
