@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Vocabularies;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -89,6 +90,9 @@ public class ClientAppService : IClientAppService
 
     public async Task<int> CreateAsync(CreateClientRequest request, CancellationToken ct)
     {
+        if (!ValidateControlledValues(request.Gender, request.Nationality))
+            return 0;
+
         // Valida consistência PartyTypeId vs campos obrigatórios via INotify
         if (!ValidatePartyTypeConsistency(request, isCreate: true))
             return 0;
@@ -126,14 +130,20 @@ public class ClientAppService : IClientAppService
     {
         var client = await _repo.GetByIdAsync(id, ct);
 
-        if (client == null || client.IsDeleted || !client.IsActive)
+        if (client == null || client.TenantId != TenantId || client.IsDeleted || !client.IsActive)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Client.Update.ResourceNotFound"), 410);
             return false;
         }
 
-        // Valida consistência PartyTypeId vs campos
-        if (!ValidatePartyTypeConsistency(request, isCreate: false))
+        var gender = request.GenderProvided ? request.Gender : client.Gender;
+        var nationality = request.NationalityProvided ? request.Nationality : client.Nationality;
+        // O legado só pode ser reenviado sem alterações exatas, dentro do tenant corrente.
+        if (!ValidateControlledValues(gender, nationality, client.Gender, client.Nationality, allowUnchangedLegacy: true))
+            return false;
+
+        // A consistência considera os valores efetivos, incluindo campos omitidos.
+        if (!ValidatePartyTypeConsistency(request, gender, nationality))
             return false;
 
         if (!await ValidateDependenciesAsync(request.PartyTypeId, request.AcquisitionSourceTypeId, request.StatusDomainId, request.StatusDefinitionId, ct))
@@ -151,8 +161,8 @@ public class ClientAppService : IClientAppService
             request.Email,
             request.WebsiteUrl,
             request.BirthDate,
-            request.Gender,
-            request.Nationality,
+            gender,
+            nationality,
             request.CompanyRegistrationNumber,
             request.EconomicActivityCode,
             request.NumberOfEmployees,
@@ -274,7 +284,7 @@ public class ClientAppService : IClientAppService
     /// <summary>
     /// Valida a consistência entre PartyTypeId e os campos obrigatórios para update.
     /// </summary>
-    private bool ValidatePartyTypeConsistency(UpdateClientRequest request, bool isCreate)
+    private bool ValidatePartyTypeConsistency(UpdateClientRequest request, string? gender, string? nationality)
     {
         // PartyTypeId=1: pessoa singular → dados de empresa não permitidos
         if (request.PartyTypeId == 1)
@@ -291,8 +301,8 @@ public class ClientAppService : IClientAppService
         else if (request.PartyTypeId == 2)
         {
             if (request.BirthDate.HasValue ||
-                !string.IsNullOrWhiteSpace(request.Gender) ||
-                !string.IsNullOrWhiteSpace(request.Nationality))
+                gender is not null ||
+                nationality is not null)
             {
                 _notify.Add(_localization.GetMessage("Application.Service.Client.Validate.Consistency.CompanyInvalidIndividualFields"), 422);
                 return false;
@@ -302,6 +312,24 @@ public class ClientAppService : IClientAppService
         return true;
     }
 
+    private bool ValidateControlledValues(string? gender, string? nationality,
+        string? persistedGender = null, string? persistedNationality = null, bool allowUnchangedLegacy = false)
+    {
+        var valid = true;
+        if (!ClientGenderCatalog.IsCanonical(gender) &&
+            !(allowUnchangedLegacy && string.Equals(gender, persistedGender, StringComparison.Ordinal)))
+        {
+            _notify.Add(_localization.GetMessage("Domain.Client.GenderControlledValue"), 400);
+            valid = false;
+        }
+        if (!ClientNationalityCatalog.IsCanonical(nationality) &&
+            !(allowUnchangedLegacy && string.Equals(nationality, persistedNationality, StringComparison.Ordinal)))
+        {
+            _notify.Add(_localization.GetMessage("Domain.Client.NationalityControlledValue"), 400);
+            valid = false;
+        }
+        return valid;
+    }
     private async Task<bool> ValidateDependenciesAsync(byte partyTypeId, int acquisitionSourceTypeId, int statusDomainId, int statusDefinitionId, CancellationToken ct)
     {
         // Os repositórios são opcionais apenas para manter compatibilidade com testes unitários antigos.

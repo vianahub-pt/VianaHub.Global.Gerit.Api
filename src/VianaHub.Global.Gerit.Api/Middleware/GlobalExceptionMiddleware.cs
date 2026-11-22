@@ -6,7 +6,6 @@ using System.Net;
 using System.Text.Json;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
-using AutoMapper;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
 namespace VianaHub.Global.Gerit.Api.Middleware;
@@ -98,13 +97,6 @@ public class GlobalExceptionMiddleware
             Log.Warning("⚠️ [ERROR-{ErrorId}] Error processing JSON at {Path} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(context.Request.Path.Value), LogValueSanitizer.ExceptionDetails(jsonEx));
             await HandleJsonException(context, jsonEx, errorId, notify, localization);
         }
-        catch (AutoMapperMappingException autoMapperEx)
-        {
-            // Tratamento específico para erros de mapeamento do AutoMapper
-            var errorId = Guid.NewGuid().ToString("N")[..12];
-            Log.Error("❌ [ERROR-{ErrorId}] AutoMapper mapping exception at {Path} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(context.Request.Path.Value), LogValueSanitizer.ExceptionDetails(autoMapperEx));
-            await HandleAutoMapperException(context, autoMapperEx, errorId, notify, localization);
-        }
         catch (Exception ex)
         {
             // Gerar ID único para rastreamento do erro
@@ -121,42 +113,6 @@ public class GlobalExceptionMiddleware
 
             await HandleExceptionAsync(context, ex, errorId, notify, localization);
         }
-    }
-
-    /// <summary>
-    /// Trata especificamente exceções de mapeamento do AutoMapper com mensagens amigáveis.
-    /// </summary>
-    private async Task HandleAutoMapperException(HttpContext context, AutoMapperMappingException autoMapperEx, string errorId, INotify notify, ILocalizationService localization)
-    {
-        // Evitar reprocessamento se a resposta já começou
-        if (context.Response.HasStarted)
-        {
-            Log.Warning("⚠️ [ERROR-{ErrorId}] Response already started; cannot modify", errorId);
-            return;
-        }
-
-        // Log detalhado para diagnóstico técnico
-        Log.Error("[ERROR-{ErrorId}] Detailed AutoMapper exception:\n" +
-            "   📝 Message: {Message}\n" +
-            "   🗺️ Mapping Types: {MappingTypes}\n" +
-            "   🔥 Inner Exception: {InnerException} | Exception: {ExceptionDetails}", errorId, LogValueSanitizer.Sanitize(autoMapperEx.Message), $"{autoMapperEx.Types?.SourceType?.Name} -> {autoMapperEx.Types?.DestinationType?.Name}", LogValueSanitizer.Sanitize(autoMapperEx.InnerException?.Message ?? "N/A"), LogValueSanitizer.ExceptionDetails(autoMapperEx));
-
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-        context.Response.ContentType = "application/json; charset=utf-8";
-
-        // Adiciona chave de tradução ao notify
-        notify.Add("Api.Middleware.GlobalException.AutoMapperException.Error.MappingError", 500);
-
-        var errorResponse = new ErrorResponse(localization.GetMessage("Api.Middleware.GlobalException.StatusCode.Error.InternalServerError"));
-        errorResponse.AddError(
-            localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.FieldLabel.System"),
-            localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.DataMappingError"));
-        errorResponse.AddError(
-            localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.FieldLabel.ErrorId"),
-            localization.GetMessage("Api.Middleware.GlobalException.AutoMapperException.Error.ContactSupport", errorId));
-
-        var json = JsonSerializer.Serialize(errorResponse, GetJsonSerializerOptions());
-        await context.Response.WriteAsync(json);
     }
 
     /// <summary>

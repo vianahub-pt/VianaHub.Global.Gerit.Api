@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -124,7 +123,7 @@ public class PartyTypeIdSqlIntegrationTests
         currentUser.Setup(u => u.GetUserId()).Returns(1);
         var repository = new PartyTypeDataRepository(context);
         var domain = new PartyTypeDomainService(repository, new PartyTypeValidator(localization.Object), notify);
-        return new PartyTypeAppService(repository, domain, Mock.Of<IMapper>(), notify, localization.Object, currentUser.Object,
+        return new PartyTypeAppService(repository, domain, notify, localization.Object, currentUser.Object,
             NullLogger<PartyTypeAppService>.Instance);
     }
 

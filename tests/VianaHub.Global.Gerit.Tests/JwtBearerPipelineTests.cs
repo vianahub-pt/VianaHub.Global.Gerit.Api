@@ -4,7 +4,6 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -240,7 +239,7 @@ public class JwtBearerPipelineTests
             var database = new GeritDbContext(new DbContextOptionsBuilder<GeritDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
             var notify = new Notify();
-            var auth = new AuthAppService(notify, Mock.Of<IMapper>(), permissions.Object,
+            var auth = new AuthAppService(notify, permissions.Object,
                 Mock.Of<IRefreshTokenDataRepository>(), users.Object, userRoles.Object, tenants.Object,
                 Mock.Of<IEmailSender>(), localization.Object, Mock.Of<ICurrentUserService>(),
                 Options.Create(builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!),

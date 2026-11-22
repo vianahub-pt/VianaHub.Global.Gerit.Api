@@ -1,8 +1,8 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.AcquisitionSourceType;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.AcquisitionSourceType;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
@@ -19,7 +19,6 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
 {
     private readonly IAcquisitionSourceTypeDataRepository _repo;
     private readonly IAcquisitionSourceTypeDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -29,7 +28,6 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
     public AcquisitionSourceTypeAppService(
         IAcquisitionSourceTypeDataRepository repo,
         IAcquisitionSourceTypeDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -38,7 +36,6 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -49,7 +46,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
     public async Task<IEnumerable<AcquisitionSourceTypeResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<AcquisitionSourceTypeResponse>>(entities);
+        return LocalizedCatalogMapper.ToAcquisitionSourceTypeResponses(entities);
     }
 
     public async Task<AcquisitionSourceTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -60,14 +57,14 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
             _notify.Add(_localization.GetMessage("Application.Service.AcquisitionSourceType.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<AcquisitionSourceTypeDetailResponse>(entity);
+        return LocalizedCatalogMapper.ToAcquisitionSourceTypeDetail(entity);
     }
 
     public async Task<ListPageResponse<AcquisitionSourceTypeResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<AcquisitionSourceTypeResponse>>(paged);
+        return LocalizedCatalogMapper.ToAcquisitionSourceTypePaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateAcquisitionSourceTypeRequest request, CancellationToken ct)

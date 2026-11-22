@@ -1,10 +1,10 @@
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Constants;
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.DocumentType;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.DocumentType;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -22,7 +22,6 @@ public class DocumentTypeAppService : IDocumentTypeAppService
 {
     private readonly IDocumentTypeDataRepository _repo;
     private readonly IDocumentTypeDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -31,7 +30,6 @@ public class DocumentTypeAppService : IDocumentTypeAppService
     public DocumentTypeAppService(
         IDocumentTypeDataRepository repo,
         IDocumentTypeDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -39,7 +37,6 @@ public class DocumentTypeAppService : IDocumentTypeAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -49,7 +46,7 @@ public class DocumentTypeAppService : IDocumentTypeAppService
     public async Task<IEnumerable<DocumentTypeResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<DocumentTypeResponse>>(entities);
+        return LocalizedCatalogMapper.ToDocumentTypeResponses(entities);
     }
 
     public async Task<DocumentTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -60,14 +57,14 @@ public class DocumentTypeAppService : IDocumentTypeAppService
             _notify.Add(_localization.GetMessage("Application.Service.DocumentType.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<DocumentTypeDetailResponse>(entity);
+        return LocalizedCatalogMapper.ToDocumentTypeDetail(entity);
     }
 
     public async Task<ListPageResponse<DocumentTypeResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<DocumentTypeResponse>>(paged);
+        return LocalizedCatalogMapper.ToDocumentTypePaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateDocumentTypeRequest request, CancellationToken ct)

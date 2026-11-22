@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +8,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Billing.Plan;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.Plan;
 using VianaHub.Global.Gerit.Application.Interfaces.Billing;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -24,7 +24,6 @@ public class PlanAppService : IPlanAppService
     private readonly IPlanDomainService _domain;
     private readonly ICurrentUserService _currentUser;
     private readonly INotify _notify;
-    private readonly IMapper _mapper;
     private readonly ILocalizationService _localization;
     private readonly ILogger<PlanAppService> _logger;
     private readonly IFileValidationService _fileValidation;
@@ -33,7 +32,6 @@ public class PlanAppService : IPlanAppService
         IPlanDataRepository repo,
         IPlanDomainService domain,
         INotify notify,
-        IMapper mapper,
         ICurrentUserService currentUser,
         ILocalizationService localization,
         ILogger<PlanAppService> logger,
@@ -42,7 +40,6 @@ public class PlanAppService : IPlanAppService
         _repo = repo;
         _domain = domain;
         _notify = notify;
-        _mapper = mapper;
         _currentUser = currentUser;
         _localization = localization;
         _logger = logger;
@@ -54,14 +51,14 @@ public class PlanAppService : IPlanAppService
     public async Task<IEnumerable<PlanResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<PlanResponse>>(entities);
+        return PlanMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<PlanDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
         if (entity == null) return null;
-        return _mapper.Map<PlanDetailResponse>(entity);
+        return PlanMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<ListPageResponse<PlanResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
@@ -69,16 +66,7 @@ public class PlanAppService : IPlanAppService
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
 
-        var responseDto = new ListPageResponse<PlanResponse>
-        {
-            Items = _mapper.Map<IEnumerable<PlanResponse>>(paged.Items).ToList(),
-            PageNumber = paged.PageNumber,
-            PageSize = paged.PageSize,
-            TotalItems = paged.TotalItems,
-            TotalPages = paged.TotalPages
-        };
-
-        return responseDto;
+        return PlanMapper.ToPaged(paged, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<int> CreateAsync(CreatePlanRequest request, CancellationToken ct)

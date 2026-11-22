@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +6,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.Vehicle;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.Vehicle;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
@@ -21,7 +21,6 @@ public class VehicleAppService : IVehicleAppService
 {
     private readonly IVehicleDataRepository _repo;
     private readonly IVehicleDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -30,7 +29,6 @@ public class VehicleAppService : IVehicleAppService
     public VehicleAppService(
         IVehicleDataRepository repo,
         IVehicleDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -38,7 +36,6 @@ public class VehicleAppService : IVehicleAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -48,7 +45,7 @@ public class VehicleAppService : IVehicleAppService
     public async Task<IEnumerable<VehicleResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<VehicleResponse>>(entities);
+        return VehicleMapper.ToResponses(entities);
     }
 
     public async Task<VehicleDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -59,14 +56,14 @@ public class VehicleAppService : IVehicleAppService
             _notify.Add(_localization.GetMessage("Application.Service.Vehicle.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VehicleDetailResponse>(entity);
+        return VehicleMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<ListPageResponse<VehicleResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<VehicleResponse>>(paged);
+        return VehicleMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateVehicleRequest request, CancellationToken ct)

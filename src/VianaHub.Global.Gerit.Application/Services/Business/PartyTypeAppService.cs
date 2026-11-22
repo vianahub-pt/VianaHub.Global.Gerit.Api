@@ -1,10 +1,10 @@
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Constants;
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.PartyType;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.PartyType;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -23,7 +23,6 @@ public class PartyTypeAppService : IPartyTypeAppService
 {
     private readonly IPartyTypeDataRepository _repo;
     private readonly IPartyTypeDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -32,7 +31,6 @@ public class PartyTypeAppService : IPartyTypeAppService
     public PartyTypeAppService(
         IPartyTypeDataRepository repo,
         IPartyTypeDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -40,7 +38,6 @@ public class PartyTypeAppService : IPartyTypeAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -50,7 +47,7 @@ public class PartyTypeAppService : IPartyTypeAppService
     public async Task<IEnumerable<PartyTypeResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<PartyTypeResponse>>(entities);
+        return LocalizedCatalogMapper.ToPartyTypeResponses(entities);
     }
 
     public async Task<PartyTypeDetailResponse?> GetByIdAsync(byte id, CancellationToken ct)
@@ -61,14 +58,14 @@ public class PartyTypeAppService : IPartyTypeAppService
             _notify.Add(_localization.GetMessage("Application.Service.PartyType.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<PartyTypeDetailResponse>(entity);
+        return LocalizedCatalogMapper.ToPartyTypeDetail(entity);
     }
 
     public async Task<ListPageResponse<PartyTypeResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<PartyTypeResponse>>(paged);
+        return LocalizedCatalogMapper.ToPartyTypePaged(paged);
     }
 
     public async Task<byte> CreateAsync(CreatePartyTypeRequest request, CancellationToken ct)

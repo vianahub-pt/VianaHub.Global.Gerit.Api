@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Globalization;
@@ -101,7 +100,7 @@ public class CanonicalCatalogCreationTests
                             Assert.Equal(2, entity.Translations.Count);
                             harness.RenameEnglish = () => entity.Translations.Single(t => t.LanguageCode == "en-US").Update("New marketing name", "Description");
                         }).ReturnsAsync(true);
-                    var service = new AddressTypeAppService(repo.Object, domain.Object, Mock.Of<IMapper>(), harness.Notify.Object, localization.Object, currentUser, Mock.Of<IFileValidationService>(), Mock.Of<ILogger<AddressTypeAppService>>());
+                    var service = new AddressTypeAppService(repo.Object, domain.Object, harness.Notify.Object, localization.Object, currentUser, Mock.Of<IFileValidationService>(), Mock.Of<ILogger<AddressTypeAppService>>());
                     harness.Create = async includeEnglish =>
                     {
                         var translations = new List<CreateAddressTypeTranslationRequest> { new() { LanguageCode = "pt-PT", Name = "Nome português diferente", Description = "Descrição" } };
@@ -123,7 +122,7 @@ public class CanonicalCatalogCreationTests
                             Assert.Equal(2, entity.Translations.Count);
                             harness.RenameEnglish = () => entity.Translations.Single(t => t.LanguageCode == "en-US").Update("New marketing name", "Description");
                         }).ReturnsAsync(true);
-                    var service = new AcquisitionSourceTypeAppService(repo.Object, domain.Object, Mock.Of<IMapper>(), harness.Notify.Object, localization.Object, currentUser, Mock.Of<IFileValidationService>(), Mock.Of<ILogger<AcquisitionSourceTypeAppService>>());
+                    var service = new AcquisitionSourceTypeAppService(repo.Object, domain.Object, harness.Notify.Object, localization.Object, currentUser, Mock.Of<IFileValidationService>(), Mock.Of<ILogger<AcquisitionSourceTypeAppService>>());
                     harness.Create = async includeEnglish =>
                     {
                         var translations = new List<CreateAcquisitionSourceTypeTranslationRequest> { new() { LanguageCode = "pt-PT", Name = "Nome português diferente", Description = "Descrição" } };
@@ -145,7 +144,7 @@ public class CanonicalCatalogCreationTests
                             Assert.Equal(2, entity.Translations.Count);
                             harness.RenameEnglish = () => entity.Translations.Single(t => t.LanguageCode == "en-US").Update("New marketing name", "Description");
                         }).ReturnsAsync(true);
-                    var service = new PartyTypeAppService(repo.Object, domain.Object, Mock.Of<IMapper>(), harness.Notify.Object, localization.Object, currentUser, Mock.Of<ILogger<PartyTypeAppService>>());
+                    var service = new PartyTypeAppService(repo.Object, domain.Object, harness.Notify.Object, localization.Object, currentUser, Mock.Of<ILogger<PartyTypeAppService>>());
                     harness.Create = async includeEnglish =>
                     {
                         var translations = new List<CreatePartyTypeTranslationRequest> { new() { LanguageCode = "pt-PT", Name = "Nome português diferente", Description = "Descrição" } };
@@ -167,7 +166,7 @@ public class CanonicalCatalogCreationTests
                             Assert.Equal(2, entity.Translations.Count);
                             harness.RenameEnglish = () => entity.Translations.Single(t => t.LanguageCode == "en-US").Update("New marketing name", "Description");
                         }).ReturnsAsync(true);
-                    var service = new StatusDomainAppService(repo.Object, domain.Object, Mock.Of<IMapper>(), harness.Notify.Object, localization.Object, currentUser, Mock.Of<ILogger<StatusDomainAppService>>());
+                    var service = new StatusDomainAppService(repo.Object, domain.Object, harness.Notify.Object, localization.Object, currentUser, Mock.Of<ILogger<StatusDomainAppService>>());
                     harness.Create = async includeEnglish =>
                     {
                         var translations = new List<CreateStatusDomainTranslationRequest> { new() { LanguageCode = "pt-PT", Name = "Nome português diferente", Description = "Descrição" } };
@@ -189,7 +188,7 @@ public class CanonicalCatalogCreationTests
                             Assert.Equal(2, entity.Translations.Count);
                             harness.RenameEnglish = () => entity.Translations.Single(t => t.LanguageCode == "en-US").Update("New marketing name", "Description");
                         }).ReturnsAsync(true);
-                    var service = new PlanAppService(repo.Object, domain.Object, harness.Notify.Object, Mock.Of<IMapper>(), currentUser, localization.Object, Mock.Of<ILogger<PlanAppService>>(), Mock.Of<IFileValidationService>());
+                    var service = new PlanAppService(repo.Object, domain.Object, harness.Notify.Object, currentUser, localization.Object, Mock.Of<ILogger<PlanAppService>>(), Mock.Of<IFileValidationService>());
                     harness.Create = async includeEnglish =>
                     {
                         var translations = new List<CreatePlanTranslationRequest> { new() { LanguageCode = "pt-PT", Name = "Nome português diferente", Description = "Descrição" } };

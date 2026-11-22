@@ -2,7 +2,6 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using VianaHub.Global.Gerit.Application.Services.Business;
@@ -23,7 +22,6 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Business
         {
             var repoMock = new Mock<IVehicleDataRepository>();
             var domainMock = new Mock<IVehicleDomainService>();
-            var mapperMock = new Mock<IMapper>();
             var notifyMock = new Mock<INotify>();
             var localizationMock = new Mock<ILocalizationService>();
             var currentUserMock = new Mock<ICurrentUserService>();
@@ -31,7 +29,7 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Business
 
             fileValidationMock.Setup(f => f.ValidateFile(null)).Returns(false);
 
-            var service = new VehicleAppService(repoMock.Object, domainMock.Object, mapperMock.Object, notifyMock.Object, localizationMock.Object, currentUserMock.Object, fileValidationMock.Object);
+            var service = new VehicleAppService(repoMock.Object, domainMock.Object, notifyMock.Object, localizationMock.Object, currentUserMock.Object, fileValidationMock.Object);
 
             var result = await service.BulkUploadAsync(null, CancellationToken.None);
 
@@ -45,7 +43,6 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Business
         {
             var repoMock = new Mock<IVehicleDataRepository>();
             var domainMock = new Mock<IVehicleDomainService>();
-            var mapperMock = new Mock<IMapper>();
             var notifyMock = new Mock<INotify>();
             var localizationMock = new Mock<ILocalizationService>();
             var currentUserMock = new Mock<ICurrentUserService>();
@@ -72,7 +69,7 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Business
             repoMock.Setup(r => r.ExistsByPlateAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
             domainMock.Setup(d => d.CreateAsync(It.IsAny<VianaHub.Global.Gerit.Domain.Entities.Business.VehicleEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-            var service = new VehicleAppService(repoMock.Object, domainMock.Object, mapperMock.Object, notifyMock.Object, localizationMock.Object, currentUserMock.Object, fileValidationMock.Object);
+            var service = new VehicleAppService(repoMock.Object, domainMock.Object, notifyMock.Object, localizationMock.Object, currentUserMock.Object, fileValidationMock.Object);
 
             var result = await service.BulkUploadAsync(formFile, CancellationToken.None);
 

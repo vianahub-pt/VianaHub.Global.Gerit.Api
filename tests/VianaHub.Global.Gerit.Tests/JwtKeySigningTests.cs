@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Security.Cryptography;
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -225,7 +224,7 @@ public class JwtKeySigningTests
             Subscriptions.Setup(x => x.IsActiveAsync(7, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             var localization = new Mock<ILocalizationService>();
             localization.Setup(x => x.GetMessage(It.IsAny<string>())).Returns((string key) => key);
-            Service = new AuthAppService(Notify, Mock.Of<IMapper>(), Mock.Of<IRolePermissionDataRepository>(), Refresh.Object,
+            Service = new AuthAppService(Notify, Mock.Of<IRolePermissionDataRepository>(), Refresh.Object,
                 users.Object, Mock.Of<IUserRoleDataRepository>(), Mock.Of<ITenantDataRepository>(), Mock.Of<IEmailSender>(),
                 localization.Object, Mock.Of<ICurrentUserService>(), Options.Create(Settings), NullLogger<AuthAppService>.Instance,
                 new ConfigurationBuilder().Build(), keys.Object, Db, Secrets.Object, Subscriptions.Object, Mock.Of<IRequestTenantContext>());

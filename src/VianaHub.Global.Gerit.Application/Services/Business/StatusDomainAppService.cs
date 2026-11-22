@@ -1,10 +1,10 @@
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Constants;
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDomain;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.StatusDomain;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -23,7 +23,6 @@ public class StatusDomainAppService : IStatusDomainAppService
 {
     private readonly IStatusDomainDataRepository _repo;
     private readonly IStatusDomainDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -32,7 +31,6 @@ public class StatusDomainAppService : IStatusDomainAppService
     public StatusDomainAppService(
         IStatusDomainDataRepository repo,
         IStatusDomainDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -40,7 +38,6 @@ public class StatusDomainAppService : IStatusDomainAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -50,7 +47,7 @@ public class StatusDomainAppService : IStatusDomainAppService
     public async Task<IEnumerable<StatusDomainResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<StatusDomainResponse>>(entities);
+        return LocalizedCatalogMapper.ToStatusDomainResponses(entities);
     }
 
     public async Task<StatusDomainDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -61,14 +58,14 @@ public class StatusDomainAppService : IStatusDomainAppService
             _notify.Add(_localization.GetMessage("Application.Service.StatusDomain.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<StatusDomainDetailResponse>(entity);
+        return LocalizedCatalogMapper.ToStatusDomainDetail(entity);
     }
 
     public async Task<ListPageResponse<StatusDomainResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<StatusDomainResponse>>(paged);
+        return LocalizedCatalogMapper.ToStatusDomainPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateStatusDomainRequest request, CancellationToken ct)

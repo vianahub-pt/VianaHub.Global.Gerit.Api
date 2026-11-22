@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.AddressType;
@@ -20,7 +19,6 @@ public class AddressTypeAppServiceTests
     {
         var repoMock = new Mock<IAddressTypeDataRepository>();
         var domainMock = new Mock<IAddressTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -41,7 +39,7 @@ public class AddressTypeAppServiceTests
             })
             .ReturnsAsync(true);
 
-        var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
+        var service = CreateService(repoMock, domainMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
         var request = new CreateAddressTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Residencial", Description = "Endereço residencial" }, new() { LanguageCode = "en-US", Name = "Residential", Description = "Endereço residencial" }] };
 
@@ -61,7 +59,6 @@ public class AddressTypeAppServiceTests
     {
         var repoMock = new Mock<IAddressTypeDataRepository>();
         var domainMock = new Mock<IAddressTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -72,7 +69,7 @@ public class AddressTypeAppServiceTests
         repoMock.Setup(r => r.ExistsByTranslationAsync("pt-PT", "Residencial", It.IsAny<CancellationToken>())).ReturnsAsync(true);
         localizationMock.Setup(l => l.GetMessage("Application.Catalog.TranslationAlreadyExists")).Returns("exists");
 
-        var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
+        var service = CreateService(repoMock, domainMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
         var request = new CreateAddressTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Residencial", Description = "Desc" }, new() { LanguageCode = "en-US", Name = "Residential", Description = "Desc" }] };
 
@@ -88,7 +85,6 @@ public class AddressTypeAppServiceTests
     {
         var repoMock = new Mock<IAddressTypeDataRepository>();
         var domainMock = new Mock<IAddressTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -107,7 +103,7 @@ public class AddressTypeAppServiceTests
         repoMock.Setup(r => r.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
         domainMock.Setup(d => d.UpdateAsync(It.IsAny<AddressTypeEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
+        var service = CreateService(repoMock, domainMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
         var request = new UpdateAddressTypeRequest { Name = "New Name", Description = "New Desc" };
 
@@ -121,9 +117,7 @@ public class AddressTypeAppServiceTests
 
     private static AddressTypeAppService CreateService(
         Mock<IAddressTypeDataRepository> repoMock,
-        Mock<IAddressTypeDomainService> domainMock,
-        Mock<IMapper> mapperMock,
-        Mock<INotify> notifyMock,
+        Mock<IAddressTypeDomainService> domainMock, Mock<INotify> notifyMock,
         Mock<ILocalizationService> localizationMock,
         Mock<ICurrentUserService> currentUserMock,
         Mock<IFileValidationService> fileValidationMock,
@@ -132,7 +126,6 @@ public class AddressTypeAppServiceTests
         return new AddressTypeAppService(
             repoMock.Object,
             domainMock.Object,
-            mapperMock.Object,
             notifyMock.Object,
             localizationMock.Object,
             currentUserMock.Object,

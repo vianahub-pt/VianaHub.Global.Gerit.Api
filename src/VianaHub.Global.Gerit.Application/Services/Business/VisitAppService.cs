@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +8,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Business.Visit;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.Visit;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -25,7 +25,6 @@ public class VisitAppService : IVisitAppService
 {
     private readonly IVisitDataRepository _repo;
     private readonly IVisitDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -35,7 +34,6 @@ public class VisitAppService : IVisitAppService
     public VisitAppService(
         IVisitDataRepository repo,
         IVisitDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -44,7 +42,6 @@ public class VisitAppService : IVisitAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -55,7 +52,7 @@ public class VisitAppService : IVisitAppService
     public async Task<IEnumerable<VisitResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<VisitResponse>>(entities);
+        return VisitMapper.ToResponses(entities);
     }
 
     public async Task<VisitDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -66,14 +63,14 @@ public class VisitAppService : IVisitAppService
             _notify.Add(_localization.GetMessage("Application.Service.Visit.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitDetailResponse>(entity);
+        return VisitMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<ListPageResponse<VisitResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<VisitResponse>>(paged);
+        return VisitMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateVisitRequest request, CancellationToken ct)

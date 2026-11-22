@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -169,7 +168,6 @@ public class PartyTypeAppServiceTests
     {
         var repoMock = new Mock<IPartyTypeDataRepository>();
         var domainMock = new Mock<IPartyTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -178,7 +176,6 @@ public class PartyTypeAppServiceTests
         var service = new PartyTypeAppService(
             repoMock.Object,
             domainMock.Object,
-            mapperMock.Object,
             notifyMock.Object,
             localizationMock.Object,
             currentUserMock.Object,

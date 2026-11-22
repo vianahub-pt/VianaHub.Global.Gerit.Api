@@ -1,4 +1,4 @@
-using AutoMapper;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -22,7 +22,6 @@ public class VisitTeamFunctionAppService : IVisitTeamFunctionAppService
 {
     private readonly IVisitTeamFunctionDataRepository _repo;
     private readonly IVisitTeamFunctionDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -32,7 +31,6 @@ public class VisitTeamFunctionAppService : IVisitTeamFunctionAppService
     public VisitTeamFunctionAppService(
         IVisitTeamFunctionDataRepository repo,
         IVisitTeamFunctionDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -41,7 +39,6 @@ public class VisitTeamFunctionAppService : IVisitTeamFunctionAppService
     {
         _repo = repo;
         _domain = domain;
-        this._mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -52,7 +49,7 @@ public class VisitTeamFunctionAppService : IVisitTeamFunctionAppService
     public async Task<IEnumerable<VisitTeamFunctionResponse>> GetAllAsync(int visitTeamId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<VisitTeamFunctionResponse>>(entities);
+        return VisitTeamFunctionMapper.ToResponses(entities);
     }
 
     public async Task<VisitTeamFunctionDetailResponse?> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
@@ -63,14 +60,14 @@ public class VisitTeamFunctionAppService : IVisitTeamFunctionAppService
             _notify.Add(_localization.GetMessage("Application.Service.Function.Update.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitTeamFunctionDetailResponse>(entity);
+        return VisitTeamFunctionMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<VisitTeamFunctionResponse>> GetPagedAsync(int visitTeamId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<VisitTeamFunctionResponse>>(paged);
+        return VisitTeamFunctionMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int visitTeamId, CreateVisitTeamFunctionRequest request, CancellationToken ct)

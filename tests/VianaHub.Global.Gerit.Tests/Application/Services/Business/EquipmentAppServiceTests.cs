@@ -3,7 +3,6 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using VianaHub.Global.Gerit.Application.Services.Business;
@@ -24,7 +23,6 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Business
             var equipmentTypeRepoMock = new Mock<IEquipmentTypeDataRepository>();
             var repoMock = new Mock<IEquipmentDataRepository>();
             var domainMock = new Mock<IEquipmentDomainService>();
-            var mapperMock = new Mock<IMapper>();
             var notifyMock = new Mock<INotify>();
             var localizationMock = new Mock<ILocalizationService>();
             var currentUserMock = new Mock<ICurrentUserService>();
@@ -36,7 +34,6 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Business
                 equipmentTypeRepoMock.Object,
                 repoMock.Object,
                 domainMock.Object,
-                mapperMock.Object,
                 notifyMock.Object,
                 localizationMock.Object,
                 currentUserMock.Object,
@@ -54,7 +51,6 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Business
             var equipmentTypeRepoMock = new Mock<IEquipmentTypeDataRepository>();
             var repoMock = new Mock<IEquipmentDataRepository>();
             var domainMock = new Mock<IEquipmentDomainService>();
-            var mapperMock = new Mock<IMapper>();
             var notifyMock = new Mock<INotify>();
             var localizationMock = new Mock<ILocalizationService>();
             var currentUserMock = new Mock<ICurrentUserService>();
@@ -85,7 +81,6 @@ namespace VianaHub.Global.Gerit.Tests.Application.Services.Business
                 equipmentTypeRepoMock.Object,
                 repoMock.Object,
                 domainMock.Object,
-                mapperMock.Object,
                 notifyMock.Object,
                 localizationMock.Object,
                 currentUserMock.Object,

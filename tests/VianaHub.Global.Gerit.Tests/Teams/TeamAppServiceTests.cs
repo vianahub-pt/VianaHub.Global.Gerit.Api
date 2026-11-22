@@ -217,7 +217,7 @@ public class TeamAppServiceTests
                 .Returns((int id, CancellationToken _) => Task.FromResult(Team is { IsDeleted: false } team && team.Id == id ? team : null));
             Repository.Setup(x => x.UpdateAsync(It.IsAny<TeamEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
             var domain = new TeamDomainService(Repository.Object, new TeamValidator(localization), Notify);
-            App = new TeamAppService(Repository.Object, domain, TeamTestSupport.Mapper(), Notify, localization,
+            App = new TeamAppService(Repository.Object, domain, Notify, localization,
                 currentUser.Object, NullLogger<TeamAppService>.Instance,
                 Mock.Of<VianaHub.Global.Gerit.Application.Interfaces.Common.IFileValidationService>());
         }

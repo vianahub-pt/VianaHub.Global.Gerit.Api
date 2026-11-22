@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Vocabularies;
 using FluentValidation;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.Client;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -11,6 +12,12 @@ public class CreateClientRouteValidator : AbstractValidator<CreateClientRequest>
 {
     public CreateClientRouteValidator(ILocalizationService localization)
     {
+        RuleFor(x => x.Gender)
+            .Must(ClientGenderCatalog.IsCanonical)
+            .WithMessage(localization.GetMessage("Domain.Client.GenderControlledValue"));
+        RuleFor(x => x.Nationality)
+            .Must(ClientNationalityCatalog.IsCanonical)
+            .WithMessage(localization.GetMessage("Domain.Client.NationalityControlledValue"));
         RuleFor(x => x.PartyTypeId)
             .GreaterThan((byte)0)
             .WithMessage(localization.GetMessage("Api.Validator.Client.Create.PartyTypeId"));

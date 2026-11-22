@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +6,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.EmployeeTeams;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeTeams;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
@@ -21,7 +21,6 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
 {
     private readonly IEmployeeTeamDataRepository _repo;
     private readonly IEmployeeTeamDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -30,7 +29,6 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
     public EmployeeTeamAppService(
         IEmployeeTeamDataRepository repo,
         IEmployeeTeamDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -38,7 +36,6 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -48,7 +45,7 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
     public async Task<IEnumerable<EmployeeTeamResponse>> GetAllAsync(int employeeId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(employeeId, ct);
-        return _mapper.Map<IEnumerable<EmployeeTeamResponse>>(entities);
+        return EmployeeTeamMapper.ToResponses(entities);
     }
 
     public async Task<EmployeeTeamDetailResponse?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
@@ -59,14 +56,14 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeTeam.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<EmployeeTeamDetailResponse>(entity);
+        return EmployeeTeamMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<EmployeeTeamResponse>> GetPagedAsync(int employeeId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(employeeId, filter, ct);
-        return _mapper.Map<ListPageResponse<EmployeeTeamResponse>>(paged);
+        return EmployeeTeamMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int employeeId, CreateEmployeeTeamRequest request, CancellationToken ct)

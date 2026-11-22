@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDomain;
@@ -169,7 +168,6 @@ public class StatusDomainAppServiceTests
     {
         var repoMock = new Mock<IStatusDomainDataRepository>();
         var domainMock = new Mock<IStatusDomainDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -178,7 +176,6 @@ public class StatusDomainAppServiceTests
         var service = new StatusDomainAppService(
             repoMock.Object,
             domainMock.Object,
-            mapperMock.Object,
             notifyMock.Object,
             localizationMock.Object,
             currentUserMock.Object,

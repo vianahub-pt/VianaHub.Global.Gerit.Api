@@ -1,4 +1,3 @@
-using AutoMapper;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Job;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Job;
@@ -9,13 +8,13 @@ using VianaHub.Global.Gerit.Domain.Base;
 using VianaHub.Global.Gerit.Application.Interfaces.Job;
 using VianaHub.Global.Gerit.Domain.Entities.Job;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
+using VianaHub.Global.Gerit.Application.Mappings.Job;
 
 namespace VianaHub.Global.Gerit.Application.Services.Job;
 
 public class JobAppService : IJobAppService
 {
     private readonly IJobDefinitionDataRepository _repo;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -24,7 +23,6 @@ public class JobAppService : IJobAppService
 
     public JobAppService(
         IJobDefinitionDataRepository repo,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -32,7 +30,6 @@ public class JobAppService : IJobAppService
         IJobSchedulerService scheduler)
     {
         _repo = repo;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -49,13 +46,13 @@ public class JobAppService : IJobAppService
             return null;
         }
 
-        return _mapper.Map<JobDetailResponse>(entity);
+        return JobMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<JobResponse>> GetPagedAsync(JobPagedFilter request, CancellationToken ct)
     {
         var paged = await _repo.GetPagedAsync(request, ct);
-        return _mapper.Map<ListPageResponse<JobResponse>>(paged);
+        return JobMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateJobRequest request, CancellationToken ct)

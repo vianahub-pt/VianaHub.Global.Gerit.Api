@@ -1,10 +1,10 @@
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Constants;
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.StatusDefinition;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.StatusDefinition;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -22,7 +22,6 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
 {
     private readonly IStatusDefinitionDataRepository _repo;
     private readonly IStatusDefinitionDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -31,7 +30,6 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
     public StatusDefinitionAppService(
         IStatusDefinitionDataRepository repo,
         IStatusDefinitionDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -39,7 +37,6 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -49,7 +46,7 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
     public async Task<IEnumerable<StatusDefinitionResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<StatusDefinitionResponse>>(entities);
+        return LocalizedCatalogMapper.ToStatusDefinitionResponses(entities);
     }
 
     public async Task<StatusDefinitionDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -60,14 +57,14 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
             _notify.Add(_localization.GetMessage("Application.Service.StatusDefinition.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<StatusDefinitionDetailResponse>(entity);
+        return LocalizedCatalogMapper.ToStatusDefinitionDetail(entity);
     }
 
     public async Task<ListPageResponse<StatusDefinitionResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<StatusDefinitionResponse>>(paged);
+        return LocalizedCatalogMapper.ToStatusDefinitionPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateStatusDefinitionRequest request, CancellationToken ct)

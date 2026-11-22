@@ -1,15 +1,10 @@
+using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.UserPreferences;
 
 namespace VianaHub.Global.Gerit.Tests.UserPreferences;
 
 public class UserPreferencesMappingTests
 {
-    [Fact]
-    public void Profile_IsValid()
-    {
-        UserPreferencesTestSupport.Mapper().ConfigurationProvider.AssertConfigurationIsValid();
-    }
-
     [Fact]
     public void DetailMapping_PreservesTimesAndEmailFlags()
     {
@@ -19,7 +14,7 @@ public class UserPreferencesMappingTests
             new TimeSpan(22, 15, 0), new TimeSpan(6, 30, 0),
             true, true, false, true, false, true, 17);
 
-        var response = UserPreferencesTestSupport.Mapper().Map<UserPreferencesDetailResponse>(entity);
+        var response = UserPreferencesMapper.ToDetail(entity);
 
         Assert.Equal("22:15", response.DayStart);
         Assert.Equal("06:30", response.DayEnd);
