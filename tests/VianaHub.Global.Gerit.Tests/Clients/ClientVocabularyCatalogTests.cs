@@ -63,7 +63,7 @@ public sealed class ClientVocabularyCatalogTests
     public void EveryCountryGenderAndValidationKey_HasNativeTranslationWithoutFallback(string culture)
     {
         // Lê o ficheiro específico para impedir que o fallback esconda chaves em falta.
-        var file = Path.Combine(AppContext.BaseDirectory, "locales", culture, "common.json");
+        var file = Path.Join(AppContext.BaseDirectory, "locales", culture, "common.json");
         Assert.True(File.Exists(file), file);
         using var document = JsonDocument.Parse(File.ReadAllText(file));
         var context = new DefaultHttpContext();
