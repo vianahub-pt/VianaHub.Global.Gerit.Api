@@ -1,4 +1,3 @@
-using AutoMapper;
 using Azure.Core;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -9,6 +8,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Billing.Tenant;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.Tenant;
 using VianaHub.Global.Gerit.Application.Interfaces.Billing;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Helpers;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -24,7 +24,6 @@ public class TenantAppService : ITenantAppService
     private readonly ITenantDomainService _domain;
     private readonly ICurrentUserService _currentUser;
     private readonly INotify _notify;
-    private readonly IMapper _mapper;
     private readonly ILocalizationService _localization;
     private readonly IFileValidationService _fileValidation;
 
@@ -32,7 +31,6 @@ public class TenantAppService : ITenantAppService
         ITenantDataRepository repo,
         ITenantDomainService domain,
         INotify notify,
-        IMapper mapper,
         ICurrentUserService currentUser,
         ILocalizationService localization,
         IFileValidationService fileValidation)
@@ -40,7 +38,6 @@ public class TenantAppService : ITenantAppService
         _repo = repo;
         _domain = domain;
         _notify = notify;
-        _mapper = mapper;
         _currentUser = currentUser;
         _localization = localization;
         _fileValidation = fileValidation;
@@ -49,20 +46,20 @@ public class TenantAppService : ITenantAppService
     public async Task<IEnumerable<TenantResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<TenantResponse>>(entities);
+        return TenantMapper.ToResponses(entities);
     }
 
     public async Task<TenantDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        return _mapper.Map<TenantDetailResponse>(entity);
+        return TenantMapper.ToDetail(entity)!;
     }
 
     public async Task<ListPageResponse<TenantResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<TenantResponse>>(paged);
+        return TenantMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateTenantRequest request, CancellationToken ct)

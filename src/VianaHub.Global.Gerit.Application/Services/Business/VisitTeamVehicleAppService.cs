@@ -1,4 +1,4 @@
-using AutoMapper;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -22,7 +22,6 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
 {
     private readonly IVisitTeamVehicleDataRepository _repo;
     private readonly IVisitTeamVehicleDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -31,7 +30,6 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
     public VisitTeamVehicleAppService(
         IVisitTeamVehicleDataRepository repo,
         IVisitTeamVehicleDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -39,7 +37,6 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -49,7 +46,7 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
     public async Task<IEnumerable<VisitTeamVehicleResponse>> GetAllAsync(int visitTeamId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<VisitTeamVehicleResponse>>(entities);
+        return VisitTeamVehicleMapper.ToResponses(entities);
     }
 
     public async Task<VisitTeamVehicleDetailResponse?> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
@@ -60,14 +57,14 @@ public class VisitTeamVehicleAppService : IVisitTeamVehiclesAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitTeamVehicle.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitTeamVehicleDetailResponse>(entity);
+        return VisitTeamVehicleMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<VisitTeamVehicleResponse>> GetPagedAsync(int visitTeamId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<VisitTeamVehicleResponse>>(paged);
+        return VisitTeamVehicleMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int visitTeamId, CreateVisitTeamVehicleRequest request, CancellationToken ct)

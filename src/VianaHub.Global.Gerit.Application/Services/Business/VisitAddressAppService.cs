@@ -1,4 +1,4 @@
-using AutoMapper;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -24,7 +24,6 @@ public class VisitAddressAppService : IVisitAddressAppService
 {
     private readonly IVisitAddressDataRepository _repo;
     private readonly IVisitAddressDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -33,7 +32,6 @@ public class VisitAddressAppService : IVisitAddressAppService
     public VisitAddressAppService(
         IVisitAddressDataRepository repo,
         IVisitAddressDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -41,7 +39,6 @@ public class VisitAddressAppService : IVisitAddressAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -54,7 +51,7 @@ public class VisitAddressAppService : IVisitAddressAppService
         if (entities == null)
             return Enumerable.Empty<VisitAddressResponse>();
 
-        return _mapper.Map<IEnumerable<VisitAddressResponse>>(entities);
+        return VisitAddressMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<VisitAddressDetailResponse?> GetByIdAsync(int visitId, int id, CancellationToken ct)
@@ -65,14 +62,14 @@ public class VisitAddressAppService : IVisitAddressAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitAddress.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitAddressDetailResponse>(entity);
+        return VisitAddressMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<ListPageResponse<VisitAddressResponse>> GetPagedAsync(int visitId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(visitId, filter, ct);
-        return _mapper.Map<ListPageResponse<VisitAddressResponse>>(paged);
+        return VisitAddressMapper.ToPaged(paged, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<int> CreateAsync(int visitId, CreateVisitAddressRequest request, CancellationToken ct)

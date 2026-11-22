@@ -19,7 +19,6 @@ using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Job;
 using VianaHub.Global.Gerit.Infra.Integration.Messaging;
 using VianaHub.Global.Gerit.Infra.Job.Services;
-using AutoMapper;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Services.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;

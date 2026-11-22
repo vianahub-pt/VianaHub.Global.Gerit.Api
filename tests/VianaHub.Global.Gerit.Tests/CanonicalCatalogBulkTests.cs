@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -77,7 +76,7 @@ public class CanonicalCatalogBulkTests
                     Assert.Equal(2, entity.Translations.Count);
                     Assert.Equal("Canonical English", entity.Translations.Single(t => t.LanguageCode == "en-US").Name);
                 }).ReturnsAsync(true);
-            var service = new AddressTypeAppService(repo.Object, domain.Object, Mock.Of<IMapper>(), harness.Notify.Object, localization.Object,
+            var service = new AddressTypeAppService(repo.Object, domain.Object, harness.Notify.Object, localization.Object,
                 Mock.Of<ICurrentUserService>(), fileValidation.Object, Mock.Of<ILogger<AddressTypeAppService>>());
             upload = file => service.BulkUploadAsync(file, CancellationToken.None);
         }
@@ -93,7 +92,7 @@ public class CanonicalCatalogBulkTests
                     Assert.Equal(2, entity.Translations.Count);
                     Assert.Equal("Canonical English", entity.Translations.Single(t => t.LanguageCode == "en-US").Name);
                 }).ReturnsAsync(true);
-            var service = new PlanAppService(repo.Object, domain.Object, harness.Notify.Object, Mock.Of<IMapper>(), Mock.Of<ICurrentUserService>(), localization.Object,
+            var service = new PlanAppService(repo.Object, domain.Object, harness.Notify.Object, Mock.Of<ICurrentUserService>(), localization.Object,
                 Mock.Of<ILogger<PlanAppService>>(), fileValidation.Object);
             upload = file => service.BulkUploadAsync(file, CancellationToken.None);
         }

@@ -1,9 +1,10 @@
-using AutoMapper;
+using System.Globalization;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Billing.TenantAddress;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.TenantAddress;
 using VianaHub.Global.Gerit.Application.Interfaces.Billing;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
@@ -16,7 +17,6 @@ public class TenantAddressesAppService : ITenantAddressesAppService
 {
     private readonly ITenantAddressesDataRepository _repo;
     private readonly ITenantAddressesDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -24,14 +24,12 @@ public class TenantAddressesAppService : ITenantAddressesAppService
     public TenantAddressesAppService(
         ITenantAddressesDataRepository repo,
         ITenantAddressesDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser)
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -40,7 +38,7 @@ public class TenantAddressesAppService : ITenantAddressesAppService
     public async Task<IEnumerable<TenantAddressResponse>> GetByTenantIdAsync(int tenantId, CancellationToken ct)
     {
         var entities = await _repo.GetByTenantIdAsync(tenantId, ct);
-        return _mapper.Map<IEnumerable<TenantAddressResponse>>(entities);
+        return TenantAddressMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<TenantAddressDetailResponse?> GetByIdAsync(int tenantId, int id, CancellationToken ct)
@@ -51,14 +49,14 @@ public class TenantAddressesAppService : ITenantAddressesAppService
             _notify.Add(_localization.GetMessage("Application.Service.TenantAddress.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<TenantAddressDetailResponse>(entity);
+        return TenantAddressMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<ListPageResponse<TenantAddressResponse>> GetPagedAsync(int tenantId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(tenantId, filter, ct);
-        return _mapper.Map<ListPageResponse<TenantAddressResponse>>(paged);
+        return TenantAddressMapper.ToPaged(paged, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<int> CreateAsync(int tenantId, CreateTenantAddressRequest request, CancellationToken ct)

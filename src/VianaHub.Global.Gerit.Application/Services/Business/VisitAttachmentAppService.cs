@@ -1,4 +1,5 @@
-using AutoMapper;
+using System.Globalization;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using Microsoft.Extensions.Logging;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.VisitAttachment;
@@ -20,7 +21,6 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
     private readonly IVisitAttachmentDomainService _domain;
     private readonly IFileTypeDataRepository _fileTypeRepo;
     private readonly IVisitDataRepository _visitRepo;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -31,7 +31,6 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
         IVisitAttachmentDomainService domain,
         IFileTypeDataRepository fileTypeRepo,
         IVisitDataRepository visitRepo,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -41,7 +40,6 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
         _domain = domain;
         _fileTypeRepo = fileTypeRepo;
         _visitRepo = visitRepo;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -56,7 +54,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitAttachmentDetailResponse>(entity);
+        return VisitAttachmentMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<VisitAttachmentResponse?> GetByPublicIdAsync(Guid publicId, CancellationToken ct)
@@ -67,7 +65,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetByPublicId.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitAttachmentResponse>(entity);
+        return VisitAttachmentMapper.ToResponse(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<VisitAttachmentDetailResponse?> GetDetailByIdAsync(int visitId, int id, CancellationToken ct)
@@ -78,7 +76,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitAttachmentDetailResponse>(entity);
+        return VisitAttachmentMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<VisitAttachmentDetailResponse?> GetDetailByPublicIdAsync(Guid publicId, CancellationToken ct)
@@ -89,19 +87,19 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetByPublicId.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitAttachmentDetailResponse>(entity);
+        return VisitAttachmentMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<IEnumerable<VisitAttachmentResponse>> GetAllAsync(int visitId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(visitId, ct);
-        return _mapper.Map<IEnumerable<VisitAttachmentResponse>>(entities);
+        return VisitAttachmentMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<IEnumerable<VisitAttachmentResponse>> GetByVisitIdAsync(int visitId, CancellationToken ct)
     {
         var entities = await _repo.GetByVisitIdAsync(visitId, ct);
-        return _mapper.Map<IEnumerable<VisitAttachmentResponse>>(entities);
+        return VisitAttachmentMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<VisitAttachmentResponse?> GetPrimaryByVisitIdAsync(int visitId, CancellationToken ct)
@@ -112,14 +110,14 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitAttachment.GetPrimary.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitAttachmentResponse>(entity);
+        return VisitAttachmentMapper.ToResponse(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<ListPageResponse<VisitAttachmentResponse>> GetPagedAsync(int visitId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(visitId, filter, ct);
-        return _mapper.Map<ListPageResponse<VisitAttachmentResponse>>(paged);
+        return VisitAttachmentMapper.ToPaged(paged, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<int> CreateAsync(int visitId, CreateVisitAttachmentRequest request, CancellationToken ct)

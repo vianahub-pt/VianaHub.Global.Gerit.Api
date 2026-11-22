@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +6,7 @@ using System.Globalization;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.FileType;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.FileType;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
@@ -22,7 +22,6 @@ public class FileTypeAppService : IFileTypeAppService
 {
     private readonly IFileTypeDataRepository _repo;
     private readonly IFileTypeDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -32,7 +31,6 @@ public class FileTypeAppService : IFileTypeAppService
     public FileTypeAppService(
         IFileTypeDataRepository repo,
         IFileTypeDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -41,7 +39,6 @@ public class FileTypeAppService : IFileTypeAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -52,7 +49,7 @@ public class FileTypeAppService : IFileTypeAppService
     public async Task<IEnumerable<FileTypeResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<FileTypeResponse>>(entities);
+        return LocalizedCatalogMapper.ToFileTypeResponses(entities);
     }
 
     public async Task<FileTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -64,14 +61,14 @@ public class FileTypeAppService : IFileTypeAppService
             return null;
         }
 
-        return _mapper.Map<FileTypeDetailResponse>(entity);
+        return LocalizedCatalogMapper.ToFileTypeDetail(entity);
     }
 
     public async Task<ListPageResponse<FileTypeResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<FileTypeResponse>>(paged);
+        return LocalizedCatalogMapper.ToFileTypePaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateFileTypeRequest request, CancellationToken ct)

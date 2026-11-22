@@ -7,7 +7,6 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
-using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -456,7 +455,6 @@ public class EquipmentTypeHttpIntegrationTests(ITestOutputHelper output)
             builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserApiService>();
             builder.Services.AddScoped<INotify, Notify>();
-            builder.Services.AddSingleton<IMapper>(EquipmentTypeTestSupport.Mapper());
             var database = Guid.NewGuid().ToString();
             builder.Services.AddDbContext<GeritDbContext>(options => options.UseInMemoryDatabase(database).AddInterceptors(control));
             builder.Services.AddScoped<IEquipmentTypeDataRepository, EquipmentTypeDataRepository>();

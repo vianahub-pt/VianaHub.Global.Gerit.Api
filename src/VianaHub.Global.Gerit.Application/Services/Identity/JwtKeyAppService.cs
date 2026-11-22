@@ -1,7 +1,7 @@
-using AutoMapper;
 using Azure.Core;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Jwt;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
+using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Identity;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
@@ -13,7 +13,6 @@ public class JwtKeyAppService : IJwtKeyAppService
     private readonly IJwtKeyDataRepository _repo;
     private readonly IJwtKeyDomainService _domain;
     private readonly INotify _notify;
-    private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUser;
     private readonly ILocalizationService _localization;
     private readonly IRequestTenantContext _requestTenantContext;
@@ -22,7 +21,6 @@ public class JwtKeyAppService : IJwtKeyAppService
         IJwtKeyDataRepository repo,
         IJwtKeyDomainService domain,
         INotify notify,
-        IMapper mapper,
         ICurrentUserService currentUser,
         ILocalizationService localization,
         IRequestTenantContext requestTenantContext)
@@ -30,7 +28,6 @@ public class JwtKeyAppService : IJwtKeyAppService
         _repo = repo;
         _domain = domain;
         _notify = notify;
-        _mapper = mapper;
         _currentUser = currentUser;
         _localization = localization;
         _requestTenantContext = requestTenantContext;
@@ -39,13 +36,13 @@ public class JwtKeyAppService : IJwtKeyAppService
     public async Task<IEnumerable<JwtKeyResponse>> GetByTenantAsync(int tenantId, CancellationToken ct)
     {
         var entities = await _repo.GetByTenantAsync(tenantId, ct);
-        return _mapper.Map<IEnumerable<JwtKeyResponse>>(entities);
+        return JwtKeyMapper.ToResponses(entities);
     }
 
     public async Task<JwtKeyResponse?> GetActiveKeyAsync(int tenantId, CancellationToken ct)
     {
         var entity = await _repo.GetActiveKeyAsync(tenantId, ct);
-        return entity == null ? null : _mapper.Map<JwtKeyResponse>(entity);
+        return entity == null ? null : JwtKeyMapper.ToResponse(entity);
     }
 
     public async Task<bool> CreateInitialIfNotExistsAsync(int tenantId, CancellationToken ct)

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VianaHub.Global.Gerit.Infra.Data.Context;
 using VianaHub.Global.Gerit.Infra.Data.Repository.Business;
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.DocumentType;
@@ -29,10 +28,10 @@ public class CatalogCreationTests
         _localization.Setup(x => x.GetMessage(It.IsAny<string>(), It.IsAny<object[]>())).Returns((string key, object[] args) => key);
     }
 
-    private DocumentTypeAppService CreateService() => new(_repo.Object, _domain.Object, Mock.Of<IMapper>(), _notify.Object,
+    private DocumentTypeAppService CreateService() => new(_repo.Object, _domain.Object, _notify.Object,
         _localization.Object, Mock.Of<ICurrentUserService>(), Mock.Of<ILogger<DocumentTypeAppService>>());
 
-    private StatusDefinitionAppService CreateStatusService() => new(_statusRepo.Object, _statusDomain.Object, Mock.Of<IMapper>(), _notify.Object,
+    private StatusDefinitionAppService CreateStatusService() => new(_statusRepo.Object, _statusDomain.Object, _notify.Object,
         _localization.Object, Mock.Of<ICurrentUserService>(), Mock.Of<ILogger<StatusDefinitionAppService>>());
 
     [Theory]

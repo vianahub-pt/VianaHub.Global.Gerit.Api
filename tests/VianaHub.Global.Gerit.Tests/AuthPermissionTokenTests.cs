@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -75,7 +74,7 @@ public class AuthPermissionTokenTests
         await using var database = new GeritDbContext(new DbContextOptionsBuilder<GeritDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var settings = new JwtSettings { Issuer = "test-issuer", Audience = "test-audience" };
-        var service = new AuthAppService(notify, Mock.Of<IMapper>(), permissions.Object,
+        var service = new AuthAppService(notify, permissions.Object,
             Mock.Of<IRefreshTokenDataRepository>(), Mock.Of<IUserDataRepository>(), userRoles.Object,
             Mock.Of<ITenantDataRepository>(), Mock.Of<IEmailSender>(), Mock.Of<ILocalizationService>(),
             Mock.Of<ICurrentUserService>(), Options.Create(settings), NullLogger<AuthAppService>.Instance,

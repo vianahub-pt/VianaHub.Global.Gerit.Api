@@ -1,8 +1,8 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeFiscalData;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.EmployeeFiscalData;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -16,7 +16,6 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
 {
     private readonly IEmployeeFiscalDataDataRepository _repo;
     private readonly IEmployeeFiscalDataDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -24,14 +23,12 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
     public EmployeeFiscalDataAppService(
         IEmployeeFiscalDataDataRepository repo,
         IEmployeeFiscalDataDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser)
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -41,7 +38,7 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
     {
         var entities = await _repo.GetAllAsync(employeeId, ct);
 
-        return _mapper.Map<IEnumerable<EmployeeFiscalDataResponse>>(entities);
+        return EmployeeFiscalDataMapper.ToResponses(entities);
     }
 
     public async Task<EmployeeFiscalDataDetailResponse?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
@@ -52,14 +49,14 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeFiscalData.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<EmployeeFiscalDataDetailResponse>(entity);
+        return EmployeeFiscalDataMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<EmployeeFiscalDataResponse>> GetPagedAsync(int employeeId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(employeeId, filter, ct);
-        return _mapper.Map<ListPageResponse<EmployeeFiscalDataResponse>>(paged);
+        return EmployeeFiscalDataMapper.ToPaged(paged);
     }
 
     public async Task<bool> ExistsByIdAsync(int employeeId, CancellationToken ct = default)

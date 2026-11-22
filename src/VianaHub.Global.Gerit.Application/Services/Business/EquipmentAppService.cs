@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +6,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.Equipment;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.Equipment;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
@@ -22,7 +22,6 @@ public class EquipmentAppService : IEquipmentAppService
     private readonly IEquipmentTypeDataRepository _equipmentTypeRepo;
     private readonly IEquipmentDataRepository _repo;
     private readonly IEquipmentDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -32,7 +31,6 @@ public class EquipmentAppService : IEquipmentAppService
         IEquipmentTypeDataRepository equipmentTypeRepo,
         IEquipmentDataRepository repo,
         IEquipmentDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -41,7 +39,6 @@ public class EquipmentAppService : IEquipmentAppService
         _equipmentTypeRepo = equipmentTypeRepo;
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -51,7 +48,7 @@ public class EquipmentAppService : IEquipmentAppService
     public async Task<IEnumerable<EquipmentResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<EquipmentResponse>>(entities);
+        return EquipmentMapper.ToResponses(entities);
     }
 
     public async Task<EquipmentDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -62,14 +59,14 @@ public class EquipmentAppService : IEquipmentAppService
             _notify.Add(_localization.GetMessage("Application.Service.Equipment.Update.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<EquipmentDetailResponse>(entity);
+        return EquipmentMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<ListPageResponse<EquipmentResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<EquipmentResponse>>(paged);
+        return EquipmentMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateEquipmentRequest request, CancellationToken ct)

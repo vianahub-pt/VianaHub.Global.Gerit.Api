@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Moq;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.AcquisitionSourceType;
@@ -20,7 +19,6 @@ public class AcquisitionSourceTypeAppServiceTests
     {
         var repoMock = new Mock<IAcquisitionSourceTypeDataRepository>();
         var domainMock = new Mock<IAcquisitionSourceTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -35,11 +33,12 @@ public class AcquisitionSourceTypeAppServiceTests
 
         repoMock.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(entities);
 
-        var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
+        var service = CreateService(repoMock, domainMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
-        await service.GetAllAsync(CancellationToken.None);
+        var result = await service.GetAllAsync(CancellationToken.None);
 
-        mapperMock.Verify(m => m.Map<IEnumerable<object>>(entities), Times.Once);
+        Assert.Equal(2, result.Count());
+        Assert.Equal(entities.Select(x => x.Id), result.Select(x => x.Id));
     }
 
     [Fact(DisplayName = "AcquisitionSourceTypeAppService - CreateAsync cria entidade e tradução pt-PT")]
@@ -48,7 +47,6 @@ public class AcquisitionSourceTypeAppServiceTests
     {
         var repoMock = new Mock<IAcquisitionSourceTypeDataRepository>();
         var domainMock = new Mock<IAcquisitionSourceTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -68,7 +66,7 @@ public class AcquisitionSourceTypeAppServiceTests
             })
             .ReturnsAsync(true);
 
-        var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
+        var service = CreateService(repoMock, domainMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
         var request = new CreateAcquisitionSourceTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Test Name", Description = "Test Description" }, new() { LanguageCode = "en-US", Name = "Test Name", Description = "Test Description" }] };
 
@@ -89,7 +87,6 @@ public class AcquisitionSourceTypeAppServiceTests
     {
         var repoMock = new Mock<IAcquisitionSourceTypeDataRepository>();
         var domainMock = new Mock<IAcquisitionSourceTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -99,7 +96,7 @@ public class AcquisitionSourceTypeAppServiceTests
         repoMock.Setup(r => r.ExistsByTranslationAsync("pt-PT", "Existing", It.IsAny<CancellationToken>())).ReturnsAsync(true);
         localizationMock.Setup(l => l.GetMessage("Application.Catalog.TranslationAlreadyExists")).Returns("name-exists");
 
-        var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
+        var service = CreateService(repoMock, domainMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
         var request = new CreateAcquisitionSourceTypeRequest { Translations = [new() { LanguageCode = "pt-PT", Name = "Existing", Description = null }, new() { LanguageCode = "en-US", Name = "Existing", Description = null }] };
 
@@ -115,7 +112,6 @@ public class AcquisitionSourceTypeAppServiceTests
     {
         var repoMock = new Mock<IAcquisitionSourceTypeDataRepository>();
         var domainMock = new Mock<IAcquisitionSourceTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -133,7 +129,7 @@ public class AcquisitionSourceTypeAppServiceTests
         repoMock.Setup(r => r.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
         domainMock.Setup(d => d.UpdateAsync(It.IsAny<AcquisitionSourceTypeEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
+        var service = CreateService(repoMock, domainMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
         var request = new UpdateAcquisitionSourceTypeRequest
         {
@@ -155,7 +151,6 @@ public class AcquisitionSourceTypeAppServiceTests
     {
         var repoMock = new Mock<IAcquisitionSourceTypeDataRepository>();
         var domainMock = new Mock<IAcquisitionSourceTypeDomainService>();
-        var mapperMock = new Mock<IMapper>();
         var notifyMock = new Mock<INotify>();
         var localizationMock = new Mock<ILocalizationService>();
         var currentUserMock = new Mock<ICurrentUserService>();
@@ -173,7 +168,7 @@ public class AcquisitionSourceTypeAppServiceTests
         repoMock.Setup(r => r.GetByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
         domainMock.Setup(d => d.UpdateAsync(It.IsAny<AcquisitionSourceTypeEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
-        var service = CreateService(repoMock, domainMock, mapperMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
+        var service = CreateService(repoMock, domainMock, notifyMock, localizationMock, currentUserMock, fileValidationMock, loggerMock);
 
         var request = new UpdateAcquisitionSourceTypeRequest { Name = "New Name", Description = "New Desc" };
 
@@ -187,9 +182,7 @@ public class AcquisitionSourceTypeAppServiceTests
 
     private static AcquisitionSourceTypeAppService CreateService(
         Mock<IAcquisitionSourceTypeDataRepository> repoMock,
-        Mock<IAcquisitionSourceTypeDomainService> domainMock,
-        Mock<IMapper> mapperMock,
-        Mock<INotify> notifyMock,
+        Mock<IAcquisitionSourceTypeDomainService> domainMock, Mock<INotify> notifyMock,
         Mock<ILocalizationService> localizationMock,
         Mock<ICurrentUserService> currentUserMock,
         Mock<IFileValidationService> fileValidationMock,
@@ -198,7 +191,6 @@ public class AcquisitionSourceTypeAppServiceTests
         return new AcquisitionSourceTypeAppService(
             repoMock.Object,
             domainMock.Object,
-            mapperMock.Object,
             notifyMock.Object,
             localizationMock.Object,
             currentUserMock.Object,

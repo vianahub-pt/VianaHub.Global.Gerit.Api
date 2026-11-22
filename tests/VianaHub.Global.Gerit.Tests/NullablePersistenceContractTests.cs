@@ -1,6 +1,4 @@
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.Equipment;
 using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
@@ -13,11 +11,9 @@ public class NullablePersistenceContractTests
     [Fact]
     public void UnloadedNavigations_MapWithoutLosingForeignKeys()
     {
-        var configuration = new MapperConfiguration(
-            cfg => cfg.AddProfile<EquipmentMappingProfile>(), NullLoggerFactory.Instance);
         var equipment = new EquipmentEntity(7, 11, 13, 17, "Meter", null, null, 1);
 
-        var response = configuration.CreateMapper().Map<EquipmentDetailResponse>(equipment);
+        var response = EquipmentMapper.ToDetail(equipment, "pt-PT");
 
         Assert.Equal(7, response.TenantId);
         Assert.Equal(11, response.EquipmentTypeId);

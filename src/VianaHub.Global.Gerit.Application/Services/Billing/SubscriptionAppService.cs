@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +9,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Business.Function;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.Subscription;
 using VianaHub.Global.Gerit.Application.Interfaces.Billing;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Billing;
 using VianaHub.Global.Gerit.Application.Services.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
@@ -27,7 +27,6 @@ public class SubscriptionAppService : ISubscriptionAppService
     private readonly ISubscriptionDomainService _domain;
     private readonly ICurrentUserService _currentUser;
     private readonly INotify _notify;
-    private readonly IMapper _mapper;
     private readonly ILocalizationService _localization;
     private readonly ILogger<SubscriptionAppService> _logger;
     private readonly IFileValidationService _fileValidation;
@@ -36,7 +35,6 @@ public class SubscriptionAppService : ISubscriptionAppService
         ISubscriptionDataRepository repo,
         ISubscriptionDomainService domain,
         INotify notify,
-        IMapper mapper,
         ICurrentUserService currentUser,
         ILocalizationService localization,
         ILogger<SubscriptionAppService> logger,
@@ -45,7 +43,6 @@ public class SubscriptionAppService : ISubscriptionAppService
         _repo = repo;
         _domain = domain;
         _notify = notify;
-        _mapper = mapper;
         _currentUser = currentUser;
         _localization = localization;
         _logger = logger;
@@ -55,38 +52,38 @@ public class SubscriptionAppService : ISubscriptionAppService
     public async Task<IEnumerable<SubscriptionResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _domain.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<SubscriptionResponse>>(entities);
+        return SubscriptionMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<SubscriptionDetailResponse> GetByIdAsync(int id, CancellationToken ct)
     {
         var entity = await _domain.GetByIdAsync(id, ct);
-        return _mapper.Map<SubscriptionDetailResponse>(entity);
+        return SubscriptionMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name, DateTime.UtcNow)!;
     }
 
     public async Task<SubscriptionDetailResponse> GetByTenantIdAsync(int tenantId, CancellationToken ct)
     {
         var entity = await _domain.GetByTenantIdAsync(tenantId, ct);
-        return _mapper.Map<SubscriptionDetailResponse>(entity);
+        return SubscriptionMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name, DateTime.UtcNow)!;
     }
 
     public async Task<ListPageResponse<SubscriptionResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _domain.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<SubscriptionResponse>>(paged);
+        return SubscriptionMapper.ToPaged(paged, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<IEnumerable<SubscriptionResponse>> GetActiveSubscriptionsAsync(CancellationToken ct)
     {
         var entities = await _domain.GetActiveSubscriptionsAsync(ct);
-        return _mapper.Map<IEnumerable<SubscriptionResponse>>(entities);
+        return SubscriptionMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<IEnumerable<SubscriptionResponse>> GetExpiringSubscriptionsAsync(int daysBeforeExpiration, CancellationToken ct)
     {
         var entities = await _domain.GetExpiringSubscriptionsAsync(daysBeforeExpiration, ct);
-        return _mapper.Map<IEnumerable<SubscriptionResponse>>(entities);
+        return SubscriptionMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<int> CreateAsync(CreateSubscriptionRequest request, CancellationToken ct)
