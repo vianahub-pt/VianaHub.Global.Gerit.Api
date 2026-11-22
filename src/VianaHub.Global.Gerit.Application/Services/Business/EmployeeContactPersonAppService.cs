@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -6,6 +5,7 @@ using System.Globalization;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeContact;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.EmployeeContact;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
@@ -21,7 +21,6 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
 {
     private readonly IEmployeeContactPersonDataRepository _repo;
     private readonly IEmployeeContactPersonDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -30,7 +29,6 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
     public EmployeeContactPersonAppService(
         IEmployeeContactPersonDataRepository repo,
         IEmployeeContactPersonDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -38,7 +36,6 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -48,7 +45,7 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
     public async Task<IEnumerable<EmployeeContactPersonResponse>> GetAllAsync(int employeeId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(employeeId, ct);
-        return _mapper.Map<IEnumerable<EmployeeContactPersonResponse>>(entities);
+        return EmployeeContactPersonMapper.ToResponses(entities);
     }
 
     public async Task<EmployeeContactPersonDetailResponse?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
@@ -59,14 +56,14 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeContactPerson.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<EmployeeContactPersonDetailResponse>(entity);
+        return EmployeeContactPersonMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<EmployeeContactPersonResponse>> GetPagedAsync(int employeeId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(employeeId, filter, ct);
-        return _mapper.Map<ListPageResponse<EmployeeContactPersonResponse>>(paged);
+        return EmployeeContactPersonMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int employeeId, CreateEmployeeContactPersonRequest request, CancellationToken ct)

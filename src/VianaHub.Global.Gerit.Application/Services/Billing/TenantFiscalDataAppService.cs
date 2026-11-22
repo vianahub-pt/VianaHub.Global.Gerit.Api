@@ -1,9 +1,9 @@
-using AutoMapper;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Billing.TenantFiscalData;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.TenantFiscalData;
 using VianaHub.Global.Gerit.Application.Interfaces.Billing;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
@@ -16,7 +16,6 @@ public class TenantFiscalDataAppService : ITenantFiscalDataAppService
 {
     private readonly ITenantFiscalDataDataRepository _repo;
     private readonly ITenantFiscalDataDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -24,14 +23,12 @@ public class TenantFiscalDataAppService : ITenantFiscalDataAppService
     public TenantFiscalDataAppService(
         ITenantFiscalDataDataRepository repo,
         ITenantFiscalDataDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser)
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -40,7 +37,7 @@ public class TenantFiscalDataAppService : ITenantFiscalDataAppService
     public async Task<IEnumerable<TenantFiscalDataResponse>> GetByTenantIdAsync(int tenantId, CancellationToken ct)
     {
         var entities = await _repo.GetByTenantIdAsync(tenantId, ct);
-        return _mapper.Map<IEnumerable<TenantFiscalDataResponse>>(entities);
+        return TenantFiscalDataMapper.ToResponses(entities);
     }
 
     public async Task<TenantFiscalDataDetailResponse?> GetByIdAsync(int tenantId, int id, CancellationToken ct)
@@ -51,14 +48,14 @@ public class TenantFiscalDataAppService : ITenantFiscalDataAppService
             _notify.Add(_localization.GetMessage("Application.Service.TenantFiscalData.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<TenantFiscalDataDetailResponse>(entity);
+        return TenantFiscalDataMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<TenantFiscalDataResponse>> GetPagedAsync(int tenantId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(tenantId, filter, ct);
-        return _mapper.Map<ListPageResponse<TenantFiscalDataResponse>>(paged);
+        return TenantFiscalDataMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int tenantId, CreateTenantFiscalDataRequest request, CancellationToken ct)

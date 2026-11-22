@@ -48,7 +48,6 @@ public class Program
         builder.Services.AddScoped<TelemetryInterceptor>();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwagger(builder.Configuration, builder.Environment);
-        builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(JwtKeyMappingProfile).Assembly));
         builder.Services.AddDbContext<GeritDbContext>((serviceProvider, options) =>
         {
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));

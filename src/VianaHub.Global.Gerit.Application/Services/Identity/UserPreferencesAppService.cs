@@ -1,9 +1,9 @@
-using AutoMapper;
 using System.Globalization;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.UserPreferences;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.UserPreferences;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
+using VianaHub.Global.Gerit.Application.Mappings.Identity;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Helpers;
@@ -20,7 +20,6 @@ public class UserPreferencesAppService : IUserPreferencesAppService
 {
     private readonly IUserPreferencesDataRepository _repo;
     private readonly IUserPreferencesDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -29,7 +28,6 @@ public class UserPreferencesAppService : IUserPreferencesAppService
     public UserPreferencesAppService(
         IUserPreferencesDataRepository repo,
         IUserPreferencesDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -37,7 +35,6 @@ public class UserPreferencesAppService : IUserPreferencesAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -49,7 +46,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
         var entities = IsRestrictedUser()
             ? await _repo.GetAllByUserAsync(_currentUser.GetTenantId(), _currentUser.GetUserId(), ct)
             : await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<UserPreferencesResponse>>(entities);
+        return UserPreferencesMapper.ToResponses(entities);
     }
 
     public async Task<UserPreferencesDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -61,7 +58,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
             return null;
         }
         if (!CanAccess(entity)) return null;
-        return _mapper.Map<UserPreferencesDetailResponse>(entity);
+        return UserPreferencesMapper.ToDetail(entity);
     }
 
     public async Task<UserPreferencesResponse?> GetByUserAsync(int userId, CancellationToken ct)
@@ -78,7 +75,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
             _notify.Add(_localization.GetMessage("Application.Service.UserPreferences.Update.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<UserPreferencesResponse>(entity);
+        return UserPreferencesMapper.ToResponse(entity);
     }
 
     public async Task<ListPageResponse<UserPreferencesResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
@@ -87,7 +84,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
         var paged = IsRestrictedUser()
             ? await _repo.GetPagedByUserAsync(_currentUser.GetTenantId(), _currentUser.GetUserId(), filter, ct)
             : await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<UserPreferencesResponse>>(paged);
+        return UserPreferencesMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateUserPreferencesRequest request, CancellationToken ct)

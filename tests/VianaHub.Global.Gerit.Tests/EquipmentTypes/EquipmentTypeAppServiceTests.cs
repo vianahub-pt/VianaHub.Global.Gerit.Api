@@ -213,7 +213,7 @@ public class EquipmentTypeAppServiceTests
                 .Returns((int id, CancellationToken _) => Task.FromResult(EquipmentType is { IsDeleted: false } equipmentType && equipmentType.Id == id ? equipmentType : null));
             Repository.Setup(x => x.UpdateAsync(It.IsAny<EquipmentTypeEntity>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
             var domain = new EquipmentTypeDomainService(Repository.Object, new EquipmentTypeValidator(localization), Notify);
-            App = new EquipmentTypeAppService(Repository.Object, domain, EquipmentTypeTestSupport.Mapper(), Notify, localization,
+            App = new EquipmentTypeAppService(Repository.Object, domain, Notify, localization,
                 currentUser.Object,
                 Mock.Of<VianaHub.Global.Gerit.Application.Interfaces.Common.IFileValidationService>());
         }

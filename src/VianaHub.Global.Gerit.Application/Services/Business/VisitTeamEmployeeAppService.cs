@@ -1,4 +1,4 @@
-using AutoMapper;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using Microsoft.AspNetCore.Http;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.VisitTeamEmployee;
@@ -20,7 +20,6 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
     private readonly IVisitTeamEmployeeDomainService _domain;
     private readonly IEmployeeDataRepository _employeeRepository;
     private readonly IVisitTeamFunctionDataRepository _functionRepository;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -30,7 +29,6 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
         IVisitTeamEmployeeDomainService domain,
         IEmployeeDataRepository employeeRepository,
         IVisitTeamFunctionDataRepository functionRepository,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser)
@@ -39,7 +37,6 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
         _domain = domain;
         _employeeRepository = employeeRepository;
         _functionRepository = functionRepository;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -48,7 +45,7 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
     public async Task<IEnumerable<VisitTeamEmployeeResponse>> GetAllAsync(int visitTeamId, CancellationToken ct)
     {
         var entities = await _repo.GetByVisitTeamIdAsync(visitTeamId, ct);
-        return _mapper.Map<IEnumerable<VisitTeamEmployeeResponse>>(entities);
+        return VisitTeamEmployeeMapper.ToResponses(entities);
     }
 
     public async Task<VisitTeamEmployeeDetailResponse?> GetByIdAsync(int visitTeamId, int id, CancellationToken ct)
@@ -59,20 +56,20 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitTeamEmployee.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitTeamEmployeeDetailResponse>(entity);
+        return VisitTeamEmployeeMapper.ToDetail(entity);
     }
 
     public async Task<IEnumerable<VisitTeamEmployeeResponse>> GetActiveAsync(int visitTeamId, CancellationToken ct)
     {
         var entities = await _repo.GetActiveByVisitTeamIdAsync(visitTeamId, ct);
-        return _mapper.Map<IEnumerable<VisitTeamEmployeeResponse>>(entities);
+        return VisitTeamEmployeeMapper.ToResponses(entities);
     }
 
     public async Task<ListPageResponse<VisitTeamEmployeeResponse>> GetPagedAsync(int visitTeamId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<VisitTeamEmployeeResponse>>(paged);
+        return VisitTeamEmployeeMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int visitTeamId, CreateVisitTeamEmployeeRequest request, CancellationToken ct)

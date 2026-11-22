@@ -1,4 +1,4 @@
-using AutoMapper;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -25,7 +25,6 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
 {
     private readonly IVisitContactDataRepository _repo;
     private readonly IVisitContactDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -35,7 +34,6 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
     public VisitContactPersonAppService(
         IVisitContactDataRepository repo,
         IVisitContactDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -44,7 +42,6 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -55,7 +52,7 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
     public async Task<IEnumerable<VisitContactPersonResponse>> GetAllAsync(int visitId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(visitId, ct);
-        return _mapper.Map<IEnumerable<VisitContactPersonResponse>>(entities);
+        return VisitContactPersonMapper.ToResponses(entities);
     }
 
     public async Task<VisitContactPersonDetailResponse?> GetByIdAsync(int visitId, int id, CancellationToken ct)
@@ -66,14 +63,14 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
             _notify.Add(_localization.GetMessage("Application.Service.VisitContactPerson.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<VisitContactPersonDetailResponse>(entity);
+        return VisitContactPersonMapper.ToDetail(entity);
     }
 
     public async Task<ListPageResponse<VisitContactPersonResponse>> GetPagedAsync(int visitId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(visitId, filter, ct);
-        return _mapper.Map<ListPageResponse<VisitContactPersonResponse>>(paged);
+        return VisitContactPersonMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int visitId, CreateVisitContactPersonRequest request, CancellationToken ct)

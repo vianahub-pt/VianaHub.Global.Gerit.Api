@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +8,7 @@ using VianaHub.Global.Gerit.Domain.ReadModels;
 using VianaHub.Global.Gerit.Domain.Tools.Notifications;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.AddressType;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.AddressType;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Domain.Interfaces.Business;
@@ -22,7 +22,6 @@ public class AddressTypeAppService : IAddressTypeAppService
 {
     private readonly IAddressTypeDataRepository _repo;
     private readonly IAddressTypeDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -32,7 +31,6 @@ public class AddressTypeAppService : IAddressTypeAppService
     public AddressTypeAppService(
         IAddressTypeDataRepository repo,
         IAddressTypeDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -41,7 +39,6 @@ public class AddressTypeAppService : IAddressTypeAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -52,7 +49,7 @@ public class AddressTypeAppService : IAddressTypeAppService
     public async Task<IEnumerable<AddressTypeResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<AddressTypeResponse>>(entities);
+        return LocalizedCatalogMapper.ToAddressTypeResponses(entities);
     }
 
     public async Task<AddressTypeDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -63,14 +60,14 @@ public class AddressTypeAppService : IAddressTypeAppService
             _notify.Add(_localization.GetMessage("Application.Service.AddressType.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<AddressTypeDetailResponse>(entity);
+        return LocalizedCatalogMapper.ToAddressTypeDetail(entity);
     }
 
     public async Task<ListPageResponse<AddressTypeResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<AddressTypeResponse>>(paged);
+        return LocalizedCatalogMapper.ToAddressTypePaged(paged);
     }
 
     public async Task<int> CreateAsync(CreateAddressTypeRequest request, CancellationToken ct)

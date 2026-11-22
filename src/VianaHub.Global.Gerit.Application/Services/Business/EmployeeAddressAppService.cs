@@ -1,4 +1,3 @@
-using AutoMapper;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -6,6 +5,7 @@ using System.Globalization;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeAddress;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Business.EmployeeAddress;
+using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
@@ -21,7 +21,6 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
 {
     private readonly IEmployeeAddressDataRepository _repo;
     private readonly IEmployeeAddressDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -30,7 +29,6 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
     public EmployeeAddressAppService(
         IEmployeeAddressDataRepository repo,
         IEmployeeAddressDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser,
@@ -38,7 +36,6 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -48,7 +45,7 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
     public async Task<IEnumerable<EmployeeAddressResponse>> GetAllAsync(int employeeId, CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(employeeId, ct);
-        return _mapper.Map<IEnumerable<EmployeeAddressResponse>>(entities);
+        return EmployeeAddressMapper.ToResponses(entities, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<EmployeeAddressDetailResponse?> GetByIdAsync(int employeeId, int id, CancellationToken ct)
@@ -59,14 +56,14 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
             _notify.Add(_localization.GetMessage("Application.Service.EmployeeAddress.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<EmployeeAddressDetailResponse>(entity);
+        return EmployeeAddressMapper.ToDetail(entity, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<ListPageResponse<EmployeeAddressResponse>> GetPagedAsync(int employeeId, PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(employeeId, filter, ct);
-        return _mapper.Map<ListPageResponse<EmployeeAddressResponse>>(paged);
+        return EmployeeAddressMapper.ToPaged(paged, CultureInfo.CurrentCulture.Name);
     }
 
     public async Task<int> CreateAsync(int employeeId, CreateEmployeeAddressRequest request, CancellationToken ct)

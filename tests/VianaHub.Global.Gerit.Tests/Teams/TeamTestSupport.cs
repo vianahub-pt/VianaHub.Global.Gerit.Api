@@ -1,9 +1,6 @@
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using VianaHub.Global.Gerit.Application.Mappings.Business;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 
@@ -11,9 +8,6 @@ namespace VianaHub.Global.Gerit.Tests.Teams;
 
 internal static class TeamTestSupport
 {
-    internal static IMapper Mapper() => new MapperConfiguration(
-        config => config.AddProfile<TeamMappingProfile>(), NullLoggerFactory.Instance).CreateMapper();
-
     internal static Mock<ILocalizationService> Localization()
     {
         var mock = new Mock<ILocalizationService>();

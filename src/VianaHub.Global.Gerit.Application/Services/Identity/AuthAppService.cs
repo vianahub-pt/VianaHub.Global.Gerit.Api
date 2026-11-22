@@ -1,4 +1,3 @@
-using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,6 +11,7 @@ using VianaHub.Global.Gerit.Application.Dtos.Request.Identity.Auth;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.Tenant;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Identity.Auth;
 using VianaHub.Global.Gerit.Application.Interfaces.Identity;
+using VianaHub.Global.Gerit.Application.Mappings.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Identity;
 using VianaHub.Global.Gerit.Domain.Helpers;
@@ -27,7 +27,6 @@ namespace VianaHub.Global.Gerit.Application.Services.Identity;
 public class AuthAppService : IAuthAppService
 {
     private readonly INotify _notify;
-    private readonly IMapper _mapper;
     private readonly IRolePermissionDataRepository _rolePermissionRepo;
     private readonly IRefreshTokenDataRepository _refreshRepo;
     private readonly IUserDataRepository _userRepo;
@@ -47,7 +46,6 @@ public class AuthAppService : IAuthAppService
 
     public AuthAppService(
         INotify notify,
-        IMapper mapper,
         IRolePermissionDataRepository rolePermissionRepo,
         IRefreshTokenDataRepository refreshRepo,
         IUserDataRepository userRepo,
@@ -66,7 +64,6 @@ public class AuthAppService : IAuthAppService
         IRequestTenantContext requestTenantContext)
     {
         _notify = notify;
-        _mapper = mapper;
         _rolePermissionRepo = rolePermissionRepo;
         _refreshRepo = refreshRepo;
         _userRepo = userRepo;
@@ -335,7 +332,7 @@ public class AuthAppService : IAuthAppService
     public async Task<IEnumerable<TenantLoginResponse>> GetLoginAsync(CancellationToken ct)
     {
         var entities = await _tenantRepo.GetLoginAsync(ct);
-        return _mapper.Map<IEnumerable<TenantLoginResponse>>(entities);
+        return TenantMapper.ToLoginResponses(entities);
     }
 
     private async Task<(string? Token, DateTime ExpiresAt)> GenerateAccessTokenAsync(UserEntity user, bool isTrial, CancellationToken ct)

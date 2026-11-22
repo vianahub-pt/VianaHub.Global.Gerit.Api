@@ -1,9 +1,9 @@
-using AutoMapper;
 using VianaHub.Global.Gerit.Application.Dtos.Base;
 using VianaHub.Global.Gerit.Application.Dtos.Request.Billing.TenantContactPerson;
 using VianaHub.Global.Gerit.Application.Dtos.Response.Billing.TenantContactPerson;
 using VianaHub.Global.Gerit.Application.Interfaces.Billing;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
+using VianaHub.Global.Gerit.Application.Mappings.Billing;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
 using VianaHub.Global.Gerit.Domain.Interfaces.Billing;
@@ -16,7 +16,6 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
 {
     private readonly ITenantContactPersonDataRepository _repo;
     private readonly ITenantContactPersonDomainService _domain;
-    private readonly IMapper _mapper;
     private readonly INotify _notify;
     private readonly ILocalizationService _localization;
     private readonly ICurrentUserService _currentUser;
@@ -24,14 +23,12 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
     public TenantContactPersonAppService(
         ITenantContactPersonDataRepository repo,
         ITenantContactPersonDomainService domain,
-        IMapper mapper,
         INotify notify,
         ILocalizationService localization,
         ICurrentUserService currentUser)
     {
         _repo = repo;
         _domain = domain;
-        _mapper = mapper;
         _notify = notify;
         _localization = localization;
         _currentUser = currentUser;
@@ -40,13 +37,13 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
     public async Task<IEnumerable<TenantContactPersonResponse>> GetAllAsync(CancellationToken ct)
     {
         var entities = await _repo.GetAllAsync(ct);
-        return _mapper.Map<IEnumerable<TenantContactPersonResponse>>(entities);
+        return TenantContactPersonMapper.ToResponses(entities);
     }
 
     public async Task<IEnumerable<TenantContactPersonResponse>> GetActiveAsync(CancellationToken ct)
     {
         var entities = await _repo.GetActiveAsync(ct);
-        return _mapper.Map<IEnumerable<TenantContactPersonResponse>>(entities);
+        return TenantContactPersonMapper.ToResponses(entities);
     }
 
     public async Task<TenantContactPersonDetailResponse?> GetByIdAsync(int id, CancellationToken ct)
@@ -57,13 +54,13 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
             _notify.Add(_localization.GetMessage("Application.Service.TenantContactPerson.GetById.ResourceNotFound"), 410);
             return null;
         }
-        return _mapper.Map<TenantContactPersonDetailResponse>(entity);
+        return TenantContactPersonMapper.ToDetail(entity);
     }
 
     public async Task<IEnumerable<TenantContactPersonResponse>> GetByTenantIdAsync(int tenantId, CancellationToken ct)
     {
         var entities = await _repo.GetByTenantIdAsync(tenantId, ct);
-        return _mapper.Map<IEnumerable<TenantContactPersonResponse>>(entities);
+        return TenantContactPersonMapper.ToResponses(entities);
     }
 
     public async Task<TenantContactPersonResponse?> GetPrimaryByTenantIdAsync(int tenantId, CancellationToken ct)
@@ -74,14 +71,14 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
             _notify.Add(_localization.GetMessage("Application.Service.TenantContactPerson.GetPrimaryByTenantId.ResourceNotFound"), 404);
             return null;
         }
-        return _mapper.Map<TenantContactPersonResponse>(entity);
+        return TenantContactPersonMapper.ToResponse(entity);
     }
 
     public async Task<ListPageResponse<TenantContactPersonResponse>> GetPagedAsync(PagedFilterRequest request, CancellationToken ct)
     {
         var filter = new PagedFilter(request.Search, request.IsActive, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
         var paged = await _repo.GetPagedAsync(filter, ct);
-        return _mapper.Map<ListPageResponse<TenantContactPersonResponse>>(paged);
+        return TenantContactPersonMapper.ToPaged(paged);
     }
 
     public async Task<int> CreateAsync(int tenantId, CreateTenantContactPersonRequest request, CancellationToken ct)
