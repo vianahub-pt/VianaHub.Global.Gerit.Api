@@ -1,3 +1,4 @@
+using VianaHub.Global.Gerit.Domain.Vocabularies;
 using FluentValidation;
 using VianaHub.Global.Gerit.Domain.Entities.Business;
 using VianaHub.Global.Gerit.Domain.Interfaces.Base;
@@ -23,6 +24,12 @@ public class CreateClientValidator : AbstractValidator<ClientEntity>
             .GreaterThan(0)
             .WithMessage(localization.GetMessage("Domain.Client.AcquisitionSourceTypeIdRequired"));
 
+        RuleFor(x => x.Gender)
+            .Must(ClientGenderCatalog.IsCanonical)
+            .WithMessage(localization.GetMessage("Domain.Client.GenderControlledValue"));
+        RuleFor(x => x.Nationality)
+            .Must(ClientNationalityCatalog.IsCanonical)
+            .WithMessage(localization.GetMessage("Domain.Client.NationalityControlledValue"));
         RuleFor(x => x.PartyTypeId).GreaterThan((byte)0);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(500);
         RuleFor(x => x.StatusDefinitionId).GreaterThan(0);

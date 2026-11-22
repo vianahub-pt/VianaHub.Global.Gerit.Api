@@ -91,7 +91,8 @@ public class ClientAppServiceTests
             Email = "client@gerit.test",
             WebsiteUrl = null,
             BirthDate = DateTime.UtcNow.AddYears(-30),
-            Gender = "M",
+            // Alias legado continua legível, mas não é aceite em nova criação.
+            Gender = "male",
             Nationality = "PT",
             CompanyRegistrationNumber = null,
             EconomicActivityCode = null,
