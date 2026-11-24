@@ -12,4 +12,5 @@ public class UpdateSubscriptionRequest
     public DateTime CurrentPeriodEnd { get; set; }
     public DateTime? TrialStart { get; set; }
     public DateTime? TrialEnd { get; set; }
+    public bool? IsActive { get; set; }
 }

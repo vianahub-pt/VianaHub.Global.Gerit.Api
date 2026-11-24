@@ -22,18 +22,19 @@ public class ResourceEntity : Entity
     /// <summary>
     /// Construtor para cria��o de um novo recurso
     /// </summary>
-    public ResourceEntity(string? name, string? description, int createdBy)
+    public ResourceEntity(string? name, string? description, int createdBy, bool? isActive = null)
     {
         Name = name?.Trim() ?? string.Empty;
         Description = description?.Trim() ?? string.Empty;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
     }
 
-    public void Update(string? description, int modifiedBy)
+    public void Update(string? description, int modifiedBy, bool? isActive = null)
     {
         Description = description?.Trim() ?? string.Empty;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

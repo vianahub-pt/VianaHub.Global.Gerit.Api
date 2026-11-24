@@ -81,7 +81,8 @@ public class JobAppService : IJobAppService
             request.Queue,
             request.MaxRetries,
             request.JobConfiguration,
-            request.IsSystemJob
+            request.IsSystemJob,
+            request.IsActive
         );
 
         // Valida��o de dom�nio
@@ -120,7 +121,7 @@ public class JobAppService : IJobAppService
             request.Queue,
             request.MaxRetries,
             request.JobConfiguration,
-            request.IsActive,
+            request.IsActive ?? entity.IsActive,
             _currentUser.GetUserId()
         );
 
@@ -132,18 +133,23 @@ public class JobAppService : IJobAppService
             return false;
         }
 
-        // If job remains active and is recurring, re-register
-        if (entity.IsActive && !entity.ExecuteOnlyOnce)
-        {
-            await _scheduler.RegisterRecurringAsync(entity);
+        // Preserve the persisted scheduler identifier while deferring external scheduler changes
+        // until the repository confirms the update.
+        var shouldRegisterRecurring = entity.IsActive && !entity.ExecuteOnlyOnce;
+        var shouldRemoveRecurring = !entity.IsActive && !string.IsNullOrWhiteSpace(oldHangfireId);
+        if (shouldRegisterRecurring)
             entity.SetHangfireRegistration(entity.JobName);
-        }
-        else if (!entity.IsActive && !string.IsNullOrWhiteSpace(oldHangfireId))
-        {
-            await _scheduler.RemoveRecurringAsync(oldHangfireId);
-        }
 
-        return await _repo.UpdateAsync(entity, ct);
+        var persisted = await _repo.UpdateAsync(entity, ct);
+        if (!persisted)
+            return false;
+
+        if (shouldRegisterRecurring)
+            await _scheduler.RegisterRecurringAsync(entity);
+        else if (shouldRemoveRecurring)
+            await _scheduler.RemoveRecurringAsync(oldHangfireId!);
+
+        return true;
     }
 
     public async Task<bool> ActivateAsync(int id, CancellationToken ct)

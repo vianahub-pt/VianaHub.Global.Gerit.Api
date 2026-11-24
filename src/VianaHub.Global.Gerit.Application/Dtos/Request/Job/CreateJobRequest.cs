@@ -17,4 +17,5 @@ public class CreateJobRequest
     public int MaxRetries { get; set; } = 3;
     public string? JobConfiguration { get; set; }
     public bool IsSystemJob { get; set; } = false;
+    public bool? IsActive { get; set; }
 }

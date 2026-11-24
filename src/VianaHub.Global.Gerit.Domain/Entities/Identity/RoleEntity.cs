@@ -29,19 +29,20 @@ public class RoleEntity : Entity
     /// <summary>
     /// Construtor para cria��o de uma nova Role
     /// </summary>
-    public RoleEntity(int tenantId, string? name, string? description, int createdBy)
+    public RoleEntity(int tenantId, string? name, string? description, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         Name = name?.Trim() ?? string.Empty;
         Description = description?.Trim() ?? string.Empty;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
     }
 
-    public void Update(string? description, int modifiedBy)
+    public void Update(string? description, int modifiedBy, bool? isActive = null)
     {
         Description = description?.Trim() ?? string.Empty;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

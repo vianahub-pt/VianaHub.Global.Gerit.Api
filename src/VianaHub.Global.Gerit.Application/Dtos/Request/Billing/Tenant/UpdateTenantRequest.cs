@@ -9,4 +9,5 @@ public class UpdateTenantRequest
     public string? Website { get; set; }
     public string? UrlImage { get; set; }
     public string? Note { get; set; }
+    public bool? IsActive { get; set; }
 }

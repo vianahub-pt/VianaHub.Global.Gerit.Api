@@ -86,11 +86,34 @@ public class ClientContactPersonAppServiceTests
     [Fact]
     public async Task Create_SameEmailInDifferentClient_IsScopedToRequestedParent()
     {
+        ClientContactPersonsEntity? captured = null;
         _domain.Setup(x => x.CreateAsync(It.IsAny<ClientContactPersonsEntity>(), default))
-            .Callback<ClientContactPersonsEntity, CancellationToken>((entity, _) => typeof(ClientContactPersonsEntity).GetProperty("Id")!.SetValue(entity, 8))
+            .Callback<ClientContactPersonsEntity, CancellationToken>((entity, _) =>
+            {
+                captured = entity;
+                typeof(ClientContactPersonsEntity).GetProperty("Id")!.SetValue(entity, 8);
+            })
             .ReturnsAsync(true);
         Assert.Equal(8, await _service.CreateAsync(11, Request(), default));
+        Assert.True(captured!.IsActive);
         _repo.Verify(x => x.ExistsActiveByClientAndEmailAsync(11, "contact@example.test", null, default), Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_InactiveContactPersistsWithoutActiveUniquenessChecks()
+    {
+        ClientContactPersonsEntity? captured = null;
+        _domain.Setup(x => x.CreateAsync(It.IsAny<ClientContactPersonsEntity>(), default))
+            .Callback<ClientContactPersonsEntity, CancellationToken>((entity, _) => captured = entity)
+            .ReturnsAsync(true);
+
+        await _service.CreateAsync(10, new CreateClientContactRequest { Name = "Contact", Email = "contact@example.test", IsPrimary = true, IsActive = false }, default);
+
+        Assert.NotNull(captured);
+        Assert.False(captured!.IsActive);
+        Assert.False(captured.IsPrimary);
+        _repo.Verify(x => x.ExistsActiveByClientAndEmailAsync(10, It.IsAny<string?>(), null, default), Times.Never);
+        _repo.Verify(x => x.ExistsActivePrimaryAsync(10, null, default), Times.Never);
     }
 
     [Fact]
@@ -106,6 +129,7 @@ public class ClientContactPersonAppServiceTests
             CellPhoneNumber = "+351900000000",
             IsCellPhoneWhatsapp = true
         }, default));
+        Assert.True(entity.IsActive);
         _repo.Verify(x => x.ExistsActiveByClientAndEmailAsync(10, "contact@example.test", 42, default), Times.Once);
     }
 
@@ -117,6 +141,22 @@ public class ClientContactPersonAppServiceTests
         _repo.Setup(x => x.ExistsActiveByClientAndEmailAsync(10, "other@example.test", 42, default)).ReturnsAsync(true);
         Assert.False(await _service.UpdateAsync(10, 42, new UpdateClientContactPersonRequest { Name = "Other", Email = "other@example.test" }, default));
         _domain.Verify(x => x.UpdateAsync(It.IsAny<ClientContactPersonsEntity>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_InactivePersistsOnceWithoutCallingLifecycleOperations()
+    {
+        var entity = Entity(primary: true);
+        _repo.Setup(x => x.GetByIdAsync(10, 42, default)).ReturnsAsync(entity);
+        _domain.Setup(x => x.UpdateAsync(entity, default)).ReturnsAsync(true);
+
+        Assert.True(await _service.UpdateAsync(10, 42, new UpdateClientContactPersonRequest { Name = "Contact", Email = "contact@example.test", IsPrimary = true, IsActive = false }, default));
+
+        Assert.False(entity.IsActive);
+        Assert.False(entity.IsPrimary);
+        _domain.Verify(x => x.UpdateAsync(entity, default), Times.Once);
+        _domain.Verify(x => x.ActivateAsync(It.IsAny<ClientContactPersonsEntity>(), default), Times.Never);
+        _domain.Verify(x => x.DeactivateAsync(It.IsAny<ClientContactPersonsEntity>(), default), Times.Never);
     }
 
     [Fact]

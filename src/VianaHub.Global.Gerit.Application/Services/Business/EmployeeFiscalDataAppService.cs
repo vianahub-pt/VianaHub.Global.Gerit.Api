@@ -89,7 +89,7 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
             }
         }
 
-        var entity = new EmployeeFiscalDataEntity(tenantId, employeeId, request.TaxNumber, request.VatNumber, request.FiscalCountry, request.IsVatRegistered, request.IBAN, request.FiscalEmail, _currentUser.GetUserId());
+        var entity = new EmployeeFiscalDataEntity(tenantId, employeeId, request.TaxNumber, request.VatNumber, request.FiscalCountry, request.IsVatRegistered, request.IBAN, request.FiscalEmail, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -113,7 +113,7 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
             }
         }
 
-        entity.Update(request.TaxNumber, request.VatNumber, request.FiscalCountry, request.IsVatRegistered, request.IBAN, request.FiscalEmail, _currentUser.GetUserId());
+        entity.Update(request.TaxNumber, request.VatNumber, request.FiscalCountry, request.IsVatRegistered, request.IBAN, request.FiscalEmail, _currentUser.GetUserId(), request.IsActive);
 
         return await _domain.UpdateAsync(entity, ct);
     }
@@ -157,9 +157,9 @@ public class EmployeeFiscalDataAppService : IEmployeeFiscalDataAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int employeeId, IFormFile? file, CancellationToken ct)
+    public Task<bool> BulkUploadAsync(int employeeId, IFormFile? file, CancellationToken ct)
     {
         _notify.Add(_localization.GetMessage("Application.Service.EmployeeFiscalData.BulkUpload.NotImplemented"), 501);
-        return false;
+        return Task.FromResult(false);
     }
 }

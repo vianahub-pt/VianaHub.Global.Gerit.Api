@@ -94,7 +94,7 @@ public class PartyTypeAppService : IPartyTypeAppService
         }
         var entity = new PartyTypeEntity(
             code,
-            _currentUser.GetUserId());
+            _currentUser.GetUserId(), request.IsActive);
 
         foreach (var translation in request.Translations!)
         {
@@ -113,7 +113,7 @@ public class PartyTypeAppService : IPartyTypeAppService
             return false;
         }
 
-        entity.MarkModified(_currentUser.GetUserId());
+        entity.MarkModified(_currentUser.GetUserId(), request.IsActive);
 
         // Atualizar a tradução no idioma padrão (pt-PT)
         var translation = entity.Translations.FirstOrDefault(t => t.LanguageCode == "pt-PT");

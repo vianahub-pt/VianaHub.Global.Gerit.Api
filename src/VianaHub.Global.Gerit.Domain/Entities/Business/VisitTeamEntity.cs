@@ -20,24 +20,25 @@ public class VisitTeamEntity : Entity
 
     protected VisitTeamEntity() { }
 
-    public VisitTeamEntity(int tenantId, int visitId, int teamId, DateTime startDateTime, int createdBy)
+    public VisitTeamEntity(int tenantId, int visitId, int teamId, DateTime startDateTime, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         VisitId = visitId;
         TeamId = teamId;
         StartDateTime = startDateTime;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int visitId, int teamId, DateTime startDateTime, DateTime? endDateTime, int modifiedBy)
+    public void Update(int visitId, int teamId, DateTime startDateTime, DateTime? endDateTime, int modifiedBy, bool? isActive = null)
     {
         VisitId = visitId;
         TeamId = teamId;
         StartDateTime = startDateTime;
         EndDateTime = endDateTime;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

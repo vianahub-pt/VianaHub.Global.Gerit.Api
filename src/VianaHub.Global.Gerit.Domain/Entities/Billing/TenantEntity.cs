@@ -39,7 +39,7 @@ public class TenantEntity : Entity, IAggregateRoot
     /// <summary>
     /// Construtor para criação de um novo Tenant
     /// </summary>
-    public TenantEntity(byte partyTypeId, int acquisitionSourceTypeId, string? name, string? email, string? websiteUrl, string? imageUrl, string? note, int createdBy)
+    public TenantEntity(byte partyTypeId, int acquisitionSourceTypeId, string? name, string? email, string? websiteUrl, string? imageUrl, string? note, int createdBy, bool? isActive = null)
     {
         PartyTypeId = partyTypeId;
         AcquisitionSourceTypeId = acquisitionSourceTypeId;
@@ -48,13 +48,13 @@ public class TenantEntity : Entity, IAggregateRoot
         WebsiteUrl = websiteUrl;
         ImageUrl = imageUrl;
         Note = note;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(byte partyTypeId, int acquisitionSourceTypeId, string? name, string? email, string? websiteUrl, string? imageUrl, string? note, int modifiedBy)
+    public void Update(byte partyTypeId, int acquisitionSourceTypeId, string? name, string? email, string? websiteUrl, string? imageUrl, string? note, int modifiedBy, bool? isActive = null)
     {
         PartyTypeId = partyTypeId;
         AcquisitionSourceTypeId = acquisitionSourceTypeId;
@@ -63,6 +63,7 @@ public class TenantEntity : Entity, IAggregateRoot
         WebsiteUrl = websiteUrl;
         ImageUrl = imageUrl;
         Note = note;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

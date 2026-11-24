@@ -22,18 +22,19 @@ public class PartyTypeEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo PartyType
     /// </summary>
-    public PartyTypeEntity(string? code, int createdBy)
+    public PartyTypeEntity(string? code, int createdBy, bool? isActive = null)
     {
         Code = code;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
         Translations = new List<PartyTypeTranslationsEntity>();
     }
 
-    public void MarkModified(int modifiedBy)
+    public void MarkModified(int modifiedBy, bool? isActive = null)
     {
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

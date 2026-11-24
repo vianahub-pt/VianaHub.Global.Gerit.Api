@@ -4,4 +4,5 @@ public class UpdateVisitTeamRequest
 {
     public int VisitId { get; set; }
     public int TeamId { get; set; }
+    public bool? IsActive { get; set; }
 }

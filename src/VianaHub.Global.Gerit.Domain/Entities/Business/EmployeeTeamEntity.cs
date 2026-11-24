@@ -1,4 +1,4 @@
-﻿using VianaHub.Global.Gerit.Domain.Base;
+using VianaHub.Global.Gerit.Domain.Base;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 
 namespace VianaHub.Global.Gerit.Domain.Entities.Business;
@@ -21,26 +21,27 @@ public class EmployeeTeamEntity : Entity
 
     protected EmployeeTeamEntity() { }
 
-    public EmployeeTeamEntity(int tenantId, int teamId, int employeeId, bool isLeader, DateTime startDateTime, int createdBy)
+    public EmployeeTeamEntity(int tenantId, int teamId, int employeeId, bool isLeader, DateTime startDateTime, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         TeamId = teamId;
         EmployeeId = employeeId;
         IsLeader = isLeader;
         StartDateTime = startDateTime;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int teamId, int employeeId, bool isLeader, DateTime startDateTime, DateTime? endDateTime, int modifiedBy)
+    public void Update(int teamId, int employeeId, bool isLeader, DateTime startDateTime, DateTime? endDateTime, int modifiedBy, bool? isActive = null)
     {
         TeamId = teamId;
         EmployeeId = employeeId;
         IsLeader = isLeader;
         StartDateTime = startDateTime;
         EndDateTime = endDateTime;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

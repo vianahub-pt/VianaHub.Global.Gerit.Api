@@ -26,7 +26,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         // Construtor protegido para EF Core
         protected ClientContactPersonsEntity() { }
 
-        public ClientContactPersonsEntity(int tenantId, int clientId, string? name, string? phoneNumber, string? cellPhoneNumber, bool isWhatsapp, string? email, bool isPrimary, int createdBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
+        public ClientContactPersonsEntity(int tenantId, int clientId, string? name, string? phoneNumber, string? cellPhoneNumber, bool isWhatsapp, string? email, bool isPrimary, int createdBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false, bool? isActive = null)
         {
             TenantId = tenantId;
             ClientId = clientId;
@@ -35,24 +35,26 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             CellPhoneNumber = cellPhoneNumber;
             IsWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             Email = email;
-            IsPrimary = isPrimary;
             JobTitle = jobTitle;
             Department = department;
             IsCellPhoneWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
-            IsActive = true;
+            IsActive = isActive ?? true;
+            IsPrimary = IsActive && isPrimary;
             IsDeleted = false;
             CreatedBy = createdBy;
             CreatedAt = DateTime.UtcNow;
         }
 
-        public void Update(string? name, string? phoneNumber, string? cellPhoneNumber, bool isWhatsapp, string? email, bool isPrimary, int modifiedBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false)
+        public void Update(string? name, string? phoneNumber, string? cellPhoneNumber, bool isWhatsapp, string? email, bool isPrimary, int modifiedBy, string? jobTitle = null, string? department = null, bool isCellPhoneWhatsapp = false, bool? isActive = null)
         {
             Name = name;
             PhoneNumber = phoneNumber;
             CellPhoneNumber = cellPhoneNumber;
             IsWhatsapp = isWhatsapp || isCellPhoneWhatsapp;
             Email = email;
-            IsPrimary = isPrimary;
+            if (isActive.HasValue)
+                IsActive = isActive.Value;
+            IsPrimary = IsActive && isPrimary;
             JobTitle = jobTitle;
             Department = department;
             IsCellPhoneWhatsapp = isWhatsapp || isCellPhoneWhatsapp;

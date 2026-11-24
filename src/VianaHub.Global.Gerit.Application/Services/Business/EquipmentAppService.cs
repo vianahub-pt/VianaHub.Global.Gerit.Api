@@ -79,7 +79,7 @@ public class EquipmentAppService : IEquipmentAppService
             return 0;
         }
 
-        var entity = new EquipmentEntity(tenantId, request.EquipmentTypeId, request.StatusDefinitionId, request.StatusDomainId, request.Name, request.SerialNumber, request.UrlImage, _currentUser.GetUserId());
+        var entity = new EquipmentEntity(tenantId, request.EquipmentTypeId, request.StatusDefinitionId, request.StatusDomainId, request.Name, request.SerialNumber, request.UrlImage, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -93,7 +93,7 @@ public class EquipmentAppService : IEquipmentAppService
             return false;
         }
 
-        entity.Update(request.EquipmentTypeId, request.StatusDefinitionId, request.StatusDomainId, request.Name, request.SerialNumber, request.UrlImage, _currentUser.GetUserId());
+        entity.Update(request.EquipmentTypeId, request.StatusDefinitionId, request.StatusDomainId, request.Name, request.SerialNumber, request.UrlImage, _currentUser.GetUserId(), request.IsActive);
 
         return await _domain.UpdateAsync(entity, ct);
     }

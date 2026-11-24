@@ -7,4 +7,5 @@ public class CreateDocumentTypeRequest
 {
     [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
     public List<CreateDocumentTypeTranslationRequest>? Translations { get; set; }
+    public bool? IsActive { get; set; }
 }

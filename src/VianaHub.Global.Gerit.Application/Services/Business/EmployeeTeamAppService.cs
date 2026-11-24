@@ -76,7 +76,7 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
             return 0;
         }
 
-        var entity = new EmployeeTeamEntity(tenantId, request.TeamId, employeeId, false, DateTime.UtcNow, _currentUser.GetUserId());
+        var entity = new EmployeeTeamEntity(tenantId, request.TeamId, employeeId, false, DateTime.UtcNow, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -90,7 +90,7 @@ public class EmployeeTeamAppService : IEmployeeTeamsAppService
             return false;
         }
 
-        entity.Update(request.TeamId, employeeId, false, DateTime.UtcNow, null, _currentUser.GetUserId());
+        entity.Update(request.TeamId, employeeId, false, DateTime.UtcNow, null, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

@@ -93,7 +93,7 @@ public class AddressTypeAppService : IAddressTypeAppService
                 return 0;
             }
         }
-        var entity = new AddressTypeEntity(code, _currentUser.GetUserId());
+        var entity = new AddressTypeEntity(code, _currentUser.GetUserId(), request.IsActive);
         foreach (var translation in request.Translations!)
         {
             entity.Translations.Add(new AddressTypeTranslationsEntity(entity.Id, translation.LanguageCode, translation.Name, translation.Description));
@@ -131,7 +131,7 @@ public class AddressTypeAppService : IAddressTypeAppService
             entity.AddTranslation(new AddressTypeTranslationsEntity(entity.Id, "pt-PT", request.Name, request.Description));
         }
 
-        entity.MarkModified(_currentUser.GetUserId());
+        entity.MarkModified(_currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

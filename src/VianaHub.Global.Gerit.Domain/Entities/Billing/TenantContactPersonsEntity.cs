@@ -38,7 +38,8 @@ public class TenantContactPersonsEntity : Entity
         string? cellPhoneNumber,
         bool isCellPhoneWhatsapp,
         bool isPrimary,
-        int createdBy)
+        int createdBy,
+        bool? isActive = null)
     {
         TenantId = tenantId;
         Name = name;
@@ -49,7 +50,7 @@ public class TenantContactPersonsEntity : Entity
         CellPhoneNumber = cellPhoneNumber;
         IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
         IsPrimary = isPrimary;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
@@ -63,7 +64,8 @@ public class TenantContactPersonsEntity : Entity
         string? department,
         string? cellPhoneNumber,
         bool isCellPhoneWhatsapp,
-        int modifiedBy)
+        int modifiedBy,
+        bool? isActive = null)
     {
         Name = name;
         Email = email;
@@ -72,6 +74,7 @@ public class TenantContactPersonsEntity : Entity
         Department = department;
         CellPhoneNumber = cellPhoneNumber;
         IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

@@ -49,6 +49,25 @@ public class TeamAppServiceTests
         fixture.Repository.Verify(x => x.AddAsync(It.IsAny<TeamEntity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task Create_CanSetInactiveAndOmittedValueKeepsHistoricalActiveDefault()
+    {
+        var fixture = new Fixture();
+        TeamEntity? saved = null;
+        fixture.Repository.Setup(x => x.AddAsync(It.IsAny<TeamEntity>(), It.IsAny<CancellationToken>()))
+            .Callback<TeamEntity, CancellationToken>((entity, _) => saved = entity)
+            .ReturnsAsync(true);
+
+        await fixture.App.CreateAsync(new CreateTeamRequest { Name = "Inactive", Description = "Description", IsActive = false }, default);
+        Assert.NotNull(saved);
+        Assert.False(saved!.IsActive);
+
+        saved = null;
+        await fixture.App.CreateAsync(new CreateTeamRequest { Name = "Default", Description = "Description" }, default);
+        Assert.NotNull(saved);
+        Assert.True(saved!.IsActive);
+    }
+
     [Theory]
     [InlineData("Crew")]
     [InlineData("Renamed crew")]
@@ -73,6 +92,17 @@ public class TeamAppServiceTests
         Assert.Equal("Crew", fixture.Team!.Name);
         Assert.Equal("Description", fixture.Team.Description);
         fixture.Repository.Verify(x => x.UpdateAsync(It.IsAny<TeamEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_ChangesStateWhenSpecifiedAndPreservesItWhenOmitted()
+    {
+        var fixture = new Fixture();
+        Assert.True(await fixture.App.UpdateAsync(42, new UpdateTeamRequest { Name = "Crew", Description = "Description", IsActive = false }, default));
+        Assert.False(fixture.Team!.IsActive);
+
+        Assert.True(await fixture.App.UpdateAsync(42, new UpdateTeamRequest { Name = "Crew", Description = "Description" }, default));
+        Assert.False(fixture.Team.IsActive);
     }
 
     [Fact]

@@ -17,4 +17,5 @@ public class UpdateUserPreferencesRequest
     public bool EmailAlerts { get; set; }
     public bool EmailReminders { get; set; }
     public bool EmailPlanner { get; set; }
+    public bool? IsActive { get; set; }
 }

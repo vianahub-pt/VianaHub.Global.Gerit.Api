@@ -101,7 +101,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
 
         if (!TryParseDayTimes(request.DayStart, request.DayEnd, out var dayStart, out var dayEnd)) return 0;
 
-        var entity = new UserPreferencesEntity(tenantId, userId, request.Appearance, request.CurrencyCode, request.Locale, request.Timezone, request.DateFormat, request.TimeFormat, dayStart, dayEnd, _currentUser.GetUserId(), request.EmailNewsletter, request.EmailWeeklyReport, request.EmailApproval, request.EmailAlerts, request.EmailReminders, request.EmailPlanner);
+        var entity = new UserPreferencesEntity(tenantId, userId, request.Appearance, request.CurrencyCode, request.Locale, request.Timezone, request.DateFormat, request.TimeFormat, dayStart, dayEnd, _currentUser.GetUserId(), request.EmailNewsletter, request.EmailWeeklyReport, request.EmailApproval, request.EmailAlerts, request.EmailReminders, request.EmailPlanner, request.IsActive);
 
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
@@ -119,7 +119,7 @@ public class UserPreferencesAppService : IUserPreferencesAppService
 
         if (!TryParseDayTimes(request.DayStart, request.DayEnd, out var dayStart, out var dayEnd)) return false;
 
-        entity.Update(request.Appearance, request.Locale, request.CurrencyCode, request.Timezone, request.DateFormat, request.TimeFormat, dayStart, dayEnd, request.EmailNewsletter, request.EmailWeeklyReport, request.EmailApproval, request.EmailAlerts, request.EmailReminders, request.EmailPlanner, _currentUser.GetUserId());
+        entity.Update(request.Appearance, request.Locale, request.CurrencyCode, request.Timezone, request.DateFormat, request.TimeFormat, dayStart, dayEnd, request.EmailNewsletter, request.EmailWeeklyReport, request.EmailApproval, request.EmailAlerts, request.EmailReminders, request.EmailPlanner, _currentUser.GetUserId(), request.IsActive);
 
         return await _domain.UpdateAsync(entity, ct);
     }

@@ -31,8 +31,8 @@ public class VisitTeamEmployeeEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Funcionário na Equipe de Visita
     /// </summary>
-    public VisitTeamEmployeeEntity(int tenantId, int visitTeamId, int employeeId, int visitTeamFunctionId, 
-        bool isLeader, DateTime startDateTime, int createdBy)
+    public VisitTeamEmployeeEntity(int tenantId, int visitTeamId, int employeeId, int visitTeamFunctionId,
+        bool isLeader, DateTime startDateTime, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         VisitTeamId = visitTeamId;
@@ -40,18 +40,19 @@ public class VisitTeamEmployeeEntity : Entity
         VisitTeamFunctionId = visitTeamFunctionId;
         IsLeader = isLeader;
         StartDateTime = startDateTime;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int visitTeamFunctionId, bool isLeader, DateTime startDateTime, DateTime? endDateTime, int modifiedBy)
+    public void Update(int visitTeamFunctionId, bool isLeader, DateTime startDateTime, DateTime? endDateTime, int modifiedBy, bool? isActive = null)
     {
         VisitTeamFunctionId = visitTeamFunctionId;
         IsLeader = isLeader;
         StartDateTime = startDateTime;
         EndDateTime = endDateTime;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

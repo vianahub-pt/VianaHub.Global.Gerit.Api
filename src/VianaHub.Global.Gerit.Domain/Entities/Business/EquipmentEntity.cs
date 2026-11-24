@@ -29,7 +29,7 @@ public class EquipmentEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Equipamento
     /// </summary>
-    public EquipmentEntity(int tenantId, int equipmentTypeId, int statusDefinitionId, int statusDomainId, string? name, string? serialNumber, string? urlImage, int createdBy)
+    public EquipmentEntity(int tenantId, int equipmentTypeId, int statusDefinitionId, int statusDomainId, string? name, string? serialNumber, string? urlImage, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         EquipmentTypeId = equipmentTypeId;
@@ -38,13 +38,13 @@ public class EquipmentEntity : Entity
         Name = name;
         SerialNumber = serialNumber;
         UrlImage = urlImage;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int equipmentTypeId, int statusDefinitionId, int statusDomainId, string? name, string? serialNumber, string? urlImage, int modifiedBy)
+    public void Update(int equipmentTypeId, int statusDefinitionId, int statusDomainId, string? name, string? serialNumber, string? urlImage, int modifiedBy, bool? isActive = null)
     {
         EquipmentTypeId = equipmentTypeId;
         StatusDefinitionId = statusDefinitionId;
@@ -52,6 +52,8 @@ public class EquipmentEntity : Entity
         Name = name;
         SerialNumber = serialNumber;
         UrlImage = urlImage;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

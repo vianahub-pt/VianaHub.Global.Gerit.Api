@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeContact;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeContact;
 
 /// <summary>
 /// DTO para atualiza��o de EmployeeContact
@@ -13,4 +13,5 @@ public class UpdateEmployeeContactPersonRequest
     public string? CellPhoneNumber { get; set; }
     public bool IsCellPhoneWhatsapp { get; set; }
     public bool IsPrimary { get; set; }
+    public bool? IsActive { get; set; }
 }

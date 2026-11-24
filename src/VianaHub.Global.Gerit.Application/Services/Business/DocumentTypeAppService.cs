@@ -99,7 +99,7 @@ public class DocumentTypeAppService : IDocumentTypeAppService
 
         var entity = new DocumentTypeEntity(
             code,
-            _currentUser.GetUserId());
+            _currentUser.GetUserId(), request.IsActive);
 
         // Adicionar traduções se fornecidas
         if (request.Translations != null && request.Translations.Any())
@@ -128,7 +128,7 @@ public class DocumentTypeAppService : IDocumentTypeAppService
             return false;
         }
 
-        entity.MarkModified(_currentUser.GetUserId());
+        entity.MarkModified(_currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

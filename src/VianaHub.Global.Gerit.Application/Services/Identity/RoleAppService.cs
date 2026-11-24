@@ -81,7 +81,7 @@ public class RoleAppService : IRoleAppService
             return 0;
         }
 
-        var entity = new RoleEntity(tenantId, normalizedName, request.Description, _currentUser.GetUserId());
+        var entity = new RoleEntity(tenantId, normalizedName, request.Description, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -95,7 +95,7 @@ public class RoleAppService : IRoleAppService
             return false;
         }
 
-        entity.Update(request.Description, _currentUser.GetUserId());
+        entity.Update(request.Description, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

@@ -8,4 +8,5 @@ public record CreateVisitAttachmentRequest
     public long FileSizeBytes { get; init; }
     public int DisplayOrder { get; init; }
     public bool IsPrimary { get; init; }
+    public bool? IsActive { get; init; }
 }

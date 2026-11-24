@@ -20,21 +20,23 @@ public class VisitTeamFunctionsEntity : Entity
     /// <summary>
     /// Construtor para criação de uma nova Função de Equipe de Visita
     /// </summary>
-    public VisitTeamFunctionsEntity(int tenantId, string? name, string? description, int createdBy)
+    public VisitTeamFunctionsEntity(int tenantId, string? name, string? description, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         Name = name;
         Description = description;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string? name, string? description, int modifiedBy)
+    public void Update(string? name, string? description, int modifiedBy, bool? isActive = null)
     {
         Name = name;
         Description = description;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

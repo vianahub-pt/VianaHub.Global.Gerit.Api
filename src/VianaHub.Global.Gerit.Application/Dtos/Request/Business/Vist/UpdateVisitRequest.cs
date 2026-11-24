@@ -12,4 +12,5 @@ public class UpdateVisitRequest
     public DateTime? EndDateTime { get; set; }
     public decimal EstimatedValue { get; set; }
     public decimal? RealValue { get; set; }
+    public bool? IsActive { get; set; }
 }

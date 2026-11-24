@@ -18,21 +18,22 @@ public class VisitTeamEquipmentEntity : Entity
 
     protected VisitTeamEquipmentEntity() { }
 
-    public VisitTeamEquipmentEntity(int tenantId, int interventionTeamId, int equipmentId, int createdBy)
+    public VisitTeamEquipmentEntity(int tenantId, int interventionTeamId, int equipmentId, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         VisitTeamId = interventionTeamId;
         EquipmentId = equipmentId;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int interventionTeamId, int equipmentId, int modifiedBy)
+    public void Update(int interventionTeamId, int equipmentId, int modifiedBy, bool? isActive = null)
     {
         VisitTeamId = interventionTeamId;
         EquipmentId = equipmentId;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

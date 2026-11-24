@@ -8,7 +8,7 @@ public class CreateUserPreferencesRequest
     public string? Timezone { get; set; }
     public string? DateFormat { get; set; }
     public string? TimeFormat { get; set; }
-    public string? DayStart { get; set; } 
+    public string? DayStart { get; set; }
     public string? DayEnd { get; set; }
 
     public bool EmailNewsletter { get; set; }
@@ -17,4 +17,5 @@ public class CreateUserPreferencesRequest
     public bool EmailAlerts { get; set; }
     public bool EmailReminders { get; set; }
     public bool EmailPlanner { get; set; }
+    public bool? IsActive { get; set; }
 }

@@ -1,7 +1,7 @@
 namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.VisitAddress;
 
 /// <summary>
-/// DTO para atualização de VisitAddress
+/// DTO para atualizaÃ§Ã£o de VisitAddress
 /// </summary>
 public class UpdateVisitAddressRequest
 {
@@ -17,4 +17,5 @@ public class UpdateVisitAddressRequest
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
     public string? Note { get; set; }
+    public bool? IsActive { get; set; }
 }

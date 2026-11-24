@@ -102,7 +102,8 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
             request.CellPhoneNumber,
             request.IsCellPhoneWhatsapp,
             request.IsPrimary,
-            _currentUser.GetUserId()
+            _currentUser.GetUserId(),
+            request.IsActive
         );
 
         var success = await _domain.CreateAsync(entity, ct);
@@ -133,7 +134,8 @@ public class TenantContactPersonAppService : ITenantContactPersonAppService
             request.Department,
             request.CellPhoneNumber,
             request.IsCellPhoneWhatsapp,
-            _currentUser.GetUserId()
+            _currentUser.GetUserId(),
+            request.IsActive
         );
 
         return await _domain.UpdateAsync(entity, ct);
