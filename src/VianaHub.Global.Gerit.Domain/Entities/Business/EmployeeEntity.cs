@@ -42,7 +42,7 @@ public class EmployeeEntity : Entity, IAggregateRoot
     /// </summary>
     public EmployeeEntity(int tenantId, int statusDefinitionId, int statusDomainId, string? name,
         string? phoneNumber, string? cellPhoneNumber, bool isCellPhoneWhatsapp,
-        string? email, string? imageUrl, int createdBy)
+        string? email, string? imageUrl, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         StatusDefinitionId = statusDefinitionId;
@@ -53,7 +53,7 @@ public class EmployeeEntity : Entity, IAggregateRoot
         IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
         Email = email;
         ImageUrl = imageUrl;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
@@ -61,7 +61,7 @@ public class EmployeeEntity : Entity, IAggregateRoot
 
     public void Update(int statusDefinitionId, int statusDomainId, string? name,
         string? phoneNumber, string? cellPhoneNumber, bool isCellPhoneWhatsapp,
-        string? email, string? imageUrl, int modifiedBy)
+        string? email, string? imageUrl, int modifiedBy, bool? isActive = null)
     {
         StatusDefinitionId = statusDefinitionId;
         StatusDomainId = statusDomainId;
@@ -71,6 +71,7 @@ public class EmployeeEntity : Entity, IAggregateRoot
         IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
         Email = email;
         ImageUrl = imageUrl;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

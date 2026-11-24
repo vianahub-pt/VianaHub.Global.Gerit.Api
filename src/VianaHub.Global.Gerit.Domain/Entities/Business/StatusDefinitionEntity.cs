@@ -28,25 +28,26 @@ public class StatusDefinitionEntity : Entity
     /// <summary>
     /// Construtor para criação de uma nova Definição de Status
     /// </summary>
-    public StatusDefinitionEntity(int tenantId, int statusDomainId, string? code, int displayOrder, bool isSystem, int createdBy)
+    public StatusDefinitionEntity(int tenantId, int statusDomainId, string? code, int displayOrder, bool isSystem, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         StatusDomainId = statusDomainId;
         Code = code;
         DisplayOrder = displayOrder;
         IsSystem = isSystem;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
         Translations = new List<StatusDefinitionTranslationsEntity>();
     }
 
-    public void Update(int displayOrder, bool isSystem, int modifiedBy)
+    public void Update(int displayOrder, bool isSystem, int modifiedBy, bool? isActive = null)
     {
 
         DisplayOrder = displayOrder;
         IsSystem = isSystem;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

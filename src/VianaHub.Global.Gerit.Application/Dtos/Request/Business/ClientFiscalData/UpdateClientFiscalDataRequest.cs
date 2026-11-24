@@ -8,4 +8,5 @@ public class UpdateClientFiscalDataRequest
     public bool IsVatRegistered { get; set; }
     public string? IBAN { get; set; }
     public string? FiscalEmail { get; set; }
+    public bool? IsActive { get; set; }
 }

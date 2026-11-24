@@ -76,8 +76,8 @@ public class VisitTeamEquipmentAppService : IVisitTeamEquipmentsAppService
             return 0;
         }
 
-        var entity = new VisitTeamEquipmentEntity(tenantId, visitTeamId, request.EquipmentId, _currentUser.GetUserId());
-        entity.Update(visitTeamId, request.EquipmentId, _currentUser.GetUserId());
+        var entity = new VisitTeamEquipmentEntity(tenantId, visitTeamId, request.EquipmentId, _currentUser.GetUserId(), request.IsActive);
+        entity.Update(visitTeamId, request.EquipmentId, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }

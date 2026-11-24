@@ -55,22 +55,33 @@ public sealed class ActionHttpIntegrationTests
         var id = (await created.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
         Assert.True(id > 0);
         Assert.Single(await host.ReadAllAsync());
+        Assert.True((await client.GetFromJsonAsync<ActionDetailResponse>($"/v1/actions/{id}"))!.IsActive);
+        using var inactiveCreate = await client.PostAsJsonAsync("/v1/actions/", new { name = "Inactive Action", description = "Inactive", isActive = false });
+        Assert.Equal(HttpStatusCode.Created, inactiveCreate.StatusCode);
+        var inactiveId = (await inactiveCreate.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
+        Assert.False((await client.GetFromJsonAsync<ActionDetailResponse>($"/v1/actions/{inactiveId}"))!.IsActive);
         var detail = await client.GetFromJsonAsync<ActionDetailResponse>($"/v1/actions/{id}");
         Assert.Equal("Manage Users", detail!.Name);
         Assert.Equal(255, detail.Description!.Length);
 
         using var page = await client.GetAsync("/v1/actions/paged?PageNumber=1&PageSize=10&SortBy=Name&SortDirection=asc");
         Assert.Equal(HttpStatusCode.OK, page.StatusCode);
-        Assert.Equal(id, Assert.Single((await page.Content.ReadFromJsonAsync<ListPageResponse<ActionResponse>>())!.Items).Id);
+        Assert.Contains((await page.Content.ReadFromJsonAsync<ListPageResponse<ActionResponse>>())!.Items, item => item.Id == id);
 
         Assert.Equal(HttpStatusCode.BadRequest, (await client.PutAsJsonAsync($"/v1/actions/{id}", new { description = new string('x', 256) })).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await client.PutAsJsonAsync($"/v1/actions/{id}", new { description = "Edited" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PutAsJsonAsync($"/v1/actions/{id}", new { description = "Edited", isActive = false })).StatusCode);
+        Assert.False((await client.GetFromJsonAsync<ActionDetailResponse>($"/v1/actions/{id}"))!.IsActive);
+        Assert.Equal(HttpStatusCode.OK, (await client.PutAsJsonAsync($"/v1/actions/{id}", new { description = "Edited again" })).StatusCode);
+        Assert.False((await client.GetFromJsonAsync<ActionDetailResponse>($"/v1/actions/{id}"))!.IsActive);
+        Assert.Equal(HttpStatusCode.OK, (await client.PutAsJsonAsync($"/v1/actions/{id}", new { description = "Edited active", isActive = true })).StatusCode);
+        Assert.True((await client.GetFromJsonAsync<ActionDetailResponse>($"/v1/actions/{id}"))!.IsActive);
         Assert.Equal(HttpStatusCode.OK, (await client.PatchAsync($"/v1/actions/{id}/deactivate", null)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.PatchAsync($"/v1/actions/{id}/deactivate", null)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.PatchAsync($"/v1/actions/{id}/activate", null)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.PatchAsync($"/v1/actions/{id}/activate", null)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync($"/v1/actions/{id}")).StatusCode);
         Assert.Equal(HttpStatusCode.Gone, (await client.GetAsync($"/v1/actions/{id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync($"/v1/actions/{inactiveId}")).StatusCode);
         Assert.Empty((await client.GetFromJsonAsync<ActionResponse[]>("/v1/actions/"))!);
         Assert.Equal(HttpStatusCode.Gone, (await client.PutAsJsonAsync($"/v1/actions/{id}", new { description = "Nope" })).StatusCode);
         Assert.Equal(HttpStatusCode.Gone, (await client.PatchAsync($"/v1/actions/{id}/activate", null)).StatusCode);

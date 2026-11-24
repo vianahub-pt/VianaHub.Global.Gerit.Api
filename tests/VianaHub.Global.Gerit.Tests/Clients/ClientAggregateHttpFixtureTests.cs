@@ -108,6 +108,175 @@ public sealed class ClientAggregateHttpFixtureTests
     }
 
     [Fact]
+    public async Task ClientPostAndPutHonorExplicitAndOmittedIsActiveWithoutLifecycleGrants()
+    {
+        await using var fixture = await ClientAggregateHttpFixture.StartAsync();
+        using var client = fixture.CreateAuthorizedClient(clientPermissions: ["GetBy", "Create", "Update"]);
+
+        async Task<int> CreateAsync(string name, bool? isActive, bool includeIsActive)
+        {
+            var payload = new Dictionary<string, object?>
+            {
+                ["partyTypeId"] = fixture.PartyTypeId,
+                ["acquisitionSourceTypeId"] = fixture.AcquisitionSourceTypeId,
+                ["statusDomainId"] = fixture.StatusDomainId,
+                ["statusDefinitionId"] = fixture.StatusDefinitionId,
+                ["name"] = name
+            };
+            if (includeIsActive) payload["isActive"] = isActive;
+            using var response = await client.PostAsJsonAsync("/v1/clients", payload);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.True(response.StatusCode == HttpStatusCode.Created, $"HTTP {(int)response.StatusCode}: {body}");
+            return JsonSerializer.Deserialize<JsonElement>(body).GetProperty("id").GetInt32();
+        }
+
+        async Task<ClientDetailResponse> GetAsync(int id) =>
+            await client.GetFromJsonAsync<ClientDetailResponse>($"/v1/clients/{id}") ?? throw new InvalidOperationException("Client detail response was empty.");
+
+        var activeId = await CreateAsync("active-create", true, true);
+        Assert.True((await GetAsync(activeId)).IsActive);
+        var inactiveId = await CreateAsync("inactive-create", false, true);
+        Assert.False((await GetAsync(inactiveId)).IsActive);
+        var defaultId = await CreateAsync("default-create", null, false);
+        Assert.True((await GetAsync(defaultId)).IsActive);
+
+        async Task PutAsync(int id, string name, bool? isActive, bool includeIsActive)
+        {
+            var current = await GetAsync(id);
+            var payload = new Dictionary<string, object?>
+            {
+                ["partyTypeId"] = current.PartyTypeId,
+                ["acquisitionSourceTypeId"] = current.AcquisitionSourceTypeId,
+                ["urlImage"] = current.UrlImage,
+                ["note"] = current.Note,
+                ["name"] = name,
+                ["phoneNumber"] = current.PhoneNumber,
+                ["cellPhoneNumber"] = current.CellPhoneNumber,
+                ["isCellPhoneWhatsapp"] = current.IsCellPhoneWhatsapp,
+                ["email"] = current.Email,
+                ["websiteUrl"] = current.WebsiteUrl,
+                ["birthDate"] = current.BirthDate,
+                ["gender"] = current.Gender,
+                ["nationality"] = current.Nationality,
+                ["companyRegistrationNumber"] = current.CompanyRegistrationNumber,
+                ["economicActivityCode"] = current.EconomicActivityCode,
+                ["numberOfEmployees"] = current.NumberOfEmployees,
+                ["statusDefinitionId"] = current.StatusDefinitionId,
+                ["statusDomainId"] = current.StatusDomainId
+            };
+            if (includeIsActive) payload["isActive"] = isActive;
+            using var response = await client.PutAsJsonAsync($"/v1/clients/{id}", payload);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var updated = await GetAsync(id);
+            Assert.Equal(name, updated.Name);
+        }
+
+        await PutAsync(activeId, "active-to-inactive", false, true);
+        Assert.False((await GetAsync(activeId)).IsActive);
+        await PutAsync(activeId, "omission-keeps-inactive", null, false);
+        Assert.False((await GetAsync(activeId)).IsActive);
+        await PutAsync(activeId, "inactive-to-active", true, true);
+        Assert.True((await GetAsync(activeId)).IsActive);
+    }
+
+    [Fact]
+    public async Task ClientChildCrudResourcesPersistIsActiveWithCreateAndUpdateGrantsOnly()
+    {
+        await using var fixture = await ClientAggregateHttpFixture.StartAsync();
+        using var client = fixture.CreateAuthorizedClient(
+            contactPermissions: ["GetBy", "Create", "Update"],
+            addressPermissions: ["GetBy", "Create", "Update"],
+            documentPermissions: ["GetBy", "Create", "Update"]);
+
+        async Task AssertStatusContractAsync(
+            string childPath,
+            Func<int, Dictionary<string, object?>> payloadFor,
+            Func<int, Task<int>> createParent)
+        {
+            var parentId = await createParent(0);
+            async Task<int> CreateAsync(int suffix, bool? isActive, bool includeStatus)
+            {
+                var payload = payloadFor(suffix);
+                if (includeStatus) payload["isActive"] = isActive;
+                using var response = await client.PostAsJsonAsync($"/v1/clients/{parentId}/{childPath}", payload);
+                var body = await response.Content.ReadAsStringAsync();
+                Assert.True(response.StatusCode == HttpStatusCode.Created, $"{childPath}: HTTP {(int)response.StatusCode}: {body}");
+                return JsonSerializer.Deserialize<JsonElement>(body).GetProperty("id").GetInt32();
+            }
+
+            async Task<bool> ReadActiveAsync(int id)
+            {
+                using var response = await client.GetAsync($"/v1/clients/{parentId}/{childPath}/{id}");
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                return body.RootElement.GetProperty("isActive").GetBoolean();
+            }
+
+            async Task PutAsync(int id, int suffix, bool? isActive, bool includeStatus)
+            {
+                var payload = payloadFor(suffix);
+                if (includeStatus) payload["isActive"] = isActive;
+                using var response = await client.PutAsJsonAsync($"/v1/clients/{parentId}/{childPath}/{id}", payload);
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            }
+
+            var activeId = await CreateAsync(1, true, true);
+            Assert.True(await ReadActiveAsync(activeId));
+            var inactiveId = await CreateAsync(2, false, true);
+            Assert.False(await ReadActiveAsync(inactiveId));
+            var defaultId = await CreateAsync(3, null, false);
+            Assert.True(await ReadActiveAsync(defaultId));
+
+            await PutAsync(activeId, 4, false, true);
+            Assert.False(await ReadActiveAsync(activeId));
+            await PutAsync(activeId, 5, null, false);
+            Assert.False(await ReadActiveAsync(activeId));
+            await PutAsync(activeId, 6, true, true);
+            Assert.True(await ReadActiveAsync(activeId));
+            await PutAsync(inactiveId, 7, true, true);
+            Assert.True(await ReadActiveAsync(inactiveId));
+            await PutAsync(inactiveId, 8, false, true);
+            Assert.False(await ReadActiveAsync(inactiveId));
+        }
+
+        await AssertStatusContractAsync("contacts", suffix => new Dictionary<string, object?>
+        {
+            ["name"] = $"Contact {suffix}",
+            ["email"] = $"contact-{Guid.NewGuid():N}@example.test",
+            ["phoneNumber"] = "351210000000",
+            ["jobTitle"] = "Manager",
+            ["department"] = "Operations",
+            ["isPrimary"] = false,
+            ["isCellPhoneWhatsapp"] = false
+        }, _ => fixture.CreateClientAsync(client));
+
+        await AssertStatusContractAsync("addresses", suffix => new Dictionary<string, object?>
+        {
+            ["addressTypeId"] = fixture.AddressTypeId,
+            ["countryCode"] = "PT",
+            ["street"] = $"Street {suffix} {Guid.NewGuid():N}",
+            ["streetNumber"] = "10",
+            ["complement"] = "A",
+            ["neighborhood"] = "Centro",
+            ["city"] = "Lisboa",
+            ["district"] = "Lisboa",
+            ["postalCode"] = "1000-001",
+            ["note"] = "fixture",
+            ["isPrimary"] = false
+        }, _ => fixture.CreateClientAsync(client));
+
+        await AssertStatusContractAsync("documents", suffix => new Dictionary<string, object?>
+        {
+            ["documentTypeId"] = fixture.DocumentTypeId,
+            ["documentNumber"] = $"DOC-{suffix}-{Guid.NewGuid():N}",
+            ["issuingCountryCode"] = "PT",
+            ["issuedAt"] = "2020-01-01",
+            ["expiresAt"] = "2030-01-01",
+            ["isPrimary"] = false
+        }, _ => fixture.CreateClientAsync(client));
+    }
+
+    [Fact]
     public async Task ClientContactPersonUsesRealHttpLifecycleAndHonorsParentStates()
     {
         await using var fixture = await ClientAggregateHttpFixture.StartAsync();
@@ -241,6 +410,67 @@ public sealed class ClientAggregateHttpFixtureTests
         Assert.NotEqual(await ptError.Content.ReadAsStringAsync(), await enError.Content.ReadAsStringAsync());
     }
 
+    [Fact]
+    public async Task ClientFiscalDataPostAndPutHonorExplicitAndOmittedIsActive()
+    {
+        await using var fixture = await ClientAggregateHttpFixture.StartAsync();
+        using var client = fixture.CreateAuthorizedClient();
+
+        async Task<(int ClientId, int FiscalId)> CreateAsync(string taxNumber, bool? isActive, bool includeIsActive)
+        {
+            var clientId = await fixture.CreateClientAsync(client);
+            var payload = new Dictionary<string, object?>
+            {
+                ["taxNumber"] = taxNumber,
+                ["vatNumber"] = "PTVAT12345",
+                ["fiscalCountry"] = "PT",
+                ["isVatRegistered"] = true,
+                ["iban"] = "PT50000000000000000000000",
+                ["fiscalEmail"] = "fiscal@example.test"
+            };
+            if (includeIsActive) payload["isActive"] = isActive;
+            using var response = await client.PostAsJsonAsync($"/v1/clients/{clientId}/fiscal-data", payload);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.True(response.StatusCode == HttpStatusCode.Created, $"HTTP {(int)response.StatusCode}: {body}");
+            return (clientId, JsonSerializer.Deserialize<JsonElement>(body).GetProperty("id").GetInt32());
+        }
+
+        async Task<ClientFiscalDataDetailResponse> GetAsync(int clientId, int fiscalId) =>
+            await client.GetFromJsonAsync<ClientFiscalDataDetailResponse>($"/v1/clients/{clientId}/fiscal-data/{fiscalId}") ?? throw new InvalidOperationException("Fiscal detail response was empty.");
+
+        var (activeClientId, activeFiscalId) = await CreateAsync("ISACTIVE-TRUE", true, true);
+        Assert.True((await GetAsync(activeClientId, activeFiscalId)).IsActive);
+
+        var (inactiveClientId, inactiveFiscalId) = await CreateAsync("ISACTIVE-FALSE", false, true);
+        Assert.False((await GetAsync(inactiveClientId, inactiveFiscalId)).IsActive);
+
+        var (defaultClientId, defaultFiscalId) = await CreateAsync("ISACTIVE-OMITTED", null, false);
+        Assert.True((await GetAsync(defaultClientId, defaultFiscalId)).IsActive);
+
+        var update = new Dictionary<string, object?>
+        {
+            ["taxNumber"] = "ISACT-OMIT-UPD",
+            ["vatNumber"] = "PTVAT12345",
+            ["fiscalCountry"] = "PT",
+            ["isVatRegistered"] = true,
+            ["iban"] = "PT50000000000000000000000",
+            ["fiscalEmail"] = "fiscal@example.test",
+            ["isActive"] = false
+        };
+        using (var response = await client.PutAsJsonAsync($"/v1/clients/{defaultClientId}/fiscal-data/{defaultFiscalId}", update))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False((await GetAsync(defaultClientId, defaultFiscalId)).IsActive);
+
+        update.Remove("isActive");
+        using (var response = await client.PutAsJsonAsync($"/v1/clients/{defaultClientId}/fiscal-data/{defaultFiscalId}", update))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False((await GetAsync(defaultClientId, defaultFiscalId)).IsActive);
+
+        update["isActive"] = true;
+        using (var response = await client.PutAsJsonAsync($"/v1/clients/{defaultClientId}/fiscal-data/{defaultFiscalId}", update))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True((await GetAsync(defaultClientId, defaultFiscalId)).IsActive);
+    }
     [Fact]
     public async Task ClientFiscalDataUsesRealHttpLifecycleAndHonorsParentStates()
     {
@@ -482,7 +712,7 @@ public sealed class ClientAggregateHttpFixture(WebApplication app, SymmetricSecu
         return new ClientAggregateHttpFixture(app, key);
     }
 
-    public HttpClient CreateAuthorizedClient(string[]? contactPermissions = null, string[]? addressPermissions = null, string[]? fiscalPermissions = null, string[]? documentPermissions = null, string culture = "pt-PT")
+    public HttpClient CreateAuthorizedClient(string[]? contactPermissions = null, string[]? addressPermissions = null, string[]? fiscalPermissions = null, string[]? documentPermissions = null, string culture = "pt-PT", string[]? clientPermissions = null)
     {
         var client = new HttpClient { BaseAddress = _address };
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(culture);
@@ -491,7 +721,7 @@ public sealed class ClientAggregateHttpFixture(WebApplication app, SymmetricSecu
             new Claim(ClaimTypes.NameIdentifier, "1"), new Claim(ClaimTypes.Role, "BackOffice"), new Claim("tenant_id", "1"), new Claim("tenantId", "1"), new Claim("TenantId", "1"),
             new Claim("permissions", JsonSerializer.Serialize(new Dictionary<string, string[]>
             {
-                ["Clients"] = ["GetAll", "GetBy", "GetPaged", "Create", "Update", "Activate", "Deactivate", "Delete"],
+                ["Clients"] = clientPermissions ?? ["GetAll", "GetBy", "GetPaged", "Create", "Update", "Activate", "Deactivate", "Delete"],
                 ["ClientContactPersons"] = contactPermissions ?? ["GetAll", "GetBy", "GetPaged", "Create", "Update", "Activate", "Deactivate", "Delete", "BulkUpload"],
                 ["ClientAddresses"] = addressPermissions ?? ["GetAll", "GetBy", "GetPaged", "Create", "Update", "Activate", "Deactivate", "Delete", "BulkUpload"],
                 ["ClientFiscalData"] = fiscalPermissions ?? ["GetAll", "GetBy", "GetPaged", "Create", "Update", "Activate", "Deactivate", "Delete", "BulkUpload"]

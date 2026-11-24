@@ -47,7 +47,8 @@ public class JobDefinitionsEntity : Entity, IAggregateRoot
         string? queue = "default",
         int maxRetries = 3,
         string? jobConfiguration = null,
-        bool isSystemJob = false)
+        bool isSystemJob = false,
+        bool? isActive = null)
         : base()
     {
         JobCategory = jobCategory;
@@ -66,7 +67,7 @@ public class JobDefinitionsEntity : Entity, IAggregateRoot
         JobConfiguration = jobConfiguration;
         IsSystemJob = isSystemJob;
 
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
 
         CreatedBy = createdBy;
@@ -83,7 +84,7 @@ public class JobDefinitionsEntity : Entity, IAggregateRoot
         string? queue,
         int maxRetries,
         string? jobConfiguration,
-        bool isActive,
+        bool? isActive,
         int? modifiedBy)
     {
         Description = description;
@@ -95,7 +96,7 @@ public class JobDefinitionsEntity : Entity, IAggregateRoot
         Queue = queue;
         MaxRetries = maxRetries;
         JobConfiguration = jobConfiguration;
-        IsActive = isActive;
+        if (isActive.HasValue) IsActive = isActive.Value;
 
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;

@@ -54,6 +54,11 @@ public sealed class ResourceHttpIntegrationTests
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         var id = (await created.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
         Assert.True(id > 0);
+        Assert.True((await client.GetFromJsonAsync<ResourceDetailResponse>($"/v1/resources/{id}"))!.IsActive);
+        using var inactiveCreate = await client.PostAsJsonAsync("/v1/resources/", new { name = "Inactive Resource", description = "Inactive", isActive = false });
+        Assert.Equal(HttpStatusCode.Created, inactiveCreate.StatusCode);
+        var inactiveId = (await inactiveCreate.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
+        Assert.False((await client.GetFromJsonAsync<ResourceDetailResponse>($"/v1/resources/{inactiveId}"))!.IsActive);
 
         var detail = await client.GetFromJsonAsync<ResourceDetailResponse>($"/v1/resources/{id}");
         Assert.Equal("Smoke Resource", detail!.Name);
@@ -71,12 +76,58 @@ public sealed class ResourceHttpIntegrationTests
         Assert.Equal(HttpStatusCode.OK, (await client.PatchAsync($"/v1/resources/{id}/activate", null)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync($"/v1/resources/{id}")).StatusCode);
         Assert.Equal(HttpStatusCode.Gone, (await client.GetAsync($"/v1/resources/{id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync($"/v1/resources/{inactiveId}")).StatusCode);
         Assert.Equal(HttpStatusCode.Gone, (await client.PatchAsync($"/v1/resources/{id}/activate", null)).StatusCode);
         Assert.Equal(HttpStatusCode.Gone, (await client.PatchAsync($"/v1/resources/{id}/deactivate", null)).StatusCode);
         Assert.Equal(HttpStatusCode.Gone, (await client.DeleteAsync($"/v1/resources/{id}")).StatusCode);
         var all = await client.GetFromJsonAsync<ResourceResponse[]>("/v1/resources/") ?? [];
         Assert.Empty(all);
         Assert.Empty((await client.GetFromJsonAsync<ListPageResponse<ResourceResponse>>("/v1/resources/paged?PageNumber=1&PageSize=10&Search=Smoke"))!.Items);
+    }
+
+    [Fact]
+    public async Task PostAndPutPersistIsActiveWhenExplicitAndPreserveDefaultsOrCurrentValueWhenOmitted()
+    {
+        await using var host = await TestHost.StartAsync();
+        using var client = host.Client(["GetBy", "Create", "Update"]);
+
+        async Task<int> CreateAsync(string name, bool? isActive, bool includeIsActive)
+        {
+            var payload = new Dictionary<string, object?> { ["name"] = name, ["description"] = "Description" };
+            if (includeIsActive) payload["isActive"] = isActive;
+            using var response = await client.PostAsJsonAsync("/v1/resources/", payload);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            return (await response.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
+        }
+
+        async Task<bool> ReadActiveAsync(int id) =>
+            (await client.GetFromJsonAsync<ResourceDetailResponse>($"/v1/resources/{id}"))!.IsActive;
+
+        async Task PutAsync(int id, string description, bool? isActive, bool includeIsActive)
+        {
+            var payload = new Dictionary<string, object?> { ["description"] = description };
+            if (includeIsActive) payload["isActive"] = isActive;
+            using var response = await client.PutAsJsonAsync($"/v1/resources/{id}", payload);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        var activeId = await CreateAsync("HTTP active", true, true);
+        Assert.True(await ReadActiveAsync(activeId));
+        var inactiveId = await CreateAsync("HTTP inactive", false, true);
+        Assert.False(await ReadActiveAsync(inactiveId));
+        var defaultId = await CreateAsync("HTTP default", null, false);
+        Assert.True(await ReadActiveAsync(defaultId));
+
+        await PutAsync(activeId, "Explicit inactive", false, true);
+        Assert.False(await ReadActiveAsync(activeId));
+        await PutAsync(activeId, "Omitted preserves inactive", null, false);
+        var preserved = await client.GetFromJsonAsync<ResourceDetailResponse>($"/v1/resources/{activeId}");
+        Assert.False(preserved!.IsActive);
+        Assert.Equal("Omitted preserves inactive", preserved.Description);
+        await PutAsync(activeId, "Explicit active", true, true);
+        Assert.True(await ReadActiveAsync(activeId));
+        await PutAsync(inactiveId, "Activate via update", true, true);
+        Assert.True(await ReadActiveAsync(inactiveId));
     }
 
     [Fact]

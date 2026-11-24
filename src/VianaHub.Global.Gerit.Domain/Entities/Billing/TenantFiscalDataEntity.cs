@@ -26,7 +26,7 @@ public class TenantFiscalDataEntity : Entity
     /// <summary>
     /// Construtor para cria��o de novos dados fiscais do Tenant
     /// </summary>
-    public TenantFiscalDataEntity(int tenantId, string? taxNumber, string? vatNumber, string? iban, string? fiscalEmail, string? fiscalCountry, bool isVatRegistered, int createdBy)
+    public TenantFiscalDataEntity(int tenantId, string? taxNumber, string? vatNumber, string? iban, string? fiscalEmail, string? fiscalCountry, bool isVatRegistered, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         TaxNumber = taxNumber;
@@ -35,13 +35,13 @@ public class TenantFiscalDataEntity : Entity
         FiscalEmail = fiscalEmail;
         FiscalCountry = fiscalCountry;
         IsVatRegistered = isVatRegistered;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateFiscalData(string? taxNumber, string? vatNumber, string? iban, string? fiscalEmail, string? fiscalCountry, bool isVatRegistered, int modifiedBy)
+    public void UpdateFiscalData(string? taxNumber, string? vatNumber, string? iban, string? fiscalEmail, string? fiscalCountry, bool isVatRegistered, int modifiedBy, bool? isActive = null)
     {
         TaxNumber = taxNumber;
         VatNumber = vatNumber;
@@ -49,6 +49,7 @@ public class TenantFiscalDataEntity : Entity
         FiscalEmail = fiscalEmail;
         FiscalCountry = fiscalCountry;
         IsVatRegistered = isVatRegistered;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

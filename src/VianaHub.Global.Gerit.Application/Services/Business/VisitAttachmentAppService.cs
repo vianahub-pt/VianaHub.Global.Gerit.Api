@@ -149,7 +149,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
 
         var entity = new VisitAttachmentsEntity(tenantId, request.FileTypeId, visitId,
             request.S3Key, request.FileName, request.FileSizeBytes,
-            request.DisplayOrder, request.IsPrimary, _currentUser.GetUserId());
+            request.DisplayOrder, request.IsPrimary, _currentUser.GetUserId(), request.IsActive);
 
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
@@ -169,7 +169,7 @@ public class VisitAttachmentAppService : IVisitAttachmentAppService
             await RemoveAllPrimaryFlagsAsync(entity.VisitId, ct);
         }
 
-        entity.Update(request.FileName, request.DisplayOrder, request.IsPrimary, _currentUser.GetUserId());
+        entity.Update(request.FileName, request.DisplayOrder, request.IsPrimary, _currentUser.GetUserId(), request.IsActive);
 
         return await _domain.UpdateAsync(entity, ct);
     }

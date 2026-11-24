@@ -79,6 +79,46 @@ public class UserPreferencesHttpIntegrationTests
         Assert.NotNull(result); Assert.True(result.Id > 0); return result.Id;
     }
     [Fact]
+    public async Task CreateAndUpdatePersistExplicitIsActiveAndOmissionPreservesCurrentState()
+    {
+        await using var host = await Host.StartAsync();
+        using var client = host.Client(Actions);
+
+        var inactivePayload = Payload();
+        inactivePayload["isActive"] = false;
+        using var created = await client.PostAsJsonAsync("/v1/user-preferences", inactivePayload);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var id = (await created.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
+        Assert.False((await client.GetFromJsonAsync<UserPreferencesDetailResponse>($"/v1/user-preferences/{id}"))!.IsActive);
+
+        var omittedUpdate = Payload();
+        using (var response = await client.PutAsJsonAsync($"/v1/user-preferences/{id}", omittedUpdate))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False((await client.GetFromJsonAsync<UserPreferencesDetailResponse>($"/v1/user-preferences/{id}"))!.IsActive);
+
+        var activeUpdate = Payload();
+        activeUpdate["isActive"] = true;
+        using (var response = await client.PutAsJsonAsync($"/v1/user-preferences/{id}", activeUpdate))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True((await client.GetFromJsonAsync<UserPreferencesDetailResponse>($"/v1/user-preferences/{id}"))!.IsActive);
+
+        await using var explicitActiveHost = await Host.StartAsync();
+        using var explicitActiveClient = explicitActiveHost.Client(Actions);
+        var activeCreatePayload = Payload();
+        activeCreatePayload["isActive"] = true;
+        using var activeCreated = await explicitActiveClient.PostAsJsonAsync("/v1/user-preferences", activeCreatePayload);
+        Assert.Equal(HttpStatusCode.Created, activeCreated.StatusCode);
+        var activeId = (await activeCreated.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
+        Assert.True((await explicitActiveClient.GetFromJsonAsync<UserPreferencesDetailResponse>($"/v1/user-preferences/{activeId}"))!.IsActive);
+
+        await using var defaultHost = await Host.StartAsync();
+        using var defaultClient = defaultHost.Client(Actions);
+        using var defaultCreated = await defaultClient.PostAsJsonAsync("/v1/user-preferences", Payload());
+        Assert.Equal(HttpStatusCode.Created, defaultCreated.StatusCode);
+        var defaultId = (await defaultCreated.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
+        Assert.True((await defaultClient.GetFromJsonAsync<UserPreferencesDetailResponse>($"/v1/user-preferences/{defaultId}"))!.IsActive);
+    }
+    [Fact]
     public async Task CrudRoundtrip_UsesAuthenticatedIdentityAndPreservesAllFieldsAndFlags()
     {
         await using var host = await Host.StartAsync(); using var client = host.Client(Actions);

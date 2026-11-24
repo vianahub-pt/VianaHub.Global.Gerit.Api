@@ -25,7 +25,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         // EF
         protected ClientFiscalDataEntity() { }
 
-        public ClientFiscalDataEntity(int tenantId, int clientId, string? taxNumber, string? vatNumber, string? fiscalCountry, bool isVatRegistered, string? iban, string? fiscalEmail, int createdBy)
+        public ClientFiscalDataEntity(int tenantId, int clientId, string? taxNumber, string? vatNumber, string? fiscalCountry, bool isVatRegistered, string? iban, string? fiscalEmail, int createdBy, bool? isActive = null)
         {
             TenantId = tenantId;
             ClientId = clientId;
@@ -37,14 +37,14 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             IBAN = iban;
             FiscalEmail = fiscalEmail;
 
-            IsActive = true;
+            IsActive = isActive ?? true;
             IsDeleted = false;
 
             CreatedBy = createdBy;
             CreatedAt = DateTime.UtcNow;
         }
 
-        public void Update(string? taxNumber, string? vatNumber, string? fiscalCountry, bool isVatRegistered, string? iban, string? fiscalEmail, int modifiedBy)
+        public void Update(string? taxNumber, string? vatNumber, string? fiscalCountry, bool isVatRegistered, string? iban, string? fiscalEmail, int modifiedBy, bool? isActive = null)
         {
             TaxNumber = taxNumber;
             VatNumber = vatNumber;
@@ -52,6 +52,8 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             IsVatRegistered = isVatRegistered;
             IBAN = iban;
             FiscalEmail = fiscalEmail;
+            if (isActive.HasValue)
+                IsActive = isActive.Value;
 
             ModifiedBy = modifiedBy;
             ModifiedAt = DateTime.UtcNow;

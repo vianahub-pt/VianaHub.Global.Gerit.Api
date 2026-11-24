@@ -68,7 +68,8 @@ public class ClientEntity : Entity, IAggregateRoot
         int? numberOfEmployees,
         int statusDefinitionId,
         int statusDomainId,
-        int createdBy)
+        int createdBy,
+        bool? isActive = null)
     {
         TenantId = tenantId;
         PartyTypeId = partyTypeId;
@@ -89,7 +90,7 @@ public class ClientEntity : Entity, IAggregateRoot
         NumberOfEmployees = numberOfEmployees;
         StatusDefinitionId = statusDefinitionId;
         StatusDomainId = statusDomainId;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
@@ -114,7 +115,8 @@ public class ClientEntity : Entity, IAggregateRoot
         int? numberOfEmployees,
         int statusDefinitionId,
         int statusDomainId,
-        int modifiedBy)
+        int modifiedBy,
+        bool? isActive = null)
     {
         PartyTypeId = partyTypeId;
         AcquisitionSourceTypeId = acquisitionSourceTypeId;
@@ -134,6 +136,8 @@ public class ClientEntity : Entity, IAggregateRoot
         NumberOfEmployees = numberOfEmployees;
         StatusDefinitionId = statusDefinitionId;
         StatusDomainId = statusDomainId;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

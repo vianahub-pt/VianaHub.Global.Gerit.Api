@@ -8,4 +8,5 @@ public class CreatePartyTypeRequest
 {
     [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
     public List<CreatePartyTypeTranslationRequest>? Translations { get; set; }
+    public bool? IsActive { get; set; }
 }

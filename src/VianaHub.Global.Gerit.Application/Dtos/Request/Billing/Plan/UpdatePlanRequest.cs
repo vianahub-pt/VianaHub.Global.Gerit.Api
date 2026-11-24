@@ -11,4 +11,5 @@ public class UpdatePlanRequest
     public string? Currency { get; set; }
     public int MaxUsers { get; set; }
     public int MaxPhotosPerVisit { get; set; }
+    public bool? IsActive { get; set; }
 }

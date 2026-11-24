@@ -10,4 +10,5 @@ public class UpdateVehicleRequest
     public int Year { get; set; }
     public string? Color { get; set; }
     public string? FuelType { get; set; }
+    public bool? IsActive { get; set; }
 }

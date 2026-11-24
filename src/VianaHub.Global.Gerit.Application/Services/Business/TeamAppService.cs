@@ -80,7 +80,7 @@ public class TeamAppService : ITeamAppService
             return 0;
         }
 
-        var entity = new TeamEntity(tenantId, request.Name, request.Description, _currentUser.GetUserId());
+        var entity = new TeamEntity(tenantId, request.Name, request.Description, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -88,7 +88,7 @@ public class TeamAppService : ITeamAppService
     public async Task<bool> UpdateAsync(int id, UpdateTeamRequest request, CancellationToken ct)
     {
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity == null)
+        if (entity == null || (request.IsActive == true && entity.IsDeleted))
         {
             _notify.Add(_localization.GetMessage("Application.Service.Team.Update.ResourceNotFound"), 410);
             return false;
@@ -101,7 +101,7 @@ public class TeamAppService : ITeamAppService
             return false;
         }
 
-        entity.Update(request.Name, request.Description, _currentUser.GetUserId());
+        entity.Update(request.Name, request.Description, _currentUser.GetUserId(), request.IsActive);
 
         return await _domain.UpdateAsync(entity, ct);
     }

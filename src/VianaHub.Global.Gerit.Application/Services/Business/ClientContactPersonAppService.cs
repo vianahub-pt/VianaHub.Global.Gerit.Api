@@ -78,13 +78,14 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
     public async Task<int> CreateAsync(int clientId, CreateClientContactRequest request, CancellationToken ct)
     {
         if (!await EnsureParentAsync(clientId, allowInactive: false, ct)) return 0;
-        var exists = await _repo.ExistsActiveByClientAndEmailAsync(clientId, request.Email, null, ct);
+        var willBeActive = request.IsActive ?? true;
+        var exists = willBeActive && await _repo.ExistsActiveByClientAndEmailAsync(clientId, request.Email, null, ct);
         if (exists)
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.Create.ResourceAlreadyExists"), 409);
             return 0;
         }
-        if (request.IsPrimary && await _repo.ExistsActivePrimaryAsync(clientId, null, ct))
+        if (willBeActive && request.IsPrimary && await _repo.ExistsActivePrimaryAsync(clientId, null, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.PrimaryAlreadyExists"), 409);
             return 0;
@@ -102,7 +103,8 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
             UserId,
             request.JobTitle,
             request.Department,
-            request.IsCellPhoneWhatsapp
+            request.IsCellPhoneWhatsapp,
+            request.IsActive
         );
 
         var success = await _domain.CreateAsync(clientContact, ct);
@@ -119,20 +121,21 @@ public class ClientContactPersonAppService : IClientContactPersonAppService
             return false;
         }
 
-        if (clientContact.IsActive &&
+        var willBeActive = request.IsActive ?? clientContact.IsActive;
+        if (willBeActive &&
             await _repo.ExistsActiveByClientAndEmailAsync(clientId, request.Email, id, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.Update.ResourceAlreadyExists"), 409);
             return false;
         }
-        if (clientContact.IsActive && request.IsPrimary &&
+        if (willBeActive && request.IsPrimary &&
             await _repo.ExistsActivePrimaryAsync(clientId, id, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientContactPerson.PrimaryAlreadyExists"), 409);
             return false;
         }
 
-        clientContact.Update(request.Name, request.PhoneNumber, request.CellPhoneNumber, request.IsWhatsapp, request.Email, request.IsPrimary, UserId, request.JobTitle, request.Department, request.IsCellPhoneWhatsapp);
+        clientContact.Update(request.Name, request.PhoneNumber, request.CellPhoneNumber, request.IsWhatsapp, request.Email, request.IsPrimary, UserId, request.JobTitle, request.Department, request.IsCellPhoneWhatsapp, request.IsActive);
 
         return await _domain.UpdateAsync(clientContact, ct);
     }

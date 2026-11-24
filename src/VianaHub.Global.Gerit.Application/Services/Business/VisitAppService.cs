@@ -96,7 +96,8 @@ public class VisitAppService : IVisitAppService
             request.Description,
             request.StartDateTime,
             request.EstimatedValue,
-            userId
+            userId,
+            request.IsActive
         );
 
         var success = await _domain.CreateAsync(entity, ct);
@@ -133,7 +134,8 @@ public class VisitAppService : IVisitAppService
             request.EndDateTime,
             request.EstimatedValue,
             request.RealValue,
-            _currentUser.GetUserId()
+            _currentUser.GetUserId(),
+            request.IsActive
         );
 
         return await _domain.UpdateAsync(entity, ct);

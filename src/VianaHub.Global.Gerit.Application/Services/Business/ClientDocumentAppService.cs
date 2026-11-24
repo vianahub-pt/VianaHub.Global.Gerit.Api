@@ -70,7 +70,7 @@ public class ClientDocumentAppService : IClientDocumentAppService
             _notify.Add(_localization.GetMessage("Application.Service.ClientDocument.DuplicateDocument"), 409);
             return 0;
         }
-        var entity = new ClientDocumentsEntity(tenantId, clientId, request.DocumentTypeId, number, country, request.IssuedAt, request.ExpiresAt, request.IsPrimary, _currentUser.GetUserId());
+        var entity = new ClientDocumentsEntity(tenantId, clientId, request.DocumentTypeId, number, country, request.IssuedAt, request.ExpiresAt, request.IsPrimary, _currentUser.GetUserId(), request.IsActive);
         return await _domain.CreateAsync(entity, ct) ? entity.Id : 0;
     }
 
@@ -86,7 +86,7 @@ public class ClientDocumentAppService : IClientDocumentAppService
             _notify.Add(_localization.GetMessage("Application.Service.ClientDocument.DuplicateDocument"), 409);
             return false;
         }
-        entity.Update(number, country, request.IssuedAt, request.ExpiresAt, request.IsPrimary, _currentUser.GetUserId());
+        entity.Update(number, country, request.IssuedAt, request.ExpiresAt, request.IsPrimary, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

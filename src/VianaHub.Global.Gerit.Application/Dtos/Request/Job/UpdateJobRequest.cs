@@ -11,5 +11,5 @@ public class UpdateJobRequest
     public string? Queue { get; set; }
     public int MaxRetries { get; set; }
     public string? JobConfiguration { get; set; }
-    public bool IsActive { get; set; }
+    public bool? IsActive { get; set; }
 }

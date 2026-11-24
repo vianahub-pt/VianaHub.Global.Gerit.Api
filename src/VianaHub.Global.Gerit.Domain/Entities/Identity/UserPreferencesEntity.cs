@@ -33,7 +33,7 @@ public class UserPreferencesEntity : Entity
 
     protected UserPreferencesEntity() { }
 
-    public UserPreferencesEntity(int tenantId, int userId, string? appearance, string? currencyCode, string? locale, string? timezone, string? dateFormat, string? timeFormat, TimeSpan dayStart, TimeSpan dayEnd, int createdBy, bool emailNewsletter = false, bool emailWeeklyReport = false, bool emailApproval = false, bool emailAlerts = true, bool emailReminders = true, bool emailPlanner = true)
+    public UserPreferencesEntity(int tenantId, int userId, string? appearance, string? currencyCode, string? locale, string? timezone, string? dateFormat, string? timeFormat, TimeSpan dayStart, TimeSpan dayEnd, int createdBy, bool emailNewsletter = false, bool emailWeeklyReport = false, bool emailApproval = false, bool emailAlerts = true, bool emailReminders = true, bool emailPlanner = true, bool? isActive = null)
     {
         TenantId = tenantId;
         UserId = userId;
@@ -53,14 +53,14 @@ public class UserPreferencesEntity : Entity
         EmailReminders = emailReminders;
         EmailPlanner = emailPlanner;
 
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
     public void Update(string? appearance, string? locale, string? currencyCode, string? timezone, string? dateFormat, string? timeFormat, TimeSpan dayStart, TimeSpan dayEnd,
-        bool emailNewsletter, bool emailWeeklyReport, bool emailApproval, bool emailAlerts, bool emailReminders, bool emailPlanner, int modifiedBy)
+        bool emailNewsletter, bool emailWeeklyReport, bool emailApproval, bool emailAlerts, bool emailReminders, bool emailPlanner, int modifiedBy, bool? isActive = null)
     {
         Appearance = appearance;
         CurrencyCode = currencyCode;
@@ -77,6 +77,8 @@ public class UserPreferencesEntity : Entity
         EmailAlerts = emailAlerts;
         EmailReminders = emailReminders;
         EmailPlanner = emailPlanner;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
 
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;

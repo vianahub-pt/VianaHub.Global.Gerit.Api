@@ -21,6 +21,7 @@ using VianaHub.Global.Gerit.Api.Helpers;
 using VianaHub.Global.Gerit.Api.Middleware;
 using VianaHub.Global.Gerit.Api.Services;
 using VianaHub.Global.Gerit.Application.Interfaces.Business;
+using VianaHub.Global.Gerit.Application.Dtos.Response.Business.ClientDocument;
 using VianaHub.Global.Gerit.Application.Interfaces.Common;
 using VianaHub.Global.Gerit.Application.Services.Business;
 using VianaHub.Global.Gerit.Application.Services.Common;
@@ -108,6 +109,66 @@ public sealed class ClientDocumentHttpIntegrationTests
         Assert.Empty(await client.GetFromJsonAsync<JsonElement[]>("/v1/clients/10/documents") ?? []);
     }
 
+    [Fact]
+    public async Task CreateAndUpdatePersistExplicitAndOmittedIsActiveValues()
+    {
+        await using var host = await Host.StartAsync();
+        using var client = host.Client();
+
+        async Task<int> CreateAsync(string number, bool? isActive, bool includeIsActive)
+        {
+            var payload = new Dictionary<string, object?>
+            {
+                ["documentTypeId"] = 1,
+                ["documentNumber"] = number,
+                ["issuingCountryCode"] = "PT",
+                ["isPrimary"] = true
+            };
+            if (includeIsActive) payload["isActive"] = isActive;
+            using var response = await client.PostAsJsonAsync("/v1/clients/10/documents", payload);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.True(response.StatusCode == HttpStatusCode.Created, $"HTTP {(int)response.StatusCode}: {body}");
+            return JsonSerializer.Deserialize<JsonElement>(body).GetProperty("id").GetInt32();
+        }
+
+        async Task<ClientDocumentDetailResponse> GetAsync(int id) =>
+            await client.GetFromJsonAsync<ClientDocumentDetailResponse>($"/v1/clients/10/documents/{id}") ?? throw new InvalidOperationException("Detail response was empty.");
+
+        var activeId = await CreateAsync("DOC-ACTIVE", true, true);
+        Assert.True((await GetAsync(activeId)).IsActive);
+
+        var inactiveId = await CreateAsync("DOC-INACTIVE", false, true);
+        var inactive = await GetAsync(inactiveId);
+        Assert.False(inactive.IsActive);
+        Assert.False(inactive.IsPrimary);
+
+        var omittedId = await CreateAsync("DOC-OMITTED", null, false);
+        Assert.True((await GetAsync(omittedId)).IsActive);
+
+        var updatePayload = new Dictionary<string, object?>
+        {
+            ["documentTypeId"] = 1,
+            ["documentNumber"] = "DOC-INACTIVE-UPDATED",
+            ["issuingCountryCode"] = "PT",
+            ["isPrimary"] = true,
+            ["isActive"] = false
+        };
+        using (var response = await client.PutAsJsonAsync($"/v1/clients/10/documents/{omittedId}", updatePayload))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False((await GetAsync(omittedId)).IsActive);
+        Assert.False((await GetAsync(omittedId)).IsPrimary);
+
+        updatePayload.Remove("isActive");
+        using (var response = await client.PutAsJsonAsync($"/v1/clients/10/documents/{omittedId}", updatePayload))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False((await GetAsync(omittedId)).IsActive);
+
+        updatePayload["isActive"] = true;
+        using (var response = await client.PutAsJsonAsync($"/v1/clients/10/documents/{omittedId}", updatePayload))
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True((await GetAsync(omittedId)).IsActive);
+        Assert.True((await GetAsync(omittedId)).IsPrimary);
+    }
     private sealed class Host : IAsyncDisposable
     {
         private readonly WebApplication _app;

@@ -21,18 +21,19 @@ public class StatusDomainEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Domínio de Status
     /// </summary>
-    public StatusDomainEntity(string? code, int createdBy)
+    public StatusDomainEntity(string? code, int createdBy, bool? isActive = null)
     {
         Code = code;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
         Translations = new List<StatusDomainTranslationsEntity>();
     }
 
-    public void MarkModified(int modifiedBy)
+    public void MarkModified(int modifiedBy, bool? isActive = null)
     {
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

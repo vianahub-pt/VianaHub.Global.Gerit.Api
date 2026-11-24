@@ -155,6 +155,49 @@ public class TeamHttpIntegrationTests(ITestOutputHelper output)
         Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync($"/v1/teams/{second}")).StatusCode);
     }
 
+    [Fact]
+    public async Task PostAndPutPersistIsActiveWhenExplicitAndPreserveDefaultsOrCurrentValueWhenOmitted()
+    {
+        await using var host = await Host.StartAsync();
+        using var client = host.Client(["GetBy", "Create", "Update"]);
+
+        async Task<int> CreateAsync(string name, bool? isActive, bool includeIsActive)
+        {
+            var payload = new Dictionary<string, object?> { ["name"] = name, ["description"] = "Description" };
+            if (includeIsActive) payload["isActive"] = isActive;
+            using var response = await client.PostAsJsonAsync("/v1/teams/", payload);
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            return (await response.Content.ReadFromJsonAsync<GenericResponse>())!.Id;
+        }
+
+        async Task<bool> ReadActiveAsync(int id) =>
+            (await client.GetFromJsonAsync<TeamDetailResponse>($"/v1/teams/{id}"))!.IsActive;
+
+        async Task PutAsync(int id, string name, bool? isActive, bool includeIsActive)
+        {
+            var payload = new Dictionary<string, object?> { ["name"] = name, ["description"] = "Updated" };
+            if (includeIsActive) payload["isActive"] = isActive;
+            using var response = await client.PutAsJsonAsync($"/v1/teams/{id}", payload);
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        }
+
+        var activeId = await CreateAsync("HTTP active", true, true);
+        Assert.True(await ReadActiveAsync(activeId));
+        var inactiveId = await CreateAsync("HTTP inactive", false, true);
+        Assert.False(await ReadActiveAsync(inactiveId));
+        var defaultId = await CreateAsync("HTTP default", null, false);
+        Assert.True(await ReadActiveAsync(defaultId));
+
+        await PutAsync(activeId, "Explicit inactive", false, true);
+        Assert.False(await ReadActiveAsync(activeId));
+        await PutAsync(activeId, "Omitted preserves inactive", null, false);
+        Assert.False(await ReadActiveAsync(activeId));
+        await PutAsync(activeId, "Explicit active", true, true);
+        Assert.True(await ReadActiveAsync(activeId));
+        await PutAsync(inactiveId, "Activate via update", true, true);
+        Assert.True(await ReadActiveAsync(inactiveId));
+    }
+
     [Theory]
     [InlineData("GetAll", "GET", "/v1/teams/", 200)]
     [InlineData("GetBy", "GET", "/v1/teams/{id}", 200)]

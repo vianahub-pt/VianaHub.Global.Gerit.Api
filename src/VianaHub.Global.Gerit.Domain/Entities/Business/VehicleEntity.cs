@@ -30,7 +30,7 @@ public class VehicleEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Veículo
     /// </summary>
-    public VehicleEntity(int tenantId, int statusDefinitionId, int statusDomainId, string? plate, string? brand, string? model, int year, string? color, string? fuelType, int createdBy)
+    public VehicleEntity(int tenantId, int statusDefinitionId, int statusDomainId, string? plate, string? brand, string? model, int year, string? color, string? fuelType, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         StatusDefinitionId = statusDefinitionId;
@@ -41,13 +41,13 @@ public class VehicleEntity : Entity
         Year = year;
         Color = color;
         FuelType = fuelType;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(int statusDefinitionId, int statusDomainId, string? plate, string? brand, string? model, int year, string? color, string? fuelType, int modifiedBy)
+    public void Update(int statusDefinitionId, int statusDomainId, string? plate, string? brand, string? model, int year, string? color, string? fuelType, int modifiedBy, bool? isActive = null)
     {
         StatusDefinitionId = statusDefinitionId;
         StatusDomainId = statusDomainId;
@@ -57,6 +57,8 @@ public class VehicleEntity : Entity
         Year = year;
         Color = color;
         FuelType = fuelType;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

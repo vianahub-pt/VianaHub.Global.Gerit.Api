@@ -41,7 +41,7 @@ public class VisitEntity : Entity, IAggregateRoot
     /// Construtor para criação de uma nova Intervenção
     /// </summary>
     public VisitEntity(int tenantId, int clientId, int statusDefinitionId, int statusDomainId, string currencyCode, string? title, string? description, DateTime startDateTime,
-        decimal estimatedValue, int modifiedBy)
+        decimal estimatedValue, int modifiedBy, bool? isActive = null)
     {
         TenantId = tenantId;
         ClientId = clientId;
@@ -52,7 +52,7 @@ public class VisitEntity : Entity, IAggregateRoot
         Description = description;
         StartDateTime = startDateTime;
         EstimatedValue = estimatedValue;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = modifiedBy;
         CreatedAt = DateTime.UtcNow;
@@ -61,7 +61,7 @@ public class VisitEntity : Entity, IAggregateRoot
     }
 
     public void UpdateDetails(int clientId, int statusDefinitionId, int statusDomainId, string currencyCode, string? title, string? description, DateTime startDateTime, DateTime? endDateTime,
-        decimal estimatedValue, decimal? realValue, int modifiedBy)
+        decimal estimatedValue, decimal? realValue, int modifiedBy, bool? isActive = null)
     {
         ClientId = clientId;
         StatusDefinitionId = statusDefinitionId;
@@ -73,6 +73,7 @@ public class VisitEntity : Entity, IAggregateRoot
         EndDateTime = endDateTime;
         EstimatedValue = estimatedValue;
         RealValue = realValue;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

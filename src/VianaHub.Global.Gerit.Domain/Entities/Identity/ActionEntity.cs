@@ -22,18 +22,19 @@ public class ActionEntity : Entity
     /// <summary>
     /// Construtor para cria��o de uma nova a��o
     /// </summary>
-    public ActionEntity(string name, string description, int createdBy)
+    public ActionEntity(string name, string description, int createdBy, bool? isActive = null)
     {
         Name = name;
         Description = description;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
     }
 
-    public void Update(string description, int modifiedBy)
+    public void Update(string description, int modifiedBy, bool? isActive = null)
     {
         Description = description;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

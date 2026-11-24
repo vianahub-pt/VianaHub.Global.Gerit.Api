@@ -7,4 +7,5 @@ public class UpdateStatusDefinitionRequest
 {
     public int DisplayOrder { get; set; }
     public bool IsSystem { get; set; }
+    public bool? IsActive { get; set; }
 }

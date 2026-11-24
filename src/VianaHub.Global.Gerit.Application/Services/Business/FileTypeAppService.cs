@@ -91,7 +91,7 @@ public class FileTypeAppService : IFileTypeAppService
             return 0;
         }
 
-        var entity = new FileTypeEntity(request.MimeType, request.Extension, code, _currentUser.GetUserId());
+        var entity = new FileTypeEntity(request.MimeType, request.Extension, code, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -112,7 +112,7 @@ public class FileTypeAppService : IFileTypeAppService
             return false;
         }
 
-        entity.Update(request.MimeType, request.Extension, _currentUser.GetUserId());
+        entity.Update(request.MimeType, request.Extension, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

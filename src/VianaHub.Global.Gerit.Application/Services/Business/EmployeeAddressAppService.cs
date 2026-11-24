@@ -92,7 +92,7 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
             request.Longitude,
             request.Note,
             request.IsPrimary,
-            _currentUser.GetUserId());
+            _currentUser.GetUserId(), request.IsActive);
 
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
@@ -120,7 +120,7 @@ public class EmployeeAddressAppService : IEmployeeAddressAppService
             request.Latitude,
             request.Longitude,
             request.Note,
-            _currentUser.GetUserId());
+            _currentUser.GetUserId(), request.IsActive);
 
         return await _domain.UpdateAsync(entity, ct);
     }

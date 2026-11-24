@@ -103,7 +103,7 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
             code,
             request.DisplayOrder,
             request.IsSystem,
-            _currentUser.GetUserId());
+            _currentUser.GetUserId(), request.IsActive);
 
         // Adicionar traduções se fornecidas
         if (request.Translations != null && request.Translations.Any())
@@ -134,7 +134,7 @@ public class StatusDefinitionAppService : IStatusDefinitionAppService
             return false;
         }
 
-        entity.Update(request.DisplayOrder, request.IsSystem, _currentUser.GetUserId());
+        entity.Update(request.DisplayOrder, request.IsSystem, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

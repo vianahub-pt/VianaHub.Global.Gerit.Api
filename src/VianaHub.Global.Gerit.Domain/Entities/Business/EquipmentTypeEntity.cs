@@ -23,21 +23,23 @@ public class EquipmentTypeEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Tipo de Equipamento
     /// </summary>
-    public EquipmentTypeEntity(int tenantId, string? name, string? description, int createdBy)
+    public EquipmentTypeEntity(int tenantId, string? name, string? description, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         Name = name;
         Description = description;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string? name, string? description, int modifiedBy)
+    public void Update(string? name, string? description, int modifiedBy, bool? isActive = null)
     {
         Name = name;
         Description = description;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

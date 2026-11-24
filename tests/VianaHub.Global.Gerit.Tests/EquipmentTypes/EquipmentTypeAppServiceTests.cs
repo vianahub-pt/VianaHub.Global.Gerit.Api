@@ -49,6 +49,25 @@ public class EquipmentTypeAppServiceTests
         fixture.Repository.Verify(x => x.AddAsync(It.IsAny<EquipmentTypeEntity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task Create_InactiveAndOmittedStateArePersistedAsRequestedOrHistoricalDefault()
+    {
+        var fixture = new Fixture();
+        EquipmentTypeEntity? saved = null;
+        fixture.Repository.Setup(x => x.AddAsync(It.IsAny<EquipmentTypeEntity>(), It.IsAny<CancellationToken>()))
+            .Callback<EquipmentTypeEntity, CancellationToken>((entity, _) => saved = entity)
+            .ReturnsAsync(true);
+
+        await fixture.App.CreateAsync(new CreateEquipmentTypeRequest { Name = "Inactive", Description = "Description", IsActive = false }, default);
+        Assert.NotNull(saved);
+        Assert.False(saved!.IsActive);
+
+        saved = null;
+        await fixture.App.CreateAsync(new CreateEquipmentTypeRequest { Name = "Default", Description = "Description" }, default);
+        Assert.NotNull(saved);
+        Assert.True(saved!.IsActive);
+    }
+
     [Theory]
     [InlineData("Crew")]
     [InlineData("Renamed crew")]
@@ -73,6 +92,17 @@ public class EquipmentTypeAppServiceTests
         Assert.Equal("Crew", fixture.EquipmentType!.Name);
         Assert.Equal("Description", fixture.EquipmentType.Description);
         fixture.Repository.Verify(x => x.UpdateAsync(It.IsAny<EquipmentTypeEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_ChangesStateAndOmissionPreservesCurrentState()
+    {
+        var fixture = new Fixture();
+        Assert.True(await fixture.App.UpdateAsync(42, new UpdateEquipmentTypeRequest { Name = "Crew", Description = "Description", IsActive = false }, default));
+        Assert.False(fixture.EquipmentType!.IsActive);
+
+        Assert.True(await fixture.App.UpdateAsync(42, new UpdateEquipmentTypeRequest { Name = "Crew", Description = "Description" }, default));
+        Assert.False(fixture.EquipmentType.IsActive);
     }
 
     [Fact]

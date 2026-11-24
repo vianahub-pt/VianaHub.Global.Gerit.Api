@@ -76,7 +76,7 @@ public class VehicleAppService : IVehicleAppService
             return 0;
         }
 
-        var entity = new VehicleEntity(tenantId, request.StatusDefinitionId, request.StatusDomainId, request.Plate, request.Brand, request.Model, request.Year, request.Color, request.FuelType, _currentUser.GetUserId());
+        var entity = new VehicleEntity(tenantId, request.StatusDefinitionId, request.StatusDomainId, request.Plate, request.Brand, request.Model, request.Year, request.Color, request.FuelType, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -90,7 +90,7 @@ public class VehicleAppService : IVehicleAppService
             return false;
         }
 
-        entity.Update(request.StatusDefinitionId, request.StatusDomainId, request.Plate, request.Brand, request.Model, request.Year, request.Color, request.FuelType, _currentUser.GetUserId());
+        entity.Update(request.StatusDefinitionId, request.StatusDomainId, request.Plate, request.Brand, request.Model, request.Year, request.Color, request.FuelType, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

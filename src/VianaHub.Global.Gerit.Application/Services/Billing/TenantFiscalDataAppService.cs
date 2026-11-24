@@ -89,7 +89,8 @@ public class TenantFiscalDataAppService : ITenantFiscalDataAppService
             request.FiscalEmail,
             request.FiscalCountry ?? "PT",
             request.IsVatRegistered,
-            _currentUser.GetUserId()
+            _currentUser.GetUserId(),
+            request.IsActive
         );
 
         var success = await _domain.CreateAsync(entity, ct);
@@ -131,7 +132,8 @@ public class TenantFiscalDataAppService : ITenantFiscalDataAppService
             request.FiscalEmail,
             request.FiscalCountry ?? entity.FiscalCountry ?? "PT",
             request.IsVatRegistered,
-            _currentUser.GetUserId()
+            _currentUser.GetUserId(),
+            request.IsActive
         );
 
         return await _domain.UpdateAsync(entity, ct);

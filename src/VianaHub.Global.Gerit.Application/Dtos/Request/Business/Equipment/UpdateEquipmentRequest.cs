@@ -8,4 +8,5 @@ public class UpdateEquipmentRequest
     public string? Name { get; set; }
     public string? SerialNumber { get; set; }
     public string? UrlImage { get; set; }
+    public bool? IsActive { get; set; }
 }

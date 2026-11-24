@@ -71,7 +71,7 @@ public class TenantAppService : ITenantAppService
             return 0;
         }
 
-        var entity = new TenantEntity(request.PartyTypeId, request.AcquisitionSourceTypeId, request.Name, request.Email, request.Website, request.UrlImage, request.Note, _currentUser.GetUserId());
+        var entity = new TenantEntity(request.PartyTypeId, request.AcquisitionSourceTypeId, request.Name, request.Email, request.Website, request.UrlImage, request.Note, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -85,7 +85,7 @@ public class TenantAppService : ITenantAppService
             return false;
         }
 
-        entity.Update(request.PartyTypeId, request.AcquisitionSourceTypeId, request.Name, request.Email, request.Website, request.UrlImage, request.Note, _currentUser.GetUserId());
+        entity.Update(request.PartyTypeId, request.AcquisitionSourceTypeId, request.Name, request.Email, request.Website, request.UrlImage, request.Note, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

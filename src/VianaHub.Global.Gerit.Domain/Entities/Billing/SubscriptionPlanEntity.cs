@@ -44,7 +44,8 @@ public class SubscriptionPlanEntity : Entity
         string currency,
         int maxUsers,
         int maxPhotosPerVisit,
-        int createdBy)
+        int createdBy,
+        bool? isActive = null)
     {
         Code = code;
         PricePerHour = pricePerHour;
@@ -54,7 +55,7 @@ public class SubscriptionPlanEntity : Entity
         Currency = currency ?? "EUR";
         MaxUsers = maxUsers;
         MaxPhotosPerVisit = maxPhotosPerVisit;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
     }
@@ -67,7 +68,8 @@ public class SubscriptionPlanEntity : Entity
         string currency,
         int maxUsers,
         int maxPhotosPerVisit,
-        int modifiedBy)
+        int modifiedBy,
+        bool? isActive = null)
     {
 
         PricePerHour = pricePerHour;
@@ -77,6 +79,7 @@ public class SubscriptionPlanEntity : Entity
         Currency = currency ?? "EUR";
         MaxUsers = maxUsers;
         MaxPhotosPerVisit = maxPhotosPerVisit;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }
