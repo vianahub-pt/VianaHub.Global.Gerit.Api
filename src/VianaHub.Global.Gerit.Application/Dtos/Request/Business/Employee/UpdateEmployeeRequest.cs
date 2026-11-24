@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.Employee;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.Employee;
 
 public class UpdateEmployeeRequest
 {

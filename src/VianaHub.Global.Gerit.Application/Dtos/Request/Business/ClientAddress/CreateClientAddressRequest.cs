@@ -1,7 +1,7 @@
 namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientAddress;
 
 /// <summary>
-/// DTO para criação de ClientAddress
+/// DTO para criaÃ§Ã£o de ClientAddress
 /// </summary>
 public class CreateClientAddressRequest
 {

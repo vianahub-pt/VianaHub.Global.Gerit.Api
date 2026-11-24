@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.Function;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.Function;
 
 public class CreateVisitTeamFunctionRequest
 {

@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeContact;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeContact;
 
 /// <summary>
 /// DTO para criação de EmployeeContact

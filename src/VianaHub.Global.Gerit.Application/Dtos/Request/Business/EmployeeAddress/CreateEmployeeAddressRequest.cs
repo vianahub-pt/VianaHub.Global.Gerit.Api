@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeAddress;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeAddress;
 
 /// <summary>
 /// DTO para criação de endereço de membro da equipe

@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeTeams;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeTeams;
 
 public class CreateEmployeeTeamRequest
 {

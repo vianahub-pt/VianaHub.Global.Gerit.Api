@@ -1,4 +1,4 @@
-﻿using VianaHub.Global.Gerit.Domain.Base;
+using VianaHub.Global.Gerit.Domain.Base;
 using VianaHub.Global.Gerit.Domain.Entities.Billing;
 
 namespace VianaHub.Global.Gerit.Domain.Entities.Business;

@@ -1,7 +1,7 @@
 namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.VisitAddress;
 
 /// <summary>
-/// DTO para atualização de VisitAddress
+/// DTO para atualizaÃ§Ã£o de VisitAddress
 /// </summary>
 public class UpdateVisitAddressRequest
 {
