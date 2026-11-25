@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeAddress;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeAddress;
 
 /// <summary>
 /// DTO para criação de endereço de membro da equipe
@@ -18,4 +18,5 @@ public class CreateEmployeeAddressRequest
     public decimal? Longitude { get; set; }
     public string? Note { get; set; }
     public bool IsPrimary { get; set; }
+    public bool? IsActive { get; set; }
 }

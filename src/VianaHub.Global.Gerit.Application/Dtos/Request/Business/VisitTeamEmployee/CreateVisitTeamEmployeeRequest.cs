@@ -6,4 +6,5 @@ public record CreateVisitTeamEmployeeRequest
     public int VisitTeamFunctionId { get; init; }
     public bool IsLeader { get; init; }
     public DateTime StartDateTime { get; init; }
+    public bool? IsActive { get; set; }
 }

@@ -32,7 +32,7 @@ public class VisitAttachmentsEntity : Entity
     /// Construtor para criação de um novo anexo de visita
     /// </summary>
     public VisitAttachmentsEntity(int tenantId, int fileTypeId, int visitId,
-        string? s3Key, string? fileName, long fileSizeBytes, int displayOrder, bool isPrimary, int createdBy)
+        string? s3Key, string? fileName, long fileSizeBytes, int displayOrder, bool isPrimary, int createdBy, bool? isActive = null)
     {
         if (fileSizeBytes <= 0)
             throw new ArgumentException("Domain.VisitAttachment.FileSizeInvalid");
@@ -52,17 +52,18 @@ public class VisitAttachmentsEntity : Entity
         FileSizeBytes = fileSizeBytes;
         DisplayOrder = displayOrder;
         IsPrimary = isPrimary;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string? fileName, int displayOrder, bool isPrimary, int modifiedBy)
+    public void Update(string? fileName, int displayOrder, bool isPrimary, int modifiedBy, bool? isActive = null)
     {
         FileName = fileName;
         DisplayOrder = displayOrder;
         IsPrimary = isPrimary;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

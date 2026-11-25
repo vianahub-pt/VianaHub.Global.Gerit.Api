@@ -109,7 +109,8 @@ public class SubscriptionAppService : ISubscriptionAppService
             request.TrialStart,
             request.TrialEnd,
             request.StripeCustomerId,
-            _currentUser.GetUserId()
+            _currentUser.GetUserId(),
+            request.IsActive
         );
 
         var success = await _domain.CreateAsync(entity, ct);
@@ -136,7 +137,8 @@ public class SubscriptionAppService : ISubscriptionAppService
             request.CurrentPeriodEnd,
             request.TrialStart,
             request.TrialEnd,
-            _currentUser.GetUserId()
+            _currentUser.GetUserId(),
+            request.IsActive
         );
 
         return await _domain.UpdateAsync(entity, ct);

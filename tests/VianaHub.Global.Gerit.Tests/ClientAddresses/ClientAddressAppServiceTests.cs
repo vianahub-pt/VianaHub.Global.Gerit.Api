@@ -81,6 +81,7 @@ public class ClientAddressAppServiceTests
         Assert.Equal(10, captured.Latitude);
         Assert.Equal(20, captured.Longitude);
         Assert.Equal("Note", captured.Note);
+        Assert.True(captured.IsActive);
     }
 
     [Fact]
@@ -105,6 +106,7 @@ public class ClientAddressAppServiceTests
         }, default);
 
         Assert.False(result);
+        Assert.True(entity.IsActive);
         _domain.Verify(x => x.UpdateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Once);
         _domain.Verify(x => x.ActivateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -142,6 +144,39 @@ public class ClientAddressAppServiceTests
         await _service.CreateAsync(10, request, default);
 
         _domain.Verify(x => x.CreateAsync(It.Is<ClientAddressesEntity>(a => a.CountryCode == "PT"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_InactivePrimaryPersistsInactiveWithoutClaimingPrimary()
+    {
+        ClientAddressesEntity? captured = null;
+        _domain.Setup(x => x.CreateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()))
+            .Callback<ClientAddressesEntity, CancellationToken>((entity, _) => captured = entity)
+            .ReturnsAsync(true);
+        var request = Request();
+        request.IsActive = false;
+        request.IsPrimary = true;
+
+        await _service.CreateAsync(10, request, default);
+
+        Assert.NotNull(captured);
+        Assert.False(captured!.IsActive);
+        Assert.False(captured.IsPrimary);
+        _repo.Verify(x => x.ExistsPrimaryAsync(10, null, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Update_InactivePersistsInSingleUpdateAndOmissionPreservesState()
+    {
+        var entity = new ClientAddressesEntity(7, 10, 2, "PT", "Street", null, null, "N", "City", null, "1000", null, null, null, false, 17);
+        typeof(ClientAddressesEntity).GetProperty("Id")!.SetValue(entity, 42);
+        _repo.Setup(x => x.GetByIdAsync(10, 42, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
+        _repo.Setup(x => x.ExistsByIdentityAsync(10, 42, It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _domain.Setup(x => x.UpdateAsync(entity, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        Assert.True(await _service.UpdateAsync(10, 42, new UpdateClientAddressRequest { AddressTypeId = 2, CountryCode = "PT", Street = "Street", Neighborhood = "N", City = "City", PostalCode = "1000", IsActive = false }, default));
+        Assert.False(entity.IsActive);
+        _domain.Verify(x => x.ActivateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+        _domain.Verify(x => x.DeactivateAsync(It.IsAny<ClientAddressesEntity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

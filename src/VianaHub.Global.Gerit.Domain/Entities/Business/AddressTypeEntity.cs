@@ -31,10 +31,10 @@ public class AddressTypeEntity : Entity
     /// Construtor completo para criação de um novo Tipo de Endereço, incluindo o Code de identificação.
     /// Name e Description devem ser persistidos via AddTranslation() na tabela de traduções.
     /// </summary>
-    public AddressTypeEntity(string? code, int createdBy)
+    public AddressTypeEntity(string? code, int createdBy, bool? isActive = null)
     {
         Code = code;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
@@ -53,8 +53,9 @@ public class AddressTypeEntity : Entity
     /// <summary>
     /// Regista a modificação sem alterar a chave natural.
     /// </summary>
-    public void MarkModified(int modifiedBy)
+    public void MarkModified(int modifiedBy, bool? isActive = null)
     {
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

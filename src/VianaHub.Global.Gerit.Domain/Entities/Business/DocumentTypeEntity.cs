@@ -21,18 +21,19 @@ public class DocumentTypeEntity : Entity
     /// <summary>
     /// Construtor para criação de um novo Tipo de Documento
     /// </summary>
-    public DocumentTypeEntity(string? code, int createdBy)
+    public DocumentTypeEntity(string? code, int createdBy, bool? isActive = null)
     {
         Code = code;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
         Translations = new List<DocumentTypeTranslationsEntity>();
     }
 
-    public void MarkModified(int modifiedBy)
+    public void MarkModified(int modifiedBy, bool? isActive = null)
     {
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

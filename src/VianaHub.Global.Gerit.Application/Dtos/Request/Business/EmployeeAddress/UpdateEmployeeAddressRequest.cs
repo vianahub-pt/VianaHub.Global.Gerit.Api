@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeAddress;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.EmployeeAddress;
 
 /// <summary>
 /// DTO para atualizaþÒo de endereþo de membro da equipe
@@ -17,4 +17,5 @@ public class UpdateEmployeeAddressRequest
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
     public string? Note { get; set; }
+    public bool? IsActive { get; set; }
 }

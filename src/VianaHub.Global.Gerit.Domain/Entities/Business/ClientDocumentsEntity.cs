@@ -34,7 +34,7 @@ public class ClientDocumentsEntity : Entity
     /// Construtor para criação de um novo Documento do Client
     /// </summary>
     public ClientDocumentsEntity(int tenantId, int clientId, int documentTypeId, string documentNumber,
-        string issuingCountryCode, DateOnly? issuedAt, DateOnly? expiresAt, bool isPrimary, int createdBy)
+        string issuingCountryCode, DateOnly? issuedAt, DateOnly? expiresAt, bool isPrimary, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         ClientId = clientId;
@@ -44,9 +44,8 @@ public class ClientDocumentsEntity : Entity
         IssuingCountryCode = issuingCountryCode;
         IssuedAt = issuedAt;
         ExpiresAt = expiresAt;
-        IsPrimary = isPrimary;
-
-        IsActive = true;
+        IsActive = isActive ?? true;
+        IsPrimary = IsActive && isPrimary;
         IsDeleted = false;
 
         CreatedBy = createdBy;
@@ -54,13 +53,15 @@ public class ClientDocumentsEntity : Entity
     }
 
     public void Update(string documentNumber, string issuingCountryCode,
-        DateOnly? issuedAt, DateOnly? expiresAt, bool isPrimary, int modifiedBy)
+        DateOnly? issuedAt, DateOnly? expiresAt, bool isPrimary, int modifiedBy, bool? isActive = null)
     {
         DocumentNumber = documentNumber;
         IssuingCountryCode = issuingCountryCode;
         IssuedAt = issuedAt;
         ExpiresAt = expiresAt;
-        IsPrimary = isPrimary;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
+        IsPrimary = IsActive && isPrimary;
 
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;

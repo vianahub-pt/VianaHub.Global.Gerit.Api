@@ -5,4 +5,5 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.DocumentType;
 /// </summary>
 public class UpdateDocumentTypeRequest
 {
+    public bool? IsActive { get; set; }
 }

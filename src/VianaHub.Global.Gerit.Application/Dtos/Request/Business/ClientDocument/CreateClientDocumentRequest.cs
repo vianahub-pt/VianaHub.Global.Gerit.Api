@@ -8,4 +8,5 @@ public class CreateClientDocumentRequest
     public DateOnly? IssuedAt { get; set; }
     public DateOnly? ExpiresAt { get; set; }
     public bool IsPrimary { get; set; }
+    public bool? IsActive { get; set; }
 }

@@ -25,4 +25,6 @@ public class UpdateUserRequest
     public bool PhoneNumberProvided { get; private set; }
     [JsonIgnore]
     public bool UrlImageProvided { get; private set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? IsActive { get; set; }
 }

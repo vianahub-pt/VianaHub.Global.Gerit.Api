@@ -1,4 +1,4 @@
-﻿namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.Employee;
+namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.Employee;
 
 public class UpdateEmployeeRequest
 {
@@ -10,4 +10,5 @@ public class UpdateEmployeeRequest
     public bool IsCellPhoneWhatsapp { get; set; }
     public string? Email { get; set; }
     public string? ImageUrl { get; set; }
+    public bool? IsActive { get; set; }
 }

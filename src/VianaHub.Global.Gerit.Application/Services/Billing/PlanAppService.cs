@@ -100,7 +100,8 @@ public class PlanAppService : IPlanAppService
             request.Currency ?? "EUR",
             request.MaxUsers,
             request.MaxPhotosPerVisit,
-            _currentUser.GetUserId());
+            _currentUser.GetUserId(),
+            request.IsActive);
 
         foreach (var translation in request.Translations!)
         {
@@ -127,7 +128,8 @@ public class PlanAppService : IPlanAppService
             request.Currency ?? "EUR",
             request.MaxUsers,
             request.MaxPhotosPerVisit,
-            _currentUser.GetUserId());
+            _currentUser.GetUserId(),
+            request.IsActive);
 
         // Atualiza ou cria tradução para o idioma do utilizador
         if (!string.IsNullOrWhiteSpace(request.Name))

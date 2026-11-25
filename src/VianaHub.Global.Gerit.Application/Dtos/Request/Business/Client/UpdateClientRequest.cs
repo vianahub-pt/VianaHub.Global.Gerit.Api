@@ -35,4 +35,5 @@ public class UpdateClientRequest
     public int? NumberOfEmployees { get; set; }
     public int StatusDefinitionId { get; set; }
     public int StatusDomainId { get; set; }
+    public bool? IsActive { get; set; }
 }

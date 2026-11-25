@@ -87,7 +87,7 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
             request.CellPhoneNumber,
             request.IsCellPhoneWhatsapp,
             request.IsPrimary,
-            _currentUser.GetUserId());
+            _currentUser.GetUserId(), request.IsActive);
 
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
@@ -110,7 +110,7 @@ public class EmployeeContactPersonAppService : IEmployeeContactPersonAppService
             return false;
         }
 
-        entity.UpdateContactInfo(request.Name, request.Email, request.Phone, request.JobTitle, request.Department, request.CellPhoneNumber, request.IsCellPhoneWhatsapp, _currentUser.GetUserId());
+        entity.UpdateContactInfo(request.Name, request.Email, request.Phone, request.JobTitle, request.Department, request.CellPhoneNumber, request.IsCellPhoneWhatsapp, _currentUser.GetUserId(), request.IsActive);
 
         if (request.IsPrimary && !entity.IsPrimary)
         {

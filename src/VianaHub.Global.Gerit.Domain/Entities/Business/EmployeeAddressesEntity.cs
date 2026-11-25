@@ -53,7 +53,8 @@ public class EmployeeAddressesEntity : Entity
         decimal? longitude,
         string? note,
         bool isPrimary,
-        int createdBy)
+        int createdBy,
+        bool? isActive = null)
     {
         TenantId = tenantId;
         EmployeeId = employeeId;
@@ -70,7 +71,7 @@ public class EmployeeAddressesEntity : Entity
         Longitude = longitude;
         Note = note;
         IsPrimary = isPrimary;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
@@ -89,7 +90,8 @@ public class EmployeeAddressesEntity : Entity
         decimal? latitude,
         decimal? longitude,
         string? note,
-        int modifiedBy)
+        int modifiedBy,
+        bool? isActive = null)
     {
         AddressTypeId = addressTypeId;
         CountryCode = countryCode ?? "PT";
@@ -103,6 +105,7 @@ public class EmployeeAddressesEntity : Entity
         Latitude = latitude;
         Longitude = longitude;
         Note = note;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

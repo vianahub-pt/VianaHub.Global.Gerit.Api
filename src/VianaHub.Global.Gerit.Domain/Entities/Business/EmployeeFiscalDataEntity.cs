@@ -33,7 +33,7 @@ public class EmployeeFiscalDataEntity : Entity
     /// Construtor para criação de novos dados fiscais do Funcionário
     /// </summary>
     public EmployeeFiscalDataEntity(int tenantId, int employeeId, string? taxNumber, string? vatNumber,
-        string? fiscalCountry, bool isVatRegistered, string? iban, string? fiscalEmail, int createdBy)
+        string? fiscalCountry, bool isVatRegistered, string? iban, string? fiscalEmail, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         EmployeeId = employeeId;
@@ -45,7 +45,7 @@ public class EmployeeFiscalDataEntity : Entity
         IBAN = iban;
         FiscalEmail = fiscalEmail;
 
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
 
         CreatedBy = createdBy;
@@ -53,7 +53,7 @@ public class EmployeeFiscalDataEntity : Entity
     }
 
     public void Update(string? taxNumber, string? vatNumber, string? fiscalCountry, bool isVatRegistered,
-        string? iban, string? fiscalEmail, int modifiedBy)
+        string? iban, string? fiscalEmail, int modifiedBy, bool? isActive = null)
     {
         TaxNumber = taxNumber;
         VatNumber = vatNumber;
@@ -61,6 +61,7 @@ public class EmployeeFiscalDataEntity : Entity
         IsVatRegistered = isVatRegistered;
         IBAN = iban;
         FiscalEmail = fiscalEmail;
+        if (isActive.HasValue) IsActive = isActive.Value;
 
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;

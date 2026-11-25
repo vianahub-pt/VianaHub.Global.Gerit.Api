@@ -80,7 +80,7 @@ public class VisitTeamFunctionAppService : IVisitTeamFunctionAppService
             return 0;
         }
 
-        var entity = new VisitTeamFunctionsEntity(tenantId, request.Name, request.Description, _currentUser.GetUserId());
+        var entity = new VisitTeamFunctionsEntity(tenantId, request.Name, request.Description, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -94,7 +94,7 @@ public class VisitTeamFunctionAppService : IVisitTeamFunctionAppService
             return false;
         }
 
-        entity.Update(request.Name, request.Description, _currentUser.GetUserId());
+        entity.Update(request.Name, request.Description, _currentUser.GetUserId(), request.IsActive);
 
         return await _domain.UpdateAsync(entity, ct);
     }

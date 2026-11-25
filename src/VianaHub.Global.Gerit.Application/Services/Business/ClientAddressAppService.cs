@@ -122,9 +122,10 @@ public class ClientAddressAppService : IClientAddressAppService
             request.Longitude,
             request.Note,
             request.IsPrimary,
-            UserId);
+            UserId,
+            request.IsActive);
 
-        if (request.IsPrimary && await _repo.ExistsPrimaryAsync(clientId, null, ct))
+        if ((request.IsActive ?? true) && request.IsPrimary && await _repo.ExistsPrimaryAsync(clientId, null, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Create.ResourceAlreadyExists"), 409);
             return 0;
@@ -160,13 +161,14 @@ public class ClientAddressAppService : IClientAddressAppService
             return false;
         }
 
-        if (request.IsPrimary && await _repo.ExistsPrimaryAsync(clientId, id, ct))
+        var willBeActive = request.IsActive ?? clientAddress.IsActive;
+        if (willBeActive && request.IsPrimary && await _repo.ExistsPrimaryAsync(clientId, id, ct))
         {
             _notify.Add(_localization.GetMessage("Application.Service.ClientAddress.Update.ResourceAlreadyExists"), 409);
             return false;
         }
 
-        clientAddress.Update(request.AddressTypeId, NormalizeCountryCode(request.CountryCode) ?? string.Empty, request.Street ?? string.Empty, request.StreetNumber, request.Complement, request.Neighborhood ?? string.Empty, request.City ?? string.Empty, request.District, request.PostalCode ?? string.Empty, request.Latitude, request.Longitude, request.Note, request.IsPrimary, UserId);
+        clientAddress.Update(request.AddressTypeId, NormalizeCountryCode(request.CountryCode) ?? string.Empty, request.Street ?? string.Empty, request.StreetNumber, request.Complement, request.Neighborhood ?? string.Empty, request.City ?? string.Empty, request.District, request.PostalCode ?? string.Empty, request.Latitude, request.Longitude, request.Note, request.IsPrimary, UserId, request.IsActive);
 
         return await _domain.UpdateAsync(clientAddress, ct);
     }

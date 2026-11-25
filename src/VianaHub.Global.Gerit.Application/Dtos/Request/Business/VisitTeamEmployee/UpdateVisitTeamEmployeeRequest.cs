@@ -6,4 +6,5 @@ public record UpdateVisitTeamEmployeeRequest
     public bool IsLeader { get; init; }
     public DateTime StartDateTime { get; init; }
     public DateTime? EndDateTime { get; init; }
+    public bool? IsActive { get; set; }
 }

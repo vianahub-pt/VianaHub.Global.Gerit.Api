@@ -4,4 +4,5 @@ public class CreateAddressTypeRequest
 {
     [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
     public List<CreateAddressTypeTranslationRequest>? Translations { get; set; }
+    public bool? IsActive { get; set; }
 }

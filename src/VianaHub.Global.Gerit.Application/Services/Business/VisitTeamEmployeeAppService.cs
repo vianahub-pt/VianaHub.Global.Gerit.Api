@@ -101,7 +101,8 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
             request.VisitTeamFunctionId,
             request.IsLeader,
             request.StartDateTime,
-            _currentUser.GetUserId()
+            _currentUser.GetUserId(),
+            request.IsActive
         );
 
         var success = await _domain.CreateAsync(entity, ct);
@@ -123,7 +124,7 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
             return false;
         }
 
-        entity.Update(request.VisitTeamFunctionId, request.IsLeader, request.StartDateTime, request.EndDateTime, _currentUser.GetUserId());
+        entity.Update(request.VisitTeamFunctionId, request.IsLeader, request.StartDateTime, request.EndDateTime, _currentUser.GetUserId(), request.IsActive);
 
         return await _domain.UpdateAsync(entity, ct);
     }
@@ -167,9 +168,9 @@ public class VisitTeamEmployeeAppService : IVisitTeamEmployeeAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(int visitTeamId, IFormFile? file, CancellationToken ct)
+    public Task<bool> BulkUploadAsync(int visitTeamId, IFormFile? file, CancellationToken ct)
     {
         _notify.Add(_localization.GetMessage("Application.Service.VisitTeamEmployee.BulkUpload.NotImplemented"), 501);
-        return false;
+        return Task.FromResult(false);
     }
 }

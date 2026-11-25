@@ -22,10 +22,10 @@ public class AcquisitionSourceTypeEntity : Entity
     /// Construtor para criação de um novo AcquisitionSourceType.
     /// Name e Description devem ser persistidos via AddTranslation() na tabela de traduções.
     /// </summary>
-    public AcquisitionSourceTypeEntity(string? code, int createdBy)
+    public AcquisitionSourceTypeEntity(string? code, int createdBy, bool? isActive = null)
     {
         Code = code;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
@@ -44,8 +44,9 @@ public class AcquisitionSourceTypeEntity : Entity
     /// <summary>
     /// Regista a modificação sem alterar a chave natural.
     /// </summary>
-    public void MarkModified(int modifiedBy)
+    public void MarkModified(int modifiedBy, bool? isActive = null)
     {
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

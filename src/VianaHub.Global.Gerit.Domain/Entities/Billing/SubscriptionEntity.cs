@@ -51,7 +51,8 @@ public class SubscriptionEntity : Entity
         DateTime? trialStart,
         DateTime? trialEnd,
         string? stripeCustomerId,
-        int createdBy)
+        int createdBy,
+        bool? isActive = null)
     {
         TenantId = tenantId;
         SubscriptionPlanId = subscriptionPlanId;
@@ -66,7 +67,7 @@ public class SubscriptionEntity : Entity
         TrialEnd = trialEnd;
         StripeCustomerId = stripeCustomerId;
         CancelAtPeriodEnd = false;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
     }
@@ -82,7 +83,8 @@ public class SubscriptionEntity : Entity
         DateTime currentPeriodEnd,
         DateTime? trialStart,
         DateTime? trialEnd,
-        int modifiedBy)
+        int modifiedBy,
+        bool? isActive = null)
     {
         SubscriptionPlanId = subscriptionPlanId;
         StatusDefinitionId = statusDefinitionId;
@@ -94,6 +96,7 @@ public class SubscriptionEntity : Entity
         CurrentPeriodEnd = currentPeriodEnd;
         TrialStart = trialStart;
         TrialEnd = trialEnd;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

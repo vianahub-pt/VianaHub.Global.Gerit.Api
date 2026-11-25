@@ -10,4 +10,5 @@ public class CreateVisitRequest
     public string? Description { get; set; }
     public DateTime StartDateTime { get; set; }
     public decimal EstimatedValue { get; set; }
+    public bool? IsActive { get; set; }
 }

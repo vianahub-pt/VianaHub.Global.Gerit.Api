@@ -3,4 +3,5 @@ namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.VisitTeamVehic
 public class UpdateVisitTeamVehicleRequest
 {
     public int VehicleId { get; set; }
+    public bool? IsActive { get; set; }
 }

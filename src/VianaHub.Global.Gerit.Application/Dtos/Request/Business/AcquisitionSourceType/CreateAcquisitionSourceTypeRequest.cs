@@ -4,4 +4,5 @@ public class CreateAcquisitionSourceTypeRequest
 {
     [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
     public List<CreateAcquisitionSourceTypeTranslationRequest>? Translations { get; set; }
+    public bool? IsActive { get; set; }
 }

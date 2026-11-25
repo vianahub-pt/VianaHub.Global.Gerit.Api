@@ -14,4 +14,5 @@ public class CreateClientContactRequest
     public bool IsCellPhoneWhatsapp { get; set; }
     public string? Email { get; set; }
     public bool IsPrimary { get; set; }
+    public bool? IsActive { get; set; }
 }

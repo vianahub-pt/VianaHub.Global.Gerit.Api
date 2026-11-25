@@ -96,7 +96,8 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
             request.CellPhoneNumber,
             request.IsCellPhoneWhatsapp,
             request.IsPrimary,
-            userId
+            userId,
+            request.IsActive
         );
 
         var success = await _domain.CreateAsync(entity, ct);
@@ -119,7 +120,7 @@ public class VisitContactPersonAppService : IVisitContactPersonAppService
             return false;
         }
 
-        entity.Update(request.Name, request.Email, request.Phone, request.JobTitle, request.Department, request.CellPhoneNumber, request.IsCellPhoneWhatsapp, request.IsPrimary, _currentUser.GetUserId());
+        entity.Update(request.Name, request.Email, request.Phone, request.JobTitle, request.Department, request.CellPhoneNumber, request.IsCellPhoneWhatsapp, request.IsPrimary, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

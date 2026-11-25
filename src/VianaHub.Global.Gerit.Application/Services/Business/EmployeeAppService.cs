@@ -82,7 +82,7 @@ public class EmployeeAppService : IEmployeeAppService
 
         var entity = new EmployeeEntity(tenantId, request.StatusDefinitionId, request.StatusDomainId, request.Name,
             request.PhoneNumber, request.CellPhoneNumber, request.IsCellPhoneWhatsapp,
-            request.Email, request.ImageUrl, _currentUser.GetUserId());
+            request.Email, request.ImageUrl, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -98,7 +98,7 @@ public class EmployeeAppService : IEmployeeAppService
 
         entity.Update(request.StatusDefinitionId, request.StatusDomainId, request.Name,
             request.PhoneNumber, request.CellPhoneNumber, request.IsCellPhoneWhatsapp,
-            request.Email, request.ImageUrl, _currentUser.GetUserId());
+            request.Email, request.ImageUrl, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 

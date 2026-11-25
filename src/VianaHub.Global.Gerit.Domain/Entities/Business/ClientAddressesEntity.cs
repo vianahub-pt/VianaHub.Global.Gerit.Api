@@ -31,7 +31,7 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
         // Construtor protegido para EF Core
         protected ClientAddressesEntity() { }
 
-        public ClientAddressesEntity(int tenantId, int clientId, int addressTypeId, string? countryCode, string? street, string? streetNumber, string? complement, string? neighborhood, string? city, string? district, string? postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int createdBy)
+        public ClientAddressesEntity(int tenantId, int clientId, int addressTypeId, string? countryCode, string? street, string? streetNumber, string? complement, string? neighborhood, string? city, string? district, string? postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int createdBy, bool? isActive = null)
         {
             TenantId = tenantId;
             ClientId = clientId;
@@ -49,14 +49,14 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             Longitude = longitude;
             Note = note;
 
-            IsPrimary = isPrimary;
-            IsActive = true;
+            IsActive = isActive ?? true;
+            IsPrimary = IsActive && isPrimary;
             IsDeleted = false;
             CreatedBy = createdBy;
             CreatedAt = DateTime.UtcNow;
         }
 
-        public void Update(int addressTypeId, string? countryCode, string? street, string? streetNumber, string? complement, string? neighborhood, string? city, string? district, string? postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int modifiedBy)
+        public void Update(int addressTypeId, string? countryCode, string? street, string? streetNumber, string? complement, string? neighborhood, string? city, string? district, string? postalCode, decimal? latitude, decimal? longitude, string? note, bool isPrimary, int modifiedBy, bool? isActive = null)
         {
             AddressTypeId = addressTypeId;
             CountryCode = countryCode ?? string.Empty;
@@ -70,7 +70,9 @@ namespace VianaHub.Global.Gerit.Domain.Entities.Business
             Latitude = latitude;
             Longitude = longitude;
             Note = note;
-            IsPrimary = isPrimary;
+            if (isActive.HasValue)
+                IsActive = isActive.Value;
+            IsPrimary = IsActive && isPrimary;
             ModifiedBy = modifiedBy;
             ModifiedAt = DateTime.UtcNow;
         }

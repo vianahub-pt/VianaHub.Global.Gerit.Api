@@ -14,4 +14,5 @@ public class CreateSubscriptionRequest
     public DateTime? TrialStart { get; set; }
     public DateTime? TrialEnd { get; set; }
     public string? StripeCustomerId { get; set; }
+    public bool? IsActive { get; set; }
 }

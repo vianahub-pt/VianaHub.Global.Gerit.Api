@@ -8,4 +8,5 @@ public class CreateStatusDomainRequest
 {
     [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Application.Catalog.CanonicalEnglishNameRequired")]
     public List<CreateStatusDomainTranslationRequest>? Translations { get; set; }
+    public bool? IsActive { get; set; }
 }

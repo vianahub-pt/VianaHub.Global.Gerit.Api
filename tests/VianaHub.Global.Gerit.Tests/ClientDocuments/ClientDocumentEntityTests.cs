@@ -61,6 +61,31 @@ public class ClientDocumentEntityTests
         Assert.False((await validator.ValidateAsync(longNumber)).IsValid);
     }
 
+    [Fact]
+    public void CreateAndUpdateHonorOptionalIsActiveWithoutBreakingPrimaryInvariant()
+    {
+        var defaultActive = Valid(isPrimary: true);
+        var explicitlyInactive = new ClientDocumentsEntity(7, 10, 1, "DOC-2", "PT", null, null, true, 17, false);
+        var explicitlyActive = new ClientDocumentsEntity(7, 10, 1, "DOC-3", "PT", null, null, false, 17, true);
+
+        Assert.True(defaultActive.IsActive);
+        Assert.True(defaultActive.IsPrimary);
+        Assert.False(explicitlyInactive.IsActive);
+        Assert.False(explicitlyInactive.IsPrimary);
+        Assert.True(explicitlyActive.IsActive);
+
+        explicitlyInactive.Update("DOC-2", "PT", null, null, true, 18);
+        Assert.False(explicitlyInactive.IsActive);
+        Assert.False(explicitlyInactive.IsPrimary);
+
+        explicitlyInactive.Update("DOC-2", "PT", null, null, false, 18, true);
+        Assert.True(explicitlyInactive.IsActive);
+        Assert.False(explicitlyInactive.IsPrimary);
+
+        explicitlyInactive.Update("DOC-2", "PT", null, null, true, 18, false);
+        Assert.False(explicitlyInactive.IsActive);
+        Assert.False(explicitlyInactive.IsPrimary);
+    }
     private static ClientDocumentsEntity Valid(bool isPrimary = false, string country = "PT", DateOnly? issued = null, DateOnly? expires = null) =>
         new(7, 10, 1, "DOC-1", country, issued, expires, isPrimary, 17);
 

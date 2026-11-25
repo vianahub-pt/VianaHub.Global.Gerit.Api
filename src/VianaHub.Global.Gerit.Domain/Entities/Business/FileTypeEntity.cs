@@ -24,22 +24,23 @@ public class FileTypeEntity : Entity
     /// <summary>
     /// Construtor completo para criação de um novo FileType, incluindo o Code de identificação.
     /// </summary>
-    public FileTypeEntity(string? mimeType, string? extension, string? code, int createdBy)
+    public FileTypeEntity(string? mimeType, string? extension, string? code, int createdBy, bool? isActive = null)
     {
         MimeType = mimeType;
         Extension = extension;
         Code = code;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
         Translations = new List<FileTypeTranslationsEntity>();
     }
 
-    public void Update(string? mimeType, string? extension, int modifiedBy)
+    public void Update(string? mimeType, string? extension, int modifiedBy, bool? isActive = null)
     {
         MimeType = mimeType;
         Extension = extension;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

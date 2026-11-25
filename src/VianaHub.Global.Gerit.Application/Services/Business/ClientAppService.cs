@@ -120,7 +120,8 @@ public class ClientAppService : IClientAppService
             request.NumberOfEmployees,
             request.StatusDefinitionId,
             request.StatusDomainId,
-            UserId);
+            UserId,
+            request.IsActive);
 
         var success = await _domain.CreateAsync(client, ct);
         return success ? client.Id : 0;
@@ -130,7 +131,7 @@ public class ClientAppService : IClientAppService
     {
         var client = await _repo.GetByIdAsync(id, ct);
 
-        if (client == null || client.TenantId != TenantId || client.IsDeleted || !client.IsActive)
+        if (client == null || client.TenantId != TenantId || client.IsDeleted)
         {
             _notify.Add(_localization.GetMessage("Application.Service.Client.Update.ResourceNotFound"), 410);
             return false;
@@ -168,7 +169,8 @@ public class ClientAppService : IClientAppService
             request.NumberOfEmployees,
             request.StatusDefinitionId,
             request.StatusDomainId,
-            UserId);
+            UserId,
+            request.IsActive);
 
         return await _domain.UpdateAsync(client, ct);
     }

@@ -14,4 +14,5 @@ public class UpdateClientContactPersonRequest
     public string? Department { get; set; }
     public bool IsCellPhoneWhatsapp { get; set; }
     public bool IsPrimary { get; set; }
+    public bool? IsActive { get; set; }
 }

@@ -80,7 +80,7 @@ public class ActionAppService : IActionAppService
             return 0;
         }
 
-        var entity = new ActionEntity(normalizedName, request.Description ?? string.Empty, _currentUser.GetUserId());
+        var entity = new ActionEntity(normalizedName, request.Description ?? string.Empty, _currentUser.GetUserId(), request.IsActive);
         var success = await _domain.CreateAsync(entity, ct);
         return success ? entity.Id : 0;
     }
@@ -93,7 +93,7 @@ public class ActionAppService : IActionAppService
             return false;
         }
 
-        entity.Update(request.Description ?? string.Empty, _currentUser.GetUserId());
+        entity.Update(request.Description ?? string.Empty, _currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
     public async Task<bool> ActivateAsync(int id, CancellationToken ct)

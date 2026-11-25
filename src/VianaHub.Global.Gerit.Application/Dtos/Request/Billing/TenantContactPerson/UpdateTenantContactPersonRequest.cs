@@ -9,4 +9,5 @@ public class UpdateTenantContactPersonRequest
     public string? Department { get; set; }
     public string? CellPhoneNumber { get; set; }
     public bool IsCellPhoneWhatsapp { get; set; }
+    public bool? IsActive { get; set; }
 }

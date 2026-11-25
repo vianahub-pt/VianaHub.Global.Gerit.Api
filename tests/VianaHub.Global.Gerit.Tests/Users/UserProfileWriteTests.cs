@@ -106,6 +106,33 @@ public sealed class UserProfileWriteTests
     }
 
     [Fact]
+    public void UpdateRequest_IsActiveOmissionAndExplicitFalseDeserializeSeparately()
+    {
+        var omitted = JsonSerializer.Deserialize<UpdateUserRequest>("""{"name":"Updated"}""", JsonOptions)!;
+        var inactive = JsonSerializer.Deserialize<UpdateUserRequest>("""{"name":"Updated","isActive":false}""", JsonOptions)!;
+        Assert.Null(omitted.IsActive);
+        Assert.False(inactive.IsActive);
+        Assert.DoesNotContain("isActive", JsonSerializer.Serialize(omitted, JsonOptions));
+        Assert.Contains("\"isActive\":false", JsonSerializer.Serialize(inactive, JsonOptions));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_AppliesIsActiveAndPreservesItWhenOmitted()
+    {
+        var fixture = new Fixture();
+        fixture.Repository.Setup(repo => repo.ExistsByEmailAsync("owner@example.invalid", 23, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        fixture.Domain.Setup(domain => domain.UpdateAsync(fixture.User, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        Assert.True(await fixture.Service.UpdateAsync(23, new UpdateUserRequest { Name = "Inactive", IsActive = false }, default));
+        Assert.False(fixture.User.IsActive);
+        Assert.True(await fixture.Service.UpdateAsync(23, new UpdateUserRequest { Name = "Still inactive" }, default));
+        Assert.False(fixture.User.IsActive);
+
+        fixture.User.Activate(2);
+        Assert.True(await fixture.Service.UpdateAsync(23, new UpdateUserRequest { Name = "Active", IsActive = true }, default));
+        Assert.True(fixture.User.IsActive);
+    }
+    [Fact]
     public async Task CreateAsync_PersistsPhoneImageAndHashedPasswordInCurrentTenant()
     {
         var fixture = new Fixture();
@@ -127,7 +154,20 @@ public sealed class UserProfileWriteTests
         Assert.Equal("+351222", created.PhoneNumber);
         Assert.Equal("https://example.invalid/new.png", created.UrlImage);
         Assert.Equal(7, created.TenantId);
+        Assert.True(created.IsActive);
         Assert.True(DomainExtensions.VerifyClientSecret(created.PasswordHash, "Synthetic1!"));
+
+        fixture.Repository.Setup(repo => repo.ExistsByEmailAsync("inactive@example.invalid", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        Assert.Equal(31, await fixture.Service.CreateAsync(new CreateUserRequest
+        {
+            Name = "Inactive",
+            Email = "inactive@example.invalid",
+            Password = "Synthetic1!",
+            ConfirmPassword = "Synthetic1!",
+            IsActive = false
+        }, default));
+        Assert.NotNull(created);
+        Assert.False(created!.IsActive);
     }
 
     private static UserEntity Entity()

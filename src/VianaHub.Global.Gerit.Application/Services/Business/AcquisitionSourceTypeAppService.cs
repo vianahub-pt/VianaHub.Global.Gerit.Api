@@ -89,7 +89,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
                 return 0;
             }
         }
-        var entity = new AcquisitionSourceTypeEntity(code, _currentUser.GetUserId());
+        var entity = new AcquisitionSourceTypeEntity(code, _currentUser.GetUserId(), request.IsActive);
         foreach (var translation in request.Translations!)
         {
             entity.Translations.Add(new AcquisitionSourceTypeTranslationsEntity(entity.Id, translation.LanguageCode, translation.Name, translation.Description));
@@ -119,7 +119,7 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
             entity.AddTranslation(new AcquisitionSourceTypeTranslationsEntity(entity.Id, "pt-PT", request.Name, request.Description));
         }
 
-        entity.MarkModified(_currentUser.GetUserId());
+        entity.MarkModified(_currentUser.GetUserId(), request.IsActive);
         return await _domain.UpdateAsync(entity, ct);
     }
 
@@ -162,9 +162,9 @@ public class AcquisitionSourceTypeAppService : IAcquisitionSourceTypeAppService
         return await _domain.DeleteAsync(entity, ct);
     }
 
-    public async Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
+    public Task<bool> BulkUploadAsync(IFormFile? file, CancellationToken ct)
     {
         _notify.Add(_localization.GetMessage("Application.Service.AcquisitionSourceType.BulkUpload.NotImplemented"), 501);
-        return false;
+        return Task.FromResult(false);
     }
 }

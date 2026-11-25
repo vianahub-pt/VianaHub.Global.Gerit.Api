@@ -33,7 +33,7 @@ public class VisitContactPersonsEntity : Entity
     /// </summary>
     public VisitContactPersonsEntity(int tenantId, int interventionId, string? name, string? email, string? phone,
         string? jobTitle, string? department, string? cellPhoneNumber, bool isCellPhoneWhatsapp,
-        bool isPrimary, int createdBy)
+        bool isPrimary, int createdBy, bool? isActive = null)
     {
         TenantId = tenantId;
         VisitId = interventionId;
@@ -45,7 +45,7 @@ public class VisitContactPersonsEntity : Entity
         CellPhoneNumber = cellPhoneNumber;
         IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
         IsPrimary = isPrimary;
-        IsActive = true;
+        IsActive = isActive ?? true;
         IsDeleted = false;
         CreatedBy = createdBy;
         CreatedAt = DateTime.UtcNow;
@@ -53,7 +53,7 @@ public class VisitContactPersonsEntity : Entity
 
     public void Update(string? name, string? email, string? phone,
         string? jobTitle, string? department, string? cellPhoneNumber, bool isCellPhoneWhatsapp,
-        bool isPrimary, int modifiedBy)
+        bool isPrimary, int modifiedBy, bool? isActive = null)
     {
         Name = name;
         Email = email;
@@ -63,6 +63,7 @@ public class VisitContactPersonsEntity : Entity
         CellPhoneNumber = cellPhoneNumber;
         IsCellPhoneWhatsapp = isCellPhoneWhatsapp;
         IsPrimary = isPrimary;
+        if (isActive.HasValue) IsActive = isActive.Value;
         ModifiedBy = modifiedBy;
         ModifiedAt = DateTime.UtcNow;
     }

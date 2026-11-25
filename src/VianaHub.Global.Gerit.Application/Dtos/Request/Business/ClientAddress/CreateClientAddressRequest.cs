@@ -1,7 +1,7 @@
 namespace VianaHub.Global.Gerit.Application.Dtos.Request.Business.ClientAddress;
 
 /// <summary>
-/// DTO para criação de ClientAddress
+/// DTO para criaÃ§Ã£o de ClientAddress
 /// </summary>
 public class CreateClientAddressRequest
 {
@@ -18,4 +18,5 @@ public class CreateClientAddressRequest
     public decimal? Longitude { get; set; }
     public string? Note { get; set; }
     public bool IsPrimary { get; set; }
+    public bool? IsActive { get; set; }
 }

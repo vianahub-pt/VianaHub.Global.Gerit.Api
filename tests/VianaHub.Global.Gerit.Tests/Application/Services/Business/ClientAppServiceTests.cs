@@ -104,7 +104,55 @@ public class ClientAppServiceTests
         var result = await service.CreateAsync(request, CancellationToken.None);
 
         Assert.True(result > 0);
+        Assert.True(capturedEntity!.IsActive);
         domainMock.Verify(x => x.CreateAsync(It.IsAny<ClientEntity>(), It.IsAny<CancellationToken>()), Times.Once);
+
+        request.IsActive = false;
+        Assert.True(await service.CreateAsync(request, CancellationToken.None) > 0);
+        Assert.False(capturedEntity!.IsActive);
+        domainMock.Verify(x => x.CreateAsync(It.IsAny<ClientEntity>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_CanSetStateOnInactiveClientAndOmissionPreservesIt()
+    {
+        var repo = new Mock<IClientRepository>();
+        var domain = new Mock<IClientDomainService>();
+        var notify = new Mock<INotify>();
+        var localization = new Mock<ILocalizationService>();
+        var currentUser = new Mock<ICurrentUserService>();
+        currentUser.Setup(x => x.GetTenantId()).Returns(7);
+        currentUser.Setup(x => x.GetUserId()).Returns(5);
+        var entity = new ClientEntity(7, 1, 1, null, null, "Client", "999", null, false, "client@gerit.test", null,
+            DateTime.UtcNow.AddYears(-30), "male", "PT", null, null, null, 1, 1, 5);
+        entity.Deactivate(5);
+        typeof(ClientEntity).GetProperty("Id")!.SetValue(entity, 42);
+        repo.Setup(x => x.GetByIdAsync(42, It.IsAny<CancellationToken>())).ReturnsAsync(entity);
+        domain.Setup(x => x.UpdateAsync(entity, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var service = new ClientAppService(repo.Object, domain.Object, notify.Object, localization.Object,
+            currentUser.Object, Mock.Of<IFileValidationService>(), Mock.Of<ILogger<ClientAppService>>());
+        var request = new UpdateClientRequest
+        {
+            PartyTypeId = 1,
+            AcquisitionSourceTypeId = 1,
+            Name = "Client",
+            PhoneNumber = "999",
+            Email = "client@gerit.test",
+            StatusDefinitionId = 1,
+            StatusDomainId = 1,
+            IsActive = true
+        };
+
+        Assert.True(await service.UpdateAsync(42, request, default));
+        Assert.True(entity.IsActive);
+
+        entity.Deactivate(5);
+        request.IsActive = null;
+        Assert.True(await service.UpdateAsync(42, request, default));
+        Assert.False(entity.IsActive);
+        domain.Verify(x => x.UpdateAsync(entity, It.IsAny<CancellationToken>()), Times.Exactly(2));
+        domain.Verify(x => x.ActivateAsync(It.IsAny<ClientEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+        domain.Verify(x => x.DeactivateAsync(It.IsAny<ClientEntity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact(DisplayName = "ClientAppService - ActivateAsync é idempotente quando o cliente já está ativo")]
